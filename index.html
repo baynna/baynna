@@ -16,19 +16,33 @@
 
 <h3>اكتب قصتك هنا</h3>
 
-<textarea rows="10" cols="50"></textarea>
+<textarea id="story" rows="10" cols="50"></textarea>
 
 <br><br>
 
-<button>نشر القصة</button>
+<button onclick="publish()">نشر القصة</button>
 
-<br><br>
+<hr>
 
-<button>اقرأ قصص الناس</button>
+<h3>القصص المنشورة</h3>
 
-<br><br>
+<div id="posts"></div>
 
-<button>تسجيل الدخول</button>
+<script>
+
+function publish() {
+
+var text = document.getElementById("story").value;
+
+var post = document.createElement("p");
+
+post.innerText = text;
+
+document.getElementById("posts").appendChild(post);
+
+}
+
+</script>
 
 </body>
 </html>
