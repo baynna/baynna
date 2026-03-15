@@ -66,6 +66,20 @@ document.getElementById("posts").appendChild(post);
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+  async function publishStory() {
+
+  const text = document.getElementById("story").value;
+
+  if (!text) return;
+
+  await addDoc(collection(db, "stories"), {
+    content: text,
+    date: new Date().toISOString()
+  });
+
+  alert("تم نشر القصة");
+
+}
 </script></body>
 </html>
 
