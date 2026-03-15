@@ -44,5 +44,28 @@ document.getElementById("posts").appendChild(post);
 
 </script>
 
-</body>
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyA_pNFhFcOArArEmKlIiQ-pAlIVXdOM1T8",
+    authDomain: "baynna-9884f.firebaseapp.com",
+    projectId: "baynna-9884f",
+    storageBucket: "baynna-9884f.firebasestorage.app",
+    messagingSenderId: "377002437252",
+    appId: "1:377002437252:web:dc7f507818e8abace970d1",
+    measurementId: "G-BLH1DN1XEL"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script></body>
 </html>
+
