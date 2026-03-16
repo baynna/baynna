@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+
 <meta charset="UTF-8">
 <title>baynna</title>
 
@@ -9,28 +10,43 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <style>
+
 body {
-font-family: Tahoma;
-background: #f5f5f5;
-padding: 20px;
+    font-family: Tahoma;
+    background: #f5f5f5;
+    padding: 20px;
 }
 
 .box {
-max-width: 700px;
-margin: auto;
-background: white;
-padding: 20px;
-border-radius: 10px;
+    max-width: 700px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
 }
 
 button {
-padding: 8px 15px;
-margin: 5px;
+    padding: 8px 15px;
+    margin: 5px;
+    cursor: pointer;
 }
+
+input {
+    padding: 8px;
+    width: 60%;
+}
+
+#posts p {
+    background: #eee;
+    padding: 8px;
+    border-radius: 5px;
+}
+
 </style>
 
 </head>
 <body>
+
 
 <div class="box">
 
@@ -47,70 +63,82 @@ margin: 5px;
 
 </div>
 
+
+
 <script>
 
 var firebaseConfig = {
-apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
-authDomain: "baynna-9884f.firebaseapp.com",
-projectId: "baynna-9884f",
-storageBucket: "baynna-9884f.appspot.com",
-messagingSenderId: "377002437252",
-appId: "1:377002437252:web:dc7f507818e8abace970d1"
+    apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
+    authDomain: "baynna-9884f.firebaseapp.com",
+    projectId: "baynna-9884f",
+    storageBucket: "baynna-9884f.appspot.com",
+    messagingSenderId: "377002437252",
+    appId: "1:377002437252:web:dc7f507818e8abace970d1"
 };
+
 
 firebase.initializeApp(firebaseConfig);
 
 var db = firebase.firestore();
 
-function login(){
 
-var provider = new firebase.auth.GoogleAuthProvider();
 
-firebase.auth().signInWithPopup(provider)
-.then(function(result){
+function login() {
 
-document.getElementById("user").innerText =
-result.user.displayName;
+    var provider = new firebase.auth.GoogleAuthProvider();
 
-})
-.catch(function(error){
+    firebase.auth().signInWithPopup(provider)
 
-alert(error.message);
+    .then(function(result) {
 
-});
+        document.getElementById("user").innerText =
+            result.user.displayName;
+
+    })
+
+    .catch(function(error) {
+
+        alert(error.message);
+
+    });
+
+}
+
+
+
+function add() {
+
+    var t = document.getElementById("text").value;
+
+    db.collection("posts").add({
+
+        text: t,
+        time: Date.now()
+
+    });
 
 }
 
-function add(){
 
-var t = document.getElementById("text").value;
-
-db.collection("posts").add({
-
-text: t,
-time: Date.now()
-
-});
-
-}
 
 db.collection("posts")
-.orderBy("time","desc")
-.onSnapshot(function(s){
+.orderBy("time", "desc")
+.onSnapshot(function(s) {
 
-var h = "";
+    var h = "";
 
-s.forEach(function(d){
+    s.forEach(function(d) {
 
-h += "<p>"+d.data().text+"</p>";
+        h += "<p>" + d.data().text + "</p>";
 
-});
+    });
 
-document.getElementById("posts").innerHTML = h;
+    document.getElementById("posts").innerHTML = h;
 
 });
 
 </script>
+
 
 </body>
 </html>
