@@ -1,55 +1,88 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>baynna</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>baynna</title>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
+  <style>
+    body{
+      font-family: Tahoma, Arial, sans-serif;
+      background:#f5f7fb;
+      margin:0;
+      padding:20px;
+    }
+
+    h2{
+      margin-top:0;
+    }
+
+    input{
+      width:260px;
+      padding:8px;
+    }
+
+    button{
+      padding:8px 12px;
+      cursor:pointer;
+    }
+
+    #posts{
+      margin-top:20px;
+    }
+
+    .post{
+      background:#fff;
+      border:1px solid #ddd;
+      padding:10px;
+      margin-bottom:10px;
+      border-radius:8px;
+    }
+  </style>
 </head>
-
 <body>
 
-<h2>اكتب منشور</h2>
+  <h2>اكتب منشور</h2>
 
-<input id="story" type="text">
-<button onclick="add()">إضافة</button>
+  <input id="story" type="text" />
+  <button onclick="add()">إضافة</button>
 
-<div id="posts"></div>
+  <div id="posts"></div>
 
-<script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA_pNFhFcOArArEmK1IiQ-pAlIVXdOM1T8",
+      authDomain: "baynna-9884f.firebaseapp.com",
+      projectId: "baynna-9884f",
+      storageBucket: "baynna-9884f.appspot.com",
+      messagingSenderId: "377002437252",
+      appId: "1:377002437252:web:dc7f507818e8abace970d1",
+      measurementId: "G-BLH1DN1XEL"
+    };
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA_pNFhFcOArArEmK1IiQ-pAlIVXdOM1T8",
-  authDomain: "baynna-9884f.firebaseapp.com",
-  projectId: "baynna-9884f",
-  storageBucket: "baynna-9884f.appspot.com",
-  messagingSenderId: "377002437252",
-  appId: "1:377002437252:web:dc7f507818e8abace970d1",
-  measurementId: "G-BLH1DN1XEL"
-};
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-firebase.initializeApp(firebaseConfig);
+    function add() {
+      let text = document.getElementById("story").value;
 
-const db = firebase.firestore();
+      if (text === "") return;
 
-function add(){
-
-let text = document.getElementById("story").value;
-
-if(text=="") return;
-
-db.collection("stories").add({
-text: text,
-time: new Date()
-});
-
-document.getElementById("story").value="";
-
-}
-
-</script>
+      db.collection("stories").add({
+        text: text,
+        time: new Date()
+      }).then(() => {
+        let div = document.createElement("div");
+        div.className = "post";
+        div.innerText = text;
+        document.getElementById("posts").appendChild(div);
+        document.getElementById("story").value = "";
+      });
+    }
+  </script>
 
 </body>
 </html>
