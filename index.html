@@ -40,7 +40,7 @@ let text = document.getElementById("story").value;
 
 if(text=="") return;
 
-db.collection("posts").add({
+db.collection("stories").add({
 text: text,
 time: new Date()
 });
