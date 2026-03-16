@@ -19,4 +19,97 @@ padding: 20px;
 max-width: 700px;
 margin: auto;
 background: white;
-padding: 20px
+padding: 20px;
+border-radius: 10px;
+}
+
+button {
+padding: 8px 15px;
+}
+</style>
+
+</head>
+<body>
+
+<div class="box">
+
+<h3>بيننا</h3>
+
+<button onclick="login()">تسجيل الدخول بجوجل</button>
+
+<p id="user">غير مسجل</p>
+
+<input id="text">
+<button onclick="add()">إضافة</button>
+
+<div id="posts"></div>
+
+</div>
+
+<script>
+
+var firebaseConfig = {
+apiKey: "AIzaSyA_pNFhFcOArArEmK1IiQ-pAlIVXdOM1T8",
+authDomain: "baynna-9884f.firebaseapp.com",
+projectId: "baynna-9884f",
+storageBucket: "baynna-9884f.appspot.com",
+messagingSenderId: "377002437252",
+appId: "1:377002437252:web:dc7f507818e8abace970d1"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+var db = firebase.firestore();
+
+function login(){
+
+var provider = new firebase.auth.GoogleAuthProvider();
+
+firebase.auth().signInWithPopup(provider)
+.then(function(result){
+
+document.getElementById("user").innerText =
+result.user.displayName;
+
+})
+.catch(function(error){
+
+alert(error.message);
+
+});
+
+}
+
+function add(){
+
+var t = document.getElementById("text").value;
+
+db.collection("posts").add({
+
+text: t,
+time: Date.now()
+
+});
+
+}
+
+db.collection("posts")
+.orderBy("time","desc")
+.onSnapshot(function(s){
+
+var h = "";
+
+s.forEach(function(d){
+
+h += "<p>"+d.data().text+"</p>";
+
+});
+
+document.getElementById("posts").innerHTML = h;
+
+});
+
+</script>
+
+</body>
+</html>
