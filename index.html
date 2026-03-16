@@ -1,102 +1,124 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>baynna</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>بيننا</title>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-<style>
-body{font-family:Tahoma;background:#f2f2f2;padding:20px}
-.box{max-width:600px;margin:auto;background:white;padding:20px;border-radius:10px}
-button{padding:8px 12px;margin:5px}
-input{padding:8px;width:70%}
-.post{background:#eee;margin:5px;padding:8px;border-radius:6px}
-</style>
-
+  <style>
+    body { font-family: Tahoma, Arial, sans-serif; background: #f5f7fb; margin: 0; padding: 20px; }
+    .box { max-width: 700px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.08); }
+    h2 { margin: 0 0 15px 0; }
+    .top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 15px; }
+    input { width: 100%; max-width: 320px; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; }
+    button { padding: 10px 16px; border: none; border-radius: 8px; background: #2563eb; color: white; cursor: pointer; }
+    button:hover { background: #1d4ed8; }
+    .muted { color: #666; font-size: 14px; margin-bottom: 15px; }
+    #posts { margin-top: 20px; }
+    .post { background: #eee; padding: 12px; margin-bottom: 10px; border-radius: 8px; }
+  </style>
 </head>
 <body>
 
-<div class="box">
+  <div class="box">
+    <h2>بيننا</h2>
 
-<h2>بيننا</h2>
+    <div class="top">
+      <button onclick="login()">تسجيل الدخول</button>
+      <button onclick="logout()">خروج</button>
+    </div>
 
-<button onclick="login()">تسجيل الدخول</button>
-<button onclick="logout()">خروج</button>
+    <p id="user" class="muted">غير مسجل</p>
 
-<br><br>
+    <div class="top">
+      <input id="text" placeholder="اكتب منشور" />
+      <button onclick="send()">نشر</button>
+    </div>
 
-<input id="text">
-<button onclick="send()">نشر</button>
+    <div id="posts"></div>
+  </div>
 
-<div id="posts"></div>
+  <script>
+    var firebaseConfig = {
+      apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
+      authDomain: "baynna-9884f.firebaseapp.com",
+      projectId: "baynna-9884f",
+      storageBucket: "baynna-9884f.appspot.com",
+      messagingSenderId: "377002437252",
+      appId: "1:377002437252:web:dc7f507818e8abace970d1"
+    };
 
-</div>
+    firebase.initializeApp(firebaseConfig);
 
-<script>
+    var db = firebase.firestore();
+    var auth = firebase.auth();
 
-var firebaseConfig = {
-apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
-authDomain: "baynna-9884f.firebaseapp.com",
-projectId: "baynna-9884f",
-storageBucket: "baynna-9884f.appspot.com",
-messagingSenderId: "377002437252",
-appId: "1:377002437252:web:dc7f507818e8abace970d1"
-};
+    function login() {
+      var provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithRedirect(provider);
+    }
 
-firebase.initializeApp(firebaseConfig);
+    function logout() {
+      auth.signOut().then(function() {
+        document.getElementById("user").innerText = "غير مسجل";
+      });
+    }
 
-var db = firebase.firestore();
-var auth = firebase.auth();
+    auth.getRedirectResult().catch(function(error) {
+      alert(error.message);
+    });
 
-function login(){
+    auth.onAuthStateChanged(function(user) {
+      if (user) {
+        document.getElementById("user").innerText =
+          "مسجل: " + (user.displayName || user.email || "مستخدم");
+      } else {
+        document.getElementById("user").innerText = "غير مسجل";
+      }
+    });
 
-var provider = new firebase.auth.GoogleAuthProvider();
+    function send() {
+      var text = document.getElementById("text").value.trim();
+      var user = auth.currentUser;
 
-auth.signInWithPopup(provider);
+      if (!user) {
+        alert("سجل الدخول أولاً");
+        return;
+      }
 
-}
+      if (text === "") return;
 
-function logout(){
+      db.collection("posts").add({
+        text: text,
+        name: user.displayName || user.email || "مستخدم",
+        email: user.email || "",
+        time: Date.now()
+      }).then(function() {
+        document.getElementById("text").value = "";
+      });
+    }
 
-auth.signOut();
+    db.collection("posts")
+      .orderBy("time", "desc")
+      .onSnapshot(function(snapshot) {
+        var html = "";
 
-}
+        snapshot.forEach(function(doc) {
+          var data = doc.data();
+          html += "<div class='post'><strong>" +
+            (data.name || "مستخدم") +
+            "</strong><br>" +
+            (data.text || "") +
+            "</div>";
+        });
 
-function send(){
-
-var text=document.getElementById("text").value;
-
-var user=auth.currentUser;
-
-if(!user){alert("سجل الدخول");return;}
-
-db.collection("posts").add({
-
-text:text,
-name:user.displayName
-
-});
-
-}
-
-db.collection("posts").orderBy("text").onSnapshot(function(s){
-
-var html="";
-
-s.forEach(function(doc){
-
-html+="<div class='post'>"+doc.data().name+" : "+doc.data().text+"</div>";
-
-});
-
-document.getElementById("posts").innerHTML=html;
-
-});
-
-</script>
+        document.getElementById("posts").innerHTML = html;
+      });
+  </script>
 
 </body>
 </html>
