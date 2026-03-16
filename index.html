@@ -1,205 +1,22 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>baynna</title>
+<meta charset="UTF-8">
+<title>baynna</title>
 
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
-  <style>
-    body {
-      font-family: Tahoma, Arial, sans-serif;
-      background: #f5f7fb;
-      margin: 0;
-      padding: 20px;
-    }
+<style>
+body {
+font-family: Tahoma;
+background: #f5f5f5;
+padding: 20px;
+}
 
-    .box {
-      max-width: 700px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.08);
-    }
-
-    h2 {
-      margin: 0 0 15px 0;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    .row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    input {
-      flex: 1;
-      padding: 10px;
-      font-size: 16px;
-    }
-
-    button {
-      padding: 10px 16px;
-      cursor: pointer;
-      border: none;
-      border-radius: 8px;
-      background: #2563eb;
-      color: white;
-    }
-
-    button:hover {
-      background: #1d4ed8;
-    }
-
-    #posts {
-      margin-top: 20px;
-    }
-
-    .post {
-      background: #eee;
-      padding: 12px;
-      margin-bottom: 10px;
-      border-radius: 8px;
-      text-align: right;
-    }
-
-    .muted {
-      color: #666;
-      font-size: 14px;
-      margin-top: 5px;
-    }
-
-    #app {
-      display: none;
-    }
-  </style>
-</head>
-<body>
-  <div class="box">
-    <div class="topbar">
-      <div>
-        <h2>بيننا</h2>
-        <div id="userInfo" class="muted">غير مسجل الدخول</div>
-      </div>
-
-      <div>
-        <button id="loginBtn" onclick="login()">تسجيل الدخول بجوجل</button>
-        <button id="logoutBtn" onclick="logout()" style="display:none;">تسجيل الخروج</button>
-      </div>
-    </div>
-
-    <div id="app">
-      <div class="row">
-        <input id="story" type="text" placeholder="اكتب منشورك هنا" />
-        <button onclick="add()">إضافة</button>
-      </div>
-    </div>
-
-    <div id="posts"></div>
-  </div>
-
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyA_pNFhFcOArArEmK1IiQ-pAlIVXdOM1T8",
-      authDomain: "baynna-9884f.firebaseapp.com",
-      projectId: "baynna-9884f",
-      storageBucket: "baynna-9884f.appspot.com",
-      messagingSenderId: "377002437252",
-      appId: "1:377002437252:web:dc7f507818e8abace970d1",
-      measurementId: "G-BLH1DN1XEL"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-    const provider = new firebase.auth.GoogleAuthProvider();
-
-    function showPost(text, name) {
-      let div = document.createElement("div");
-      div.className = "post";
-      div.innerHTML = "<strong>" + name + "</strong><br>" + text;
-      document.getElementById("posts").appendChild(div);
-    }
-
-    function loadPosts() {
-      document.getElementById("posts").innerHTML = "";
-
-      db.collection("stories")
-        .orderBy("time", "desc")
-        .get()
-        .then((snapshot) => {
-          snapshot.forEach((doc) => {
-            const data = doc.data();
-            showPost(data.text || "", data.name || "مستخدم");
-          });
-        });
-    }
-
-    function add() {
-      let text = document.getElementById("story").value.trim();
-      let user = auth.currentUser;
-
-      if (!user) {
-        alert("سجل الدخول أولاً");
-        return;
-      }
-
-      if (text === "") return;
-
-      db.collection("stories").add({
-        text: text,
-        uid: user.uid,
-        name: user.displayName || "مستخدم",
-        email: user.email || "",
-        time: new Date()
-      }).then(() => {
-        document.getElementById("story").value = "";
-        loadPosts();
-      });
-    }
-
-    function login() {
-      auth.signInWithPopup(provider).catch((error) => {
-        alert("حدث خطأ في تسجيل الدخول");
-        console.log(error);
-      });
-    }
-
-    function logout() {
-      auth.signOut();
-    }
-
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        document.getElementById("userInfo").innerText =
-          "مسجل الدخول: " + (user.displayName || user.email);
-
-        document.getElementById("loginBtn").style.display = "none";
-        document.getElementById("logoutBtn").style.display = "inline-block";
-        document.getElementById("app").style.display = "block";
-      } else {
-        document.getElementById("userInfo").innerText = "غير مسجل الدخول";
-        document.getElementById("loginBtn").style.display = "inline-block";
-        document.getElementById("logoutBtn").style.display = "none";
-        document.getElementById("app").style.display = "none";
-      }
-
-      loadPosts();
-    });
-  </script>
-</body>
-</html>
+.box {
+max-width: 700px;
+margin: auto;
+background: white;
+padding: 20px
