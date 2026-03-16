@@ -80,6 +80,29 @@ const db = getFirestore(app);
   alert("تم نشر القصة");
 
 }
+  async function loadStories() {
+
+  const querySnapshot = await getDocs(collection(db, "stories"));
+
+  const container = document.getElementById("posts");
+
+  container.innerHTML = "";
+
+  querySnapshot.forEach((doc) => {
+
+    const data = doc.data();
+
+    const div = document.createElement("div");
+
+    div.innerText = data.content;
+
+    container.appendChild(div);
+
+  });
+
+}
+
+loadStories();
 </script></body>
 </html>
 
