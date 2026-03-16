@@ -1,87 +1,49 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>بيننا</title>
+<title>baynna</title>
 
-<style>
-
-body{
-font-family:Tahoma;
-background:#f5f7fb;
-margin:0;
-}
-
-.container{
-max-width:700px;
-margin:40px auto;
-background:white;
-padding:20px;
-border-radius:12px;
-box-shadow:0 0 10px #ccc;
-}
-
-textarea{
-width:100%;
-height:120px;
-padding:10px;
-}
-
-button{
-background:blue;
-color:white;
-padding:10px;
-border:none;
-margin-top:10px;
-cursor:pointer;
-}
-
-.post{
-background:#eee;
-padding:10px;
-margin-top:10px;
-border-radius:8px;
-}
-
-</style>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
 </head>
 
 <body>
 
-<div class="container">
+<h2>اكتب منشور</h2>
 
-<h1>من يفهمك كما أنت</h1>
-
-<p>اكتب ما في قلبك… هنا لن يحكم عليك أحد</p>
-
-<textarea id="story"></textarea>
-
-<br>
-
-<button onclick="add()">نشر</button>
-
-<hr>
+<input id="story" type="text">
+<button onclick="add()">إضافة</button>
 
 <div id="posts"></div>
 
-</div>
-
 <script>
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA_pNFhFcOArArEmK1IiQ-pAlIVXdOM1T8",
+  authDomain: "baynna-9884f.firebaseapp.com",
+  projectId: "baynna-9884f",
+  storageBucket: "baynna-9884f.appspot.com",
+  messagingSenderId: "377002437252",
+  appId: "1:377002437252:web:dc7f507818e8abace970d1",
+  measurementId: "G-BLH1DN1XEL"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
 
 function add(){
 
-let text=document.getElementById("story").value;
+let text = document.getElementById("story").value;
 
 if(text=="") return;
 
-let div=document.createElement("div");
-
-div.className="post";
-
-div.innerText=text;
-
-document.getElementById("posts").appendChild(div);
+db.collection("posts").add({
+text: text,
+time: new Date()
+});
 
 document.getElementById("story").value="";
 
