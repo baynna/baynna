@@ -9,48 +9,67 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
   <style>
-    body{
+    body {
       font-family: Tahoma, Arial, sans-serif;
-      background:#f5f7fb;
-      margin:0;
-      padding:20px;
+      background: #f5f7fb;
+      margin: 0;
+      padding: 20px;
     }
 
-    h2{
-      margin-top:0;
+    h2 {
+      margin: 0 0 15px 0;
     }
 
-    input{
-      width:260px;
-      padding:8px;
+    .box {
+      max-width: 700px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.08);
     }
 
-    button{
-      padding:8px 12px;
-      cursor:pointer;
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
     }
 
-    #posts{
-      margin-top:20px;
+    input {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
     }
 
-    .post{
-      background:#fff;
-      border:1px solid #ddd;
-      padding:10px;
-      margin-bottom:10px;
-      border-radius:8px;
+    button {
+      padding: 10px 16px;
+      cursor: pointer;
+    }
+
+    #posts {
+      margin-top: 20px;
+    }
+
+    .post {
+      background: #eee;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      text-align: right;
     }
   </style>
 </head>
 <body>
+  <div class="box">
+    <h2>اكتب منشور</h2>
 
-  <h2>اكتب منشور</h2>
+    <div class="row">
+      <input id="story" type="text" />
+      <button onclick="add()">إضافة</button>
+    </div>
 
-  <input id="story" type="text" />
-  <button onclick="add()">إضافة</button>
-
-  <div id="posts"></div>
+    <div id="posts"></div>
+  </div>
 
   <script>
     const firebaseConfig = {
@@ -66,6 +85,26 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    function showPost(text) {
+      let div = document.createElement("div");
+      div.className = "post";
+      div.innerText = text;
+      document.getElementById("posts").appendChild(div);
+    }
+
+    function loadPosts() {
+      document.getElementById("posts").innerHTML = "";
+
+      db.collection("stories").get().then((snapshot) => {
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.text) {
+            showPost(data.text);
+          }
+        });
+      });
+    }
+
     function add() {
       let text = document.getElementById("story").value;
 
@@ -75,14 +114,12 @@
         text: text,
         time: new Date()
       }).then(() => {
-        let div = document.createElement("div");
-        div.className = "post";
-        div.innerText = text;
-        document.getElementById("posts").appendChild(div);
         document.getElementById("story").value = "";
+        loadPosts();
       });
     }
-  </script>
 
+    loadPosts();
+  </script>
 </body>
 </html>
