@@ -101,14 +101,14 @@
 
     <div class="row">
       <input id="text" placeholder="اكتب منشور">
-      <button onclick="send()">نشر</button>
+      <button onclick="sendPost()">نشر</button>
     </div>
 
     <div id="posts"></div>
   </div>
 
   <script>
-    var firebaseConfig = {
+    const firebaseConfig = {
       apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
       authDomain: "baynna-9884f.firebaseapp.com",
       projectId: "baynna-9884f",
@@ -119,49 +119,49 @@
 
     firebase.initializeApp(firebaseConfig);
 
-    var auth = firebase.auth();
-    var db = firebase.firestore();
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
     function register() {
-      var email = document.getElementById("email").value.trim();
-      var password = document.getElementById("password").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
 
-      if (email === "" || password === "") {
+      if (!email || !password) {
         alert("اكتب البريد وكلمة المرور");
         return;
       }
 
       auth.createUserWithEmailAndPassword(email, password)
-        .then(function() {
+        .then(() => {
           alert("تم إنشاء الحساب");
         })
-        .catch(function(error) {
+        .catch((error) => {
           alert(error.message);
         });
     }
 
     function login() {
-      var email = document.getElementById("email").value.trim();
-      var password = document.getElementById("password").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
 
-      if (email === "" || password === "") {
+      if (!email || !password) {
         alert("اكتب البريد وكلمة المرور");
         return;
       }
 
       auth.signInWithEmailAndPassword(email, password)
-        .catch(function(error) {
+        .catch((error) => {
           alert(error.message);
         });
     }
 
     function logout() {
-      auth.signOut().then(function() {
-        document.getElementById("user").innerText = "غير مسجل";
+      auth.signOut().catch((error) => {
+        alert(error.message);
       });
     }
 
-    auth.onAuthStateChanged(function(user) {
+    auth.onAuthStateChanged((user) => {
       if (user) {
         document.getElementById("user").innerText = "مسجل: " + user.email;
       } else {
@@ -169,44 +169,49 @@
       }
     });
 
-    function send() {
-      var text = document.getElementById("text").value.trim();
-      var user = auth.currentUser;
+    function sendPost() {
+      const text = document.getElementById("text").value.trim();
+      const user = auth.currentUser;
 
       if (!user) {
         alert("سجل الدخول أولاً");
         return;
       }
 
-      if (text === "") return;
+      if (!text) return;
 
       db.collection("posts").add({
         text: text,
         name: user.email,
         uid: user.uid,
-        time: Date.now()
-      }).then(function() {
+        time: firebase.firestore.FieldValue.serverTimestamp()
+      })
+      .then(() => {
         document.getElementById("text").value = "";
-      }).catch(function(error) {
+      })
+      .catch((error) => {
         alert(error.message);
       });
     }
 
     db.collection("posts")
       .orderBy("time", "desc")
-      .onSnapshot(function(snapshot) {
-        var html = "";
+      .onSnapshot((snapshot) => {
+        let html = "";
 
-        snapshot.forEach(function(doc) {
-          var data = doc.data();
-          html += "<div class='post'><strong>" +
-            (data.name || "مستخدم") +
-            "</strong><br>" +
-            (data.text || "") +
-            "</div>";
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          html += `
+            <div class="post">
+              <strong>${data.name || "مستخدم"}</strong><br>
+              ${data.text || ""}
+            </div>
+          `;
         });
 
         document.getElementById("posts").innerHTML = html;
+      }, (error) => {
+        alert(error.message);
       });
   </script>
 
