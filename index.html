@@ -1,84 +1,98 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-
 <meta charset="UTF-8">
-<title>بيننا</title>
+<title>baynna</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+<style>
+body{font-family:Tahoma;background:#f2f2f2;padding:20px}
+.box{max-width:600px;margin:auto;background:white;padding:20px;border-radius:10px}
+button{padding:8px 12px;margin:5px}
+input{padding:8px;width:70%}
+.post{background:#eee;margin:5px;padding:8px;border-radius:6px}
+</style>
+
 </head>
 <body>
 
+<div class="box">
+
 <h2>بيننا</h2>
 
-<button onclick="login()">تسجيل الدخول بجوجل</button>
+<button onclick="login()">تسجيل الدخول</button>
+<button onclick="logout()">خروج</button>
 
 <br><br>
 
-<input id="text" placeholder="اكتب منشور">
+<input id="text">
 <button onclick="send()">نشر</button>
 
 <div id="posts"></div>
 
+</div>
+
 <script>
 
 var firebaseConfig = {
-apiKey: "PUT_API_KEY",
-authDomain: "PUT_AUTH",
-projectId: "PUT_ID",
-storageBucket: "PUT_BUCKET",
-messagingSenderId: "PUT_MSG",
-appId: "PUT_APP"
+apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
+authDomain: "baynna-9884f.firebaseapp.com",
+projectId: "baynna-9884f",
+storageBucket: "baynna-9884f.appspot.com",
+messagingSenderId: "377002437252",
+appId: "1:377002437252:web:dc7f507818e8abace970d1"
 };
 
 firebase.initializeApp(firebaseConfig);
 
 var db = firebase.firestore();
-
+var auth = firebase.auth();
 
 function login(){
 
 var provider = new firebase.auth.GoogleAuthProvider();
 
-firebase.auth().signInWithPopup(provider);
+auth.signInWithPopup(provider);
 
 }
 
+function logout(){
+
+auth.signOut();
+
+}
 
 function send(){
 
-var text = document.getElementById("text").value;
+var text=document.getElementById("text").value;
 
-firebase.auth().onAuthStateChanged(function(user){
+var user=auth.currentUser;
 
-if(user){
+if(!user){alert("سجل الدخول");return;}
 
 db.collection("posts").add({
+
 text:text,
 name:user.displayName
-});
-
-}
 
 });
 
 }
 
-
-db.collection("posts").onSnapshot(function(snapshot){
+db.collection("posts").orderBy("text").onSnapshot(function(s){
 
 var html="";
 
-snapshot.forEach(function(doc){
+s.forEach(function(doc){
 
-html += "<p>"+doc.data().name+" : "+doc.data().text+"</p>";
+html+="<div class='post'>"+doc.data().name+" : "+doc.data().text+"</div>";
 
 });
 
-document.getElementById("posts").innerHTML = html;
+document.getElementById("posts").innerHTML=html;
 
 });
 
