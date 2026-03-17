@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>بيننا</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -10,210 +9,175 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <style>
-    body {
-      font-family: Tahoma, Arial, sans-serif;
-      background: #f5f7fb;
-      margin: 0;
-      padding: 20px;
+    body{
+      font-family: Arial;
+      background:#f5f5f5;
+      padding:20px;
     }
 
-    .box {
-      max-width: 700px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.08);
+    .box{
+      max-width:600px;
+      margin:auto;
+      background:white;
+      padding:20px;
+      border-radius:10px;
     }
 
-    h2 {
-      margin: 0 0 15px 0;
+    input{
+      padding:10px;
+      margin:5px;
+      width:45%;
     }
 
-    .row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
+    button{
+      padding:10px;
+      margin:5px;
     }
 
-    input {
-      flex: 1;
-      min-width: 220px;
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+    .post{
+      background:#eee;
+      padding:10px;
+      margin-top:10px;
     }
 
-    button {
-      padding: 10px 16px;
-      border: none;
-      border-radius: 8px;
-      background: #2563eb;
-      color: white;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #1d4ed8;
-    }
-
-    .muted {
-      color: #666;
-      font-size: 14px;
-      margin-bottom: 15px;
-    }
-
-    .post {
-      background: #eee;
-      padding: 12px;
-      margin-bottom: 10px;
-      border-radius: 8px;
-    }
-
-    #authBox {
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 1px solid #ddd;
-    }
   </style>
 </head>
 <body>
 
-  <div class="box">
-    <h2>بيننا</h2>
+<div class="box">
 
-    <div id="authBox">
-      <div class="row">
-        <input id="email" type="email" placeholder="البريد الإلكتروني">
-        <input id="password" type="password" placeholder="كلمة المرور">
-      </div>
+<h2>بيننا</h2>
 
-      <div class="row">
-        <button onclick="register()">إنشاء حساب</button>
-        <button onclick="login()">تسجيل الدخول</button>
-        <button onclick="logout()">خروج</button>
-      </div>
+<input id="email" placeholder="البريد">
+<input id="password" placeholder="كلمة المرور">
 
-      <p id="user" class="muted">غير مسجل</p>
-    </div>
+<br>
 
-    <div class="row">
-      <input id="text" placeholder="اكتب منشور">
-      <button onclick="sendPost()">نشر</button>
-    </div>
+<button onclick="register()">إنشاء حساب</button>
+<button onclick="login()">تسجيل الدخول</button>
+<button onclick="logout()">خروج</button>
 
-    <div id="posts"></div>
-  </div>
+<p id="user">غير مسجل</p>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
-      authDomain: "baynna-9884f.firebaseapp.com",
-      projectId: "baynna-9884f",
-      storageBucket: "baynna-9884f.appspot.com",
-      messagingSenderId: "377002437252",
-      appId: "1:377002437252:web:dc7f507818e8abace970d1"
-    };
+<hr>
 
-    firebase.initializeApp(firebaseConfig);
+<input id="text" placeholder="اكتب منشور">
+<button onclick="sendPost()">نشر</button>
 
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+<div id="posts"></div>
 
-    function register() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
+</div>
 
-      if (!email || !password) {
-        alert("اكتب البريد وكلمة المرور");
-        return;
-      }
+<script>
 
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(() => {
-          alert("تم إنشاء الحساب");
-        })
-        .catch((error) => {
-          alert(error.message);
-        });
-    }
+const firebaseConfig = {
+  apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
+  authDomain: "baynna-9884f.firebaseapp.com",
+  projectId: "baynna-9884f",
+  storageBucket: "baynna-9884f.appspot.com",
+  messagingSenderId: "377002437252",
+  appId: "1:377002437252:web:dc7f507818e8abace970d1",
+  measurementId: "G-BLHD1NIXEL"
+};
 
-    function login() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
+firebase.initializeApp(firebaseConfig);
 
-      if (!email || !password) {
-        alert("اكتب البريد وكلمة المرور");
-        return;
-      }
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-      auth.signInWithEmailAndPassword(email, password)
-        .catch((error) => {
-          alert(error.message);
-        });
-    }
 
-    function logout() {
-      auth.signOut().catch((error) => {
-        alert(error.message);
-      });
-    }
+function register(){
 
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        document.getElementById("user").innerText = "مسجل: " + user.email;
-      } else {
-        document.getElementById("user").innerText = "غير مسجل";
-      }
-    });
+let email=document.getElementById("email").value;
+let password=document.getElementById("password").value;
 
-    function sendPost() {
-      const text = document.getElementById("text").value.trim();
-      const user = auth.currentUser;
+auth.createUserWithEmailAndPassword(email,password)
+.catch(e=>alert(e.message));
 
-      if (!user) {
-        alert("سجل الدخول أولاً");
-        return;
-      }
+}
 
-      if (!text) return;
 
-      db.collection("posts").add({
-        text: text,
-        name: user.email,
-        uid: user.uid,
-        time: firebase.firestore.FieldValue.serverTimestamp()
-      })
-      .then(() => {
-        document.getElementById("text").value = "";
-      })
-      .catch((error) => {
-        alert(error.message);
-      });
-    }
+function login(){
 
-    db.collection("posts")
-      .orderBy("time", "desc")
-      .onSnapshot((snapshot) => {
-        let html = "";
+let email=document.getElementById("email").value;
+let password=document.getElementById("password").value;
 
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          html += `
-            <div class="post">
-              <strong>${data.name || "مستخدم"}</strong><br>
-              ${data.text || ""}
-            </div>
-          `;
-        });
+auth.signInWithEmailAndPassword(email,password)
+.catch(e=>alert(e.message));
 
-        document.getElementById("posts").innerHTML = html;
-      }, (error) => {
-        alert(error.message);
-      });
-  </script>
+}
+
+
+function logout(){
+
+auth.signOut();
+
+}
+
+
+auth.onAuthStateChanged(user=>{
+
+if(user){
+
+document.getElementById("user").innerText=user.email;
+
+}else{
+
+document.getElementById("user").innerText="غير مسجل";
+
+}
+
+});
+
+
+function sendPost(){
+
+let text=document.getElementById("text").value;
+let user=auth.currentUser;
+
+if(!user){
+
+alert("سجل الدخول");
+
+return;
+
+}
+
+db.collection("posts").add({
+
+text:text,
+name:user.email,
+time:Date.now()
+
+});
+
+}
+
+
+db.collection("posts")
+.orderBy("time","desc")
+.onSnapshot(snap=>{
+
+let html="";
+
+snap.forEach(doc=>{
+
+let d=doc.data();
+
+html+=`
+<div class="post">
+<b>${d.name}</b><br>
+${d.text}
+</div>
+`;
+
+});
+
+document.getElementById("posts").innerHTML=html;
+
+});
+
+</script>
 
 </body>
 </html>
