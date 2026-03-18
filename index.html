@@ -1,76 +1,78 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<title>بيننا</title>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<head>
+  <meta charset="UTF-8">
+  <title>بيننا</title>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
 </head>
 
 <body style="text-align:center;">
 
-<h2>بيننا</h2>
+  <h2>بيننا</h2>
 
-<input id="email" placeholder="البريد">
-<br><br>
+  <input id="email" placeholder="البريد">
+  <br><br>
 
-<input id="password" type="password" placeholder="كلمة المرور">
-<br><br>
+  <input id="password" type="password" placeholder="كلمة المرور">
+  <br><br>
 
-<button onclick="register()">إنشاء حساب</button>
-<button onclick="login()">تسجيل دخول</button>
-<button onclick="logout()">خروج</button>
+  <button onclick="register()">إنشاء حساب</button>
+  <button onclick="login()">تسجيل دخول</button>
+  <button onclick="logout()">خروج</button>
 
-<p id="user">غير مسجل</p>
+  <p id="user">غير مسجل</p>
 
-<script>
+  <script>
 
-const firebaseConfig = {
-apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
-authDomain: "baynna-9884f.firebaseapp.com",
-projectId: "baynna-9884f",
-storageBucket: "baynna-9884f.appspot.com",
-messagingSenderId: "377002437252",
-appId: "1:377002437252:web:dc7f507818e8abace970d1",
-measurementId: "G-BLH1DN1XEL"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
+      authDomain: "baynna-9884f.firebaseapp.com",
+      projectId: "baynna-9884f",
+      storageBucket: "baynna-9884f.firebasestorage.app",
+      messagingSenderId: "377002437252",
+      appId: "1:377002437252:web:dc7f507818e8abace970d1",
+      measurementId: "G-BLH1DN1XEL"
+    };
 
-firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
 
-const auth = firebase.auth();
+    const auth = firebase.auth();
 
-function register(){
+    function register() {
 
-const email=document.getElementById("email").value;
-const password=document.getElementById("password").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
-auth.createUserWithEmailAndPassword(email,password)
-.catch(e=>alert(e.message));
+      auth.createUserWithEmailAndPassword(email, password)
+        .catch(e => alert(e.message));
 
-}
+    }
 
-function login(){
+    function login() {
 
-const email=document.getElementById("email").value;
-const password=document.getElementById("password").value;
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
-auth.signInWithEmailAndPassword(email,password)
-.catch(e=>alert(e.message));
+      auth.signInWithEmailAndPassword(email, password)
+        .catch(e => alert(e.message));
 
-}
+    }
 
-function logout(){
-auth.signOut();
-}
+    function logout() {
+      auth.signOut();
+    }
 
-auth.onAuthStateChanged(user=>{
-document.getElementById("user").innerText=
-user?user.email:"غير مسجل";
-});
+    auth.onAuthStateChanged(user => {
+      document.getElementById("user").innerText =
+        user ? user.email : "غير مسجل";
+    });
 
-</script>
+  </script>
 
 </body>
+
 </html>
