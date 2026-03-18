@@ -1,204 +1,78 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>بيننا</title>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      padding: 20px;
-      margin: 0;
-    }
-
-    .box {
-      max-width: 600px;
-      margin: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-    }
-
-    h2 {
-      margin-top: 0;
-    }
-
-    .row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-
-    input {
-      padding: 10px;
-      flex: 1;
-      min-width: 220px;
-      box-sizing: border-box;
-    }
-
-    button {
-      padding: 10px 14px;
-      cursor: pointer;
-    }
-
-    .post {
-      background: #eee;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 6px;
-    }
-
-    #user {
-      margin: 10px 0;
-      font-weight: bold;
-    }
-  </style>
 </head>
 <body>
 
-  <div class="box">
-    <h2>بيننا</h2>
+<h2>بيننا</h2>
 
-    <div class="row">
-      <input id="email" type="email" placeholder="البريد الإلكتروني" />
-      <input id="password" type="password" placeholder="كلمة المرور" />
-    </div>
+<input id="email" placeholder="البريد">
+<br><br>
 
-    <div class="row">
-      <button onclick="register()">إنشاء حساب</button>
-      <button onclick="login()">تسجيل الدخول</button>
-      <button onclick="logout()">خروج</button>
-    </div>
+<input id="password" type="password" placeholder="كلمة المرور">
+<br><br>
 
-    <p id="user">غير مسجل</p>
+<button onclick="register()">إنشاء حساب</button>
+<button onclick="login()">تسجيل دخول</button>
+<button onclick="logout()">خروج</button>
 
-    <hr />
+<p id="user">غير مسجل</p>
 
-    <div class="row">
-      <input id="text" placeholder="اكتب منشور" />
-      <button onclick="sendPost()">نشر</button>
-    </div>
+<script>
 
-    <div id="posts"></div>
-  </div>
+const firebaseConfig = {
+  apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
+  authDomain: "baynna-9884f.firebaseapp.com",
+  projectId: "baynna-9884f",
+  storageBucket: "baynna-9884f.appspot.com",
+  messagingSenderId: "377002437252",
+  appId: "1:377002437252:web:dc7f507818e8abace970d1",
+  measurementId: "G-BLH1DN1XEL"
+};
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
-      authDomain: "baynna-9884f.firebaseapp.com",
-      projectId: "baynna-9884f",
-      storageBucket: "baynna-9884f.appspot.com",
-      messagingSenderId: "377002437252",
-      appId: "1:377002437252:web:dc7f507818e8abace970d1",
-      measurementId: "G-BLH1DN1XEL"
-    };
+firebase.initializeApp(firebaseConfig);
 
-    firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+function register() {
 
-    function register() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-      if (!email || !password) {
-        alert("اكتب البريد وكلمة المرور");
-        return;
-      }
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(() => {
+      alert("تم إنشاء الحساب");
+    })
+    .catch(e => alert(e.message));
 
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(() => {
-          alert("تم إنشاء الحساب");
-        })
-        .catch((e) => {
-          alert(e.message);
-        });
-    }
+}
 
-    function login() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
+function login() {
 
-      if (!email || !password) {
-        alert("اكتب البريد وكلمة المرور");
-        return;
-      }
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-      auth.signInWithEmailAndPassword(email, password)
-        .catch((e) => {
-          alert(e.message);
-        });
-    }
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(e => alert(e.message));
 
-    function logout() {
-      auth.signOut().catch((e) => {
-        alert(e.message);
-      });
-    }
+}
 
-    auth.onAuthStateChanged((user) => {
-      document.getElementById("user").innerText = user ? user.email : "غير مسجل";
-    });
+function logout() {
+  auth.signOut();
+}
 
-    function sendPost() {
-      const text = document.getElementById("text").value.trim();
-      const user = auth.currentUser;
+auth.onAuthStateChanged(user => {
+  document.getElementById("user").innerText =
+    user ? user.email : "غير مسجل";
+});
 
-      if (!user) {
-        alert("سجل الدخول أولاً");
-        return;
-      }
-
-      if (!text) {
-        return;
-      }
-
-      db.collection("posts")
-        .add({
-          text: text,
-          name: user.email,
-          uid: user.uid,
-          time: Date.now()
-        })
-        .then(() => {
-          document.getElementById("text").value = "";
-        })
-        .catch((e) => {
-          alert(e.message);
-        });
-    }
-
-    db.collection("posts")
-      .orderBy("time", "desc")
-      .onSnapshot(
-        (snap) => {
-          let html = "";
-
-          snap.forEach((doc) => {
-            const d = doc.data();
-            html += `
-              <div class="post">
-                <b>${d.name || "مستخدم"}</b><br>
-                ${d.text || ""}
-              </div>
-            `;
-          });
-
-          document.getElementById("posts").innerHTML = html;
-        },
-        (e) => {
-          alert(e.message);
-        }
-      );
-  </script>
+</script>
 
 </body>
 </html>
