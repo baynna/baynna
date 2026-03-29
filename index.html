@@ -23,15 +23,15 @@
 
 <script>
 
- const firebaseConfig = {
-    apiKey: "AIzaSyDenhDdt7d-7GmslPRzw88ser5Orfp63OE",
-    authDomain: "baynnaa.firebaseapp.com",
-    projectId: "baynnaa",
-    storageBucket: "baynnaa.firebasestorage.app",
-    messagingSenderId: "694347629104",
-    appId: "1:694347629104:web:5e730f7682ac3ab698e3f5",
-    measurementId: "G-GC1EKMV23Y"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyDenhDdt7d-7GmslPRzw88ser5Orfp63OE",
+  authDomain: "baynnaa.firebaseapp.com",
+  projectId: "baynnaa",
+  storageBucket: "baynnaa.appspot.com",
+  messagingSenderId: "694347629104",
+  appId: "1:694347629104:web:5e730f7682ac3ab698e3f5",
+  measurementId: "G-GC1EKMV23Y"
+};
 
 firebase.initializeApp(firebaseConfig);
 
@@ -41,8 +41,8 @@ function register() {
   const password = document.getElementById("password").value;
 
   firebase.auth().createUserWithEmailAndPassword(email, password)
-    .then(() => alert("تم إنشاء الحساب"))
-    .catch(e => alert(e.message));
+  .then(() => alert("تم إنشاء الحساب"))
+  .catch(e => alert(e.message));
 }
 
 // تسجيل دخول
@@ -51,8 +51,8 @@ function login() {
   const password = document.getElementById("password").value;
 
   firebase.auth().signInWithEmailAndPassword(email, password)
-    .then(() => alert("تم تسجيل الدخول"))
-    .catch(e => alert(e.message));
+  .then(() => alert("تم تسجيل الدخول"))
+  .catch(e => alert(e.message));
 }
 
 // تسجيل خروج
@@ -62,8 +62,11 @@ function logout() {
 
 // عرض المستخدم
 firebase.auth().onAuthStateChanged(user => {
-  document.getElementById("user").innerText =
-    user ? "مرحباً " + user.email : "غير مسجل";
+  if (user) {
+    document.getElementById("user").innerText = "مرحباً " + user.email;
+  } else {
+    document.getElementById("user").innerText = "غير مسجل";
+  }
 });
 
 </script>
