@@ -8,15 +8,12 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
 </head>
-<body style="text-align:center;">
+<body style="text-align:center; font-family:Arial;">
 
 <h2>بيننا</h2>
 
-<input id="email" placeholder="البريد">
-<br><br>
-
-<input id="password" type="password" placeholder="كلمة المرور">
-<br><br>
+<input id="email" placeholder="البريد"><br><br>
+<input id="password" type="password" placeholder="كلمة المرور"><br><br>
 
 <button onclick="register()">إنشاء حساب</button>
 <button onclick="login()">تسجيل دخول</button>
@@ -27,35 +24,34 @@
 <script>
 
 const firebaseConfig = {
-  apiKey: "AIzaSyEndhDdt7d-7GmsLPRzw88ser50rfp630E",
+  apiKey: "AIzaSyDenhDdt7d-7GmslPRzw88ser5Orfp63OE",
   authDomain: "baynnaa.firebaseapp.com",
   projectId: "baynnaa",
-  storageBucket: "baynnaa.firebasestorage.app",
+  storageBucket: "baynnaa.appspot.com",
   messagingSenderId: "694347629104",
-  appId: "1:694347629104:web:5e730f7682ac3ab698e3f5",
-  measurementId: "G-GC1EKMV23Y"
+  appId: "1:694347629104:web:5e730f7682ac3ab698e3f5"
 };
 
 firebase.initializeApp(firebaseConfig);
 
 // إنشاء حساب
 function register() {
-  var email = document.getElementById("email").value;
-  var password = document.getElementById("password").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
   firebase.auth().createUserWithEmailAndPassword(email, password)
-  .then(() => alert("تم إنشاء الحساب"))
-  .catch(error => alert(error.message));
+    .then(() => alert("تم إنشاء الحساب"))
+    .catch(e => alert(e.message));
 }
 
 // تسجيل دخول
 function login() {
-  var email = document.getElementById("email").value;
-  var password = document.getElementById("password").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
   firebase.auth().signInWithEmailAndPassword(email, password)
-  .then(() => alert("تم تسجيل الدخول"))
-  .catch(error => alert(error.message));
+    .then(() => alert("تم تسجيل الدخول"))
+    .catch(e => alert(e.message));
 }
 
 // تسجيل خروج
@@ -65,11 +61,8 @@ function logout() {
 
 // عرض المستخدم
 firebase.auth().onAuthStateChanged(user => {
-  if (user) {
-    document.getElementById("user").innerText = "مرحباً " + user.email;
-  } else {
-    document.getElementById("user").innerText = "غير مسجل";
-  }
+  document.getElementById("user").innerText =
+    user ? "مرحباً " + user.email : "غير مسجل";
 });
 
 </script>
