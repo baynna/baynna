@@ -6,8 +6,10 @@
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 </head>
+
 <body style="text-align:center; font-family:Arial;">
 
 <h2>بيننا</h2>
@@ -21,21 +23,45 @@
 
 <p id="user">غير مسجل</p>
 
+<hr>
+
+<h3>اكتب ما بداخلك</h3>
+
+<select id="type">
+  <option value="feeling">💔 مشاعري</option>
+  <option value="general">🌍 عام</option>
+</select>
+
+<br><br>
+
+<textarea id="postInput" placeholder="اكتب..." style="width:300px; height:80px;"></textarea>
+
+<br><br>
+
+<button onclick="addPost()">شارك</button>
+
+<hr>
+
+<h3>المنشورات</h3>
+
+<div id="posts"></div>
+
 <script>
 
+// ⚠️ ضع بياناتك هنا
 const firebaseConfig = {
-  apiKey: "AIzaSyDenhDdt7d-7GmslPRzw88ser5Orfp63OE",
+  apiKey: "PASTE_YOUR_API_KEY_HERE",
   authDomain: "baynnaa.firebaseapp.com",
   projectId: "baynnaa",
   storageBucket: "baynnaa.appspot.com",
   messagingSenderId: "694347629104",
-  appId: "1:694347629104:web:5e730f7682ac3ab698e3f5",
-  measurementId: "G-GC1EKMV23Y"
+  appId: "1:694347629104:web:5e730f7682ac3ab698e3f5"
 };
 
 firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-// إنشاء حساب
+// تسجيل
 function register() {
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
@@ -55,18 +81,72 @@ function login() {
   .catch(e => alert(e.message));
 }
 
-// تسجيل خروج
+// خروج
 function logout() {
   firebase.auth().signOut();
 }
 
 // عرض المستخدم
 firebase.auth().onAuthStateChanged(user => {
-  if (user) {
-    document.getElementById("user").innerText = "مرحباً " + user.email;
-  } else {
-    document.getElementById("user").innerText = "غير مسجل";
+  document.getElementById("user").innerText =
+    user ? "مرحباً " + user.email : "غير مسجل";
+});
+
+// رد بيننا
+function baynnaReply(text) {
+  if (text.includes("تعب")) return "أحياناً التعب ليس ضعفاً… بل لأنك تحملت أكثر مما يجب";
+  if (text.includes("حب")) return "الحب الصادق لا يضيع… بل يترك أثراً فيك";
+  if (text.includes("حزين")) return "الحزن ليس نهاية… بل مرحلة تحتاج أن تعيشها بصدق";
+  return "أنا هنا معك… وأفهم ما تشعر به";
+}
+
+// إضافة منشور
+function addPost() {
+  const text = document.getElementById("postInput").value;
+  const type = document.getElementById("type").value;
+  const user = firebase.auth().currentUser;
+
+  if (!user) {
+    alert("سجل دخول أولاً");
+    return;
   }
+
+  let reply = "";
+
+  if (type === "feeling") {
+    reply = baynnaReply(text);
+  }
+
+  db.collection("posts").add({
+    text: text,
+    type: type,
+    reply: reply,
+    user: user.email,
+    time: Date.now()
+  });
+
+  document.getElementById("postInput").value = "";
+}
+
+// عرض المنشورات
+db.collection("posts").orderBy("time", "desc")
+.onSnapshot(snapshot => {
+
+  const postsDiv = document.getElementById("posts");
+  postsDiv.innerHTML = "";
+
+  snapshot.forEach(doc => {
+    const data = doc.data();
+
+    postsDiv.innerHTML += `
+      <div style="border:1px solid #ccc; padding:10px; margin:10px;">
+        <b>${data.user}</b><br><br>
+        ${data.text}
+        ${data.reply ? `<hr><i>${data.reply}</i>` : ""}
+      </div>
+    `;
+  });
+
 });
 
 </script>
