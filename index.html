@@ -1,186 +1,40 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>بيننا</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بيننا</title>
 
-  <style>
-    body{
-      font-family: Arial;
-      background:#f5f5f5;
-      margin:0;
-      padding:20px;
-      text-align:center;
-    }
-
-    .box{
-      max-width:700px;
-      margin:auto;
-      background:#fff;
-      padding:20px;
-      border-radius:18px;
-      box-shadow:0 4px 20px rgba(0,0,0,0.08);
-    }
-
-    input, textarea, select, button{
-      width:100%;
-      max-width:500px;
-      padding:12px;
-      margin:8px 0;
-      border-radius:10px;
-      border:1px solid #ddd;
-      font-size:16px;
-    }
-
-    button{
-      background:#222;
-      color:#fff;
-      border:none;
-      cursor:pointer;
-    }
-
-    button:hover{
-      opacity:.9;
-    }
-
-    .post{
-      text-align:right;
-      background:#ffffff;
-      max-width:700px;
-      margin:20px auto;
-      padding:18px;
-      border-radius:18px;
-      box-shadow:0 6px 20px rgba(0,0,0,0.08);
-      transition:0.3s;
-    }
-
-    .post:hover{
-      transform:scale(1.02);
-    }
-
-    .meta{
-      color:#777;
-      font-size:14px;
-      margin-bottom:10px;
-    }
-
-    .tag{
-      display:inline-block;
-      padding:6px 12px;
-      border-radius:999px;
-      background:#eee;
-      font-size:13px;
-      margin-bottom:10px;
-    }
-
-    .reply{
-      margin-top:12px;
-      padding:12px;
-      background:#f0f2f5;
-      border-radius:12px;
-    }
-  </style>
-
-</head>
-<body>
-
-<div class="box">
-
-  <h1>بيننا</h1>
-
-  <input id="nameInput" placeholder="اكتب اسمك أو بريدك">
-  <button onclick="login()">دخول</button>
-
-  <p id="user">غير مسجل</p>
-
-  <hr>
-
-  <h3>اكتب ما بداخلك</h3>
-
-  <select id="type">
-    <option value="feeling">💔 مشاعري</option>
-    <option value="general">🌍 عام</option>
-  </select>
-
-  <textarea id="text" placeholder="اكتب هنا..." rows="5"></textarea>
-
-  <button onclick="post()">شارك</button>
-
-</div>
-
-<h2>المنشورات</h2>
-<div id="posts"></div>
-
-<script>
-
-let user = localStorage.getItem("user") || "";
-let posts = JSON.parse(localStorage.getItem("posts") || "[]");
-
-function updateUser(){
-  document.getElementById("user").innerText =
-    user ? "مرحباً " + user : "غير مسجل";
+<style>
+body{
+  font-family: Arial;
+  background:#f5f5f5;
+  margin:0;
+  padding:20px;
+  text-align:center;
 }
 
-function login(){
-  let name = document.getElementById("nameInput").value.trim();
-  if(!name) return alert("اكتب اسمك");
-  user = name;
-  localStorage.setItem("user", user);
-  updateUser();
+.box{
+  max-width:700px;
+  margin:auto;
+  background:#fff;
+  padding:20px;
+  border-radius:18px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
 }
 
-function aiReply(text){
-  if(text.includes("حب")) return "الحب الصادق لا يضيع… حتى لو لم يكتمل.";
-  if(text.includes("خيانة")) return "الخيانة تكشف الحقيقة… لا تقلل منك.";
-  if(text.includes("تعب")) return "تعبك دليل أنك تحملت أكثر مما يجب.";
-  if(text.includes("حزن")) return "الحزن ليس ضعف… بل عمق شعور.";
-  return "بيننا يسمعك… وهذا بحد ذاته بداية الراحة.";
+input, textarea, select, button{
+  width:100%;
+  max-width:500px;
+  padding:12px;
+  margin:8px 0;
+  border-radius:10px;
+  border:1px solid #ddd;
+  font-size:16px;
 }
 
-function post(){
-  if(!user) return alert("سجل دخول");
-
-  let text = document.getElementById("text").value.trim();
-  let type = document.getElementById("type").value;
-
-  if(!text) return alert("اكتب شيء");
-
-  let newPost = {
-    user:user,
-    text:text,
-    type:type,
-    reply:type==="feeling" ? aiReply(text) : "",
-    time:new Date().toLocaleString()
-  };
-
-  posts.unshift(newPost);
-  localStorage.setItem("posts", JSON.stringify(posts));
-
-  document.getElementById("text").value="";
-  render();
-}
-
-function render(){
-  let div = document.getElementById("posts");
-  div.innerHTML="";
-
-  posts.forEach(p=>{
-    div.innerHTML += `
-      <div class="post">
-        <div class="tag">${p.type==="feeling" ? "💔 مشاعري" : "🌍 عام"}</div>
-        <div class="meta">${p.user} • ${p.time}</div>
-        <div>${p.text}</div>
-        ${p.reply ? `<div class="reply"><b>بيننا:</b><br>${p.reply}</div>` : ""}
-      </div>
-    `;
-  });
-}
-
-updateUser();
-render();
-
-</script>
-
-</body>
-</html>
+button{
+  background:#222;
+  color:#fff;
+  border:none;
+  cursor:pointer;
