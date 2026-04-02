@@ -5,53 +5,91 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>بيننا</title>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-
 <style>
 body {
-    font-family: Arial;
-    background: #f5f5f5;
-    text-align: center;
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  text-align: center;
+  padding: 20px;
 }
 
 .box {
-    max-width: 400px;
-    margin: auto;
-    background: white;
-    padding: 20px;
-    border-radius: 15px;
+  max-width: 500px;
+  margin: auto;
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.1);
 }
 
-input, button {
-    width: 90%;
-    padding: 10px;
-    margin: 10px;
+input, textarea, select {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: 1px solid #ddd;
 }
 
 button {
-    background: black;
-    color: white;
-    border: none;
-    border-radius: 8px;
+  width: 100%;
+  padding: 12px;
+  background: #222;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.post {
+  background: #fff;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 10px;
 }
 </style>
-</head>
 
+</head>
 <body>
 
 <div class="box">
+
 <h2>بيننا</h2>
 
-<input id="email" placeholder="البريد"><br>
-<input id="password" type="password" placeholder="كلمة المرور"><br>
+<input id="email" placeholder="اكتب ايميلك">
+<input id="password" type="password" placeholder="كلمة المرور">
 
-<button onclick="register()">إنشاء حساب</button>
 <button onclick="login()">دخول</button>
-<button onclick="logout()">خروج</button>
 
 <p id="user">غير مسجل</p>
+
+<hr>
+
+<h3>اكتب ما بداخلك</h3>
+
+<select id="feeling">
+  <option>مشاعري ❤️</option>
+  <option>حزين</option>
+  <option>سعيد</option>
+  <option>متعب</option>
+</select>
+
+<textarea id="postText" placeholder="اكتب هنا..."></textarea>
+
+<button onclick="addPost()">نشر</button>
+
+<h3>المنشورات</h3>
+<div id="posts"></div>
+
 </div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -60,40 +98,57 @@ const firebaseConfig = {
   projectId: "baynna-9884f",
   storageBucket: "baynna-9884f.appspot.com",
   messagingSenderId: "377002437252",
-  appId: "1:377002437252:web:dc7f507818e8abace970d1",
-  measurementId: "G-BLH1DN1XEL"
+  appId: "1:377002437252:web:dc7f507818e8abace970d1"
 };
 
 firebase.initializeApp(firebaseConfig);
 
-function register() {
-let email = document.getElementById("email").value;
-let password = document.getElementById("password").value;
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-firebase.auth().createUserWithEmailAndPassword(email, password)
-.then(() => alert("تم إنشاء الحساب"))
-.catch(e => alert(e.message));
-}
-
+// تسجيل دخول
 function login() {
-let email = document.getElementById("email").value;
-let password = document.getElementById("password").value;
+  let email = document.getElementById("email").value;
+  let password = document.getElementById("password").value;
 
-firebase.auth().signInWithEmailAndPassword(email, password)
-.then(() => alert("تم تسجيل الدخول"))
-.catch(e => alert(e.message));
+  auth.signInWithEmailAndPassword(email, password)
+  .then(() => {
+    document.getElementById("user").innerText = "تم تسجيل الدخول ✅";
+  })
+  .catch(() => {
+    auth.createUserWithEmailAndPassword(email, password);
+  });
 }
 
-function logout() {
-firebase.auth().signOut();
+// إضافة منشور
+function addPost() {
+  let text = document.getElementById("postText").value;
+  let feeling = document.getElementById("feeling").value;
+
+  db.collection("posts").add({
+    text: text,
+    feeling: feeling,
+    time: new Date()
+  });
+
+  document.getElementById("postText").value = "";
 }
 
-firebase.auth().onAuthStateChanged(user => {
-if(user){
-document.getElementById("user").innerText = "مرحبا " + user.email;
-}else{
-document.getElementById("user").innerText = "غير مسجل";
-}
+// عرض المنشورات
+db.collection("posts").orderBy("time","desc")
+.onSnapshot(snapshot => {
+  let postsDiv = document.getElementById("posts");
+  postsDiv.innerHTML = "";
+
+  snapshot.forEach(doc => {
+    let data = doc.data();
+    postsDiv.innerHTML += `
+      <div class="post">
+        <b>${data.feeling}</b>
+        <p>${data.text}</p>
+      </div>
+    `;
+  });
 });
 </script>
 
