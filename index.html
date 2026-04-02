@@ -4,185 +4,183 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>بيننا</title>
+
   <style>
     body{
-      font-family: Arial, sans-serif;
-      background:#f7f7f7;
+      font-family: Arial;
+      background:#f5f5f5;
       margin:0;
       padding:20px;
       text-align:center;
     }
+
     .box{
       max-width:700px;
-      margin:0 auto;
+      margin:auto;
       background:#fff;
       padding:20px;
-      border-radius:16px;
-      box-shadow:0 2px 10px rgba(0,0,0,0.08);
+      border-radius:18px;
+      box-shadow:0 4px 20px rgba(0,0,0,0.08);
     }
+
     input, textarea, select, button{
       width:100%;
       max-width:500px;
       padding:12px;
       margin:8px 0;
-      border:1px solid #ddd;
       border-radius:10px;
+      border:1px solid #ddd;
       font-size:16px;
-      box-sizing:border-box;
     }
+
     button{
       background:#222;
       color:#fff;
-      cursor:pointer;
       border:none;
+      cursor:pointer;
     }
+
     button:hover{
       opacity:.9;
     }
+
     .post{
       text-align:right;
-      background:#fff;
+      background:#ffffff;
       max-width:700px;
-      margin:15px auto;
-      padding:15px;
-      border-radius:16px;
-      box-shadow:0 2px 10px rgba(0,0,0,0.08);
+      margin:20px auto;
+      padding:18px;
+      border-radius:18px;
+      box-shadow:0 6px 20px rgba(0,0,0,0.08);
+      transition:0.3s;
     }
+
+    .post:hover{
+      transform:scale(1.02);
+    }
+
     .meta{
-      color:#666;
+      color:#777;
       font-size:14px;
       margin-bottom:10px;
     }
+
+    .tag{
+      display:inline-block;
+      padding:6px 12px;
+      border-radius:999px;
+      background:#eee;
+      font-size:13px;
+      margin-bottom:10px;
+    }
+
     .reply{
       margin-top:12px;
       padding:12px;
-      background:#f2f4f7;
+      background:#f0f2f5;
       border-radius:12px;
-      color:#333;
-    }
-    .tag{
-      display:inline-block;
-      padding:5px 10px;
-      border-radius:999px;
-      font-size:13px;
-      margin-bottom:10px;
-      background:#eee;
-    }
-    h1,h2,h3{
-      margin-top:0;
     }
   </style>
+
 </head>
 <body>
 
-  <div class="box">
-    <h1>بيننا</h1>
+<div class="box">
 
-    <input id="nameInput" placeholder="اكتب اسمك أو بريدك" />
-    <button onclick="saveUser()">دخول</button>
+  <h1>بيننا</h1>
 
-    <p id="userText">غير مسجل</p>
+  <input id="nameInput" placeholder="اكتب اسمك أو بريدك">
+  <button onclick="login()">دخول</button>
 
-    <hr>
+  <p id="user">غير مسجل</p>
 
-    <h3>اكتب ما بداخلك</h3>
+  <hr>
 
-    <select id="typeInput">
-      <option value="feeling">💔 مشاعري</option>
-      <option value="general">🌍 عام</option>
-    </select>
+  <h3>اكتب ما بداخلك</h3>
 
-    <textarea id="postInput" placeholder="اكتب هنا..." rows="5"></textarea>
+  <select id="type">
+    <option value="feeling">💔 مشاعري</option>
+    <option value="general">🌍 عام</option>
+  </select>
 
-    <button onclick="addPost()">شارك</button>
-  </div>
+  <textarea id="text" placeholder="اكتب هنا..." rows="5"></textarea>
 
-  <h2 style="margin-top:30px;">المنشورات</h2>
-  <div id="posts"></div>
+  <button onclick="post()">شارك</button>
 
-  <script>
-    let currentUser = localStorage.getItem("baynna_user") || "";
-    let posts = JSON.parse(localStorage.getItem("baynna_posts") || "[]");
+</div>
 
-    function updateUserView() {
-      document.getElementById("userText").innerText =
-        currentUser ? "مرحباً " + currentUser : "غير مسجل";
-    }
+<h2>المنشورات</h2>
+<div id="posts"></div>
 
-    function saveUser() {
-      const name = document.getElementById("nameInput").value.trim();
-      if (!name) {
-        alert("اكتب اسمك أولاً");
-        return;
-      }
-      currentUser = name;
-      localStorage.setItem("baynna_user", currentUser);
-      updateUserView();
-      alert("تم الدخول");
-    }
+<script>
 
-    function baynnaReply(text) {
-      if (text.includes("تعب")) return "أحياناً التعب ليس ضعفاً، بل لأنك حملت أكثر مما يجب.";
-      if (text.includes("حب")) return "الحب الصادق لا يضيع، حتى لو لم يكتمل كما تمنينا.";
-      if (text.includes("خيانة")) return "الخيانة لا تقلل من قيمتك، بل تكشف حقيقة الطرف الآخر.";
-      if (text.includes("حزين")) return "الحزن مرحلة صادقة، وليس عيباً أن تمر بها بهدوء.";
-      if (text.includes("ضايج") || text.includes("ضيق")) return "ليس كل ضيق نهاية، أحياناً هو بداية وضوح جديد.";
-      return "بيننا يسمعك… وأحياناً مجرد التعبير الصادق هو أول خطوة للراحة.";
-    }
+let user = localStorage.getItem("user") || "";
+let posts = JSON.parse(localStorage.getItem("posts") || "[]");
 
-    function addPost() {
-      if (!currentUser) {
-        alert("سجل دخول أولاً");
-        return;
-      }
+function updateUser(){
+  document.getElementById("user").innerText =
+    user ? "مرحباً " + user : "غير مسجل";
+}
 
-      const text = document.getElementById("postInput").value.trim();
-      const type = document.getElementById("typeInput").value;
+function login(){
+  let name = document.getElementById("nameInput").value.trim();
+  if(!name) return alert("اكتب اسمك");
+  user = name;
+  localStorage.setItem("user", user);
+  updateUser();
+}
 
-      if (!text) {
-        alert("اكتب شيئاً أولاً");
-        return;
-      }
+function aiReply(text){
+  if(text.includes("حب")) return "الحب الصادق لا يضيع… حتى لو لم يكتمل.";
+  if(text.includes("خيانة")) return "الخيانة تكشف الحقيقة… لا تقلل منك.";
+  if(text.includes("تعب")) return "تعبك دليل أنك تحملت أكثر مما يجب.";
+  if(text.includes("حزن")) return "الحزن ليس ضعف… بل عمق شعور.";
+  return "بيننا يسمعك… وهذا بحد ذاته بداية الراحة.";
+}
 
-      const post = {
-        user: currentUser,
-        text: text,
-        type: type,
-        reply: type === "feeling" ? baynnaReply(text) : "",
-        time: new Date().toLocaleString("ar-IQ")
-      };
+function post(){
+  if(!user) return alert("سجل دخول");
 
-      posts.unshift(post);
-      localStorage.setItem("baynna_posts", JSON.stringify(posts));
-      document.getElementById("postInput").value = "";
-      renderPosts();
-      alert("تم نشر المنشور");
-    }
+  let text = document.getElementById("text").value.trim();
+  let type = document.getElementById("type").value;
 
-    function renderPosts() {
-      const postsDiv = document.getElementById("posts");
-      postsDiv.innerHTML = "";
+  if(!text) return alert("اكتب شيء");
 
-      if (posts.length === 0) {
-        postsDiv.innerHTML = `<div class="post" style="text-align:center;">لا توجد منشورات بعد</div>`;
-        return;
-      }
+  let newPost = {
+    user:user,
+    text:text,
+    type:type,
+    reply:type==="feeling" ? aiReply(text) : "",
+    time:new Date().toLocaleString()
+  };
 
-      posts.forEach(post => {
-        postsDiv.innerHTML += `
-          <div class="post">
-            <div class="tag">${post.type === "feeling" ? "💔 مشاعري" : "🌍 عام"}</div>
-            <div class="meta">${post.user} • ${post.time}</div>
-            <div>${post.text}</div>
-            ${post.reply ? `<div class="reply"><b>بيننا:</b><br>${post.reply}</div>` : ""}
-          </div>
-        `;
-      });
-    }
+  posts.unshift(newPost);
+  localStorage.setItem("posts", JSON.stringify(posts));
 
-    updateUserView();
-    renderPosts();
-  </script>
+  document.getElementById("text").value="";
+  render();
+}
+
+function render(){
+  let div = document.getElementById("posts");
+  div.innerHTML="";
+
+  posts.forEach(p=>{
+    div.innerHTML += `
+      <div class="post">
+        <div class="tag">${p.type==="feeling" ? "💔 مشاعري" : "🌍 عام"}</div>
+        <div class="meta">${p.user} • ${p.time}</div>
+        <div>${p.text}</div>
+        ${p.reply ? `<div class="reply"><b>بيننا:</b><br>${p.reply}</div>` : ""}
+      </div>
+    `;
+  });
+}
+
+updateUser();
+render();
+
+</script>
 
 </body>
 </html>
