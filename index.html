@@ -1,225 +1,101 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>بيننا</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بيننا</title>
 
-  <style>
-    body{
-      font-family: Arial, sans-serif;
-      background:#f5f5f5;
-      margin:0;
-      padding:20px;
-      text-align:center;
-    }
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
-    .box{
-      max-width:700px;
-      margin:auto;
-      background:#fff;
-      padding:20px;
-      border-radius:18px;
-      box-shadow:0 4px 20px rgba(0,0,0,0.08);
-    }
+<style>
+body {
+    font-family: Arial;
+    background: #f5f5f5;
+    text-align: center;
+}
 
-    input, textarea, select, button{
-      width:100%;
-      max-width:500px;
-      padding:12px;
-      margin:8px 0;
-      border-radius:10px;
-      border:1px solid #ddd;
-      font-size:16px;
-      box-sizing:border-box;
-    }
+.box {
+    max-width: 400px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+}
 
-    button{
-      background:#222;
-      color:#fff;
-      border:none;
-      cursor:pointer;
-    }
+input, button {
+    width: 90%;
+    padding: 10px;
+    margin: 10px;
+}
 
-    button:hover{
-      opacity:.9;
-    }
-
-    .post{
-      text-align:right;
-      background:#ffffff;
-      max-width:700px;
-      margin:20px auto;
-      padding:18px;
-      border-radius:18px;
-      box-shadow:0 6px 20px rgba(0,0,0,0.08);
-      transition:0.3s;
-    }
-
-    .post:hover{
-      transform:scale(1.02);
-    }
-
-    .meta{
-      color:#777;
-      font-size:14px;
-      margin-bottom:10px;
-    }
-
-    .tag{
-      display:inline-block;
-      padding:6px 12px;
-      border-radius:999px;
-      background:#eee;
-      font-size:13px;
-      margin-bottom:10px;
-    }
-
-    .reply{
-      margin-top:12px;
-      padding:12px;
-      background:#f0f2f5;
-      border-radius:12px;
-    }
-
-    .actions{
-      margin-top:12px;
-    }
-
-    .like-btn{
-      width:auto;
-      max-width:none;
-      padding:10px 16px;
-      margin:0;
-      border-radius:10px;
-      border:none;
-      background:#222;
-      color:#fff;
-      cursor:pointer;
-      font-size:15px;
-    }
-  </style>
+button {
+    background: black;
+    color: white;
+    border: none;
+    border-radius: 8px;
+}
+</style>
 </head>
+
 <body>
 
-  <div class="box">
-    <h1>بيننا</h1>
+<div class="box">
+<h2>بيننا</h2>
 
-    <input id="nameInput" placeholder="اكتب اسمك أو بريدك">
-    <button onclick="loginUser()">دخول</button>
+<input id="email" placeholder="البريد"><br>
+<input id="password" type="password" placeholder="كلمة المرور"><br>
 
-    <p id="user">غير مسجل</p>
+<button onclick="register()">إنشاء حساب</button>
+<button onclick="login()">دخول</button>
+<button onclick="logout()">خروج</button>
 
-    <hr>
+<p id="user">غير مسجل</p>
+</div>
 
-    <h3>اكتب ما بداخلك</h3>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
+  authDomain: "baynna-9884f.firebaseapp.com",
+  projectId: "baynna-9884f",
+  storageBucket: "baynna-9884f.appspot.com",
+  messagingSenderId: "377002437252",
+  appId: "1:377002437252:web:dc7f507818e8abace970d1",
+  measurementId: "G-BLH1DN1XEL"
+};
 
-    <select id="type">
-      <option value="feeling">💔 مشاعري</option>
-      <option value="general">🌍 عام</option>
-    </select>
+firebase.initializeApp(firebaseConfig);
 
-    <textarea id="text" placeholder="اكتب هنا..." rows="5"></textarea>
+function register() {
+let email = document.getElementById("email").value;
+let password = document.getElementById("password").value;
 
-    <button onclick="addPost()">شارك</button>
-  </div>
+firebase.auth().createUserWithEmailAndPassword(email, password)
+.then(() => alert("تم إنشاء الحساب"))
+.catch(e => alert(e.message));
+}
 
-  <h2>المنشورات</h2>
-  <div id="posts"></div>
+function login() {
+let email = document.getElementById("email").value;
+let password = document.getElementById("password").value;
 
-  <script>
-    let user = localStorage.getItem("user") || "";
-    let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+firebase.auth().signInWithEmailAndPassword(email, password)
+.then(() => alert("تم تسجيل الدخول"))
+.catch(e => alert(e.message));
+}
 
-    function updateUser() {
-      document.getElementById("user").innerText =
-        user ? "مرحباً " + user : "غير مسجل";
-    }
+function logout() {
+firebase.auth().signOut();
+}
 
-    function loginUser() {
-      const name = document.getElementById("nameInput").value.trim();
-      if (!name) {
-        alert("اكتب اسمك");
-        return;
-      }
-      user = name;
-      localStorage.setItem("user", user);
-      updateUser();
-    }
-
-    function aiReply(text) {
-      if (text.includes("حب")) return "الحب الصادق لا يضيع… حتى لو لم يكتمل.";
-      if (text.includes("خيانة")) return "الخيانة تكشف الحقيقة… لا تقلل منك.";
-      if (text.includes("تعب")) return "تعبك دليل أنك تحملت أكثر مما يجب.";
-      if (text.includes("حزن")) return "الحزن ليس ضعفاً… بل عمق شعور.";
-      return "بيننا يسمعك… وهذا بحد ذاته بداية الراحة.";
-    }
-
-    function addPost() {
-      if (!user) {
-        alert("سجل دخول");
-        return;
-      }
-
-      const text = document.getElementById("text").value.trim();
-      const type = document.getElementById("type").value;
-
-      if (!text) {
-        alert("اكتب شيئاً");
-        return;
-      }
-
-      const newPost = {
-        user: user,
-        text: text,
-        type: type,
-        reply: type === "feeling" ? aiReply(text) : "",
-        time: new Date().toLocaleString(),
-        likes: 0
-      };
-
-      posts.unshift(newPost);
-      localStorage.setItem("posts", JSON.stringify(posts));
-
-      document.getElementById("text").value = "";
-      renderPosts();
-    }
-
-    function likePost(index) {
-      posts[index].likes = (posts[index].likes || 0) + 1;
-      localStorage.setItem("posts", JSON.stringify(posts));
-      renderPosts();
-    }
-
-    function renderPosts() {
-      const div = document.getElementById("posts");
-      div.innerHTML = "";
-
-      if (posts.length === 0) {
-        div.innerHTML = "<p>لا توجد منشورات</p>";
-        return;
-      }
-
-      posts.forEach(function(p, i) {
-        const typeLabel = p.type === "feeling" ? "💔 مشاعري" : "🌍 عام";
-
-        div.innerHTML += `
-          <div class="post">
-            <div class="tag">${typeLabel}</div>
-            <div class="meta">${p.user} • ${p.time}</div>
-            <div>${p.text}</div>
-            ${p.reply ? `<div class="reply"><b>بيننا:</b><br>${p.reply}</div>` : ""}
-            <div class="actions">
-              <button class="like-btn" onclick="likePost(${i})">❤️ ${p.likes || 0}</button>
-            </div>
-          </div>
-        `;
-      });
-    }
-
-    updateUser();
-    renderPosts();
-  </script>
+firebase.auth().onAuthStateChanged(user => {
+if(user){
+document.getElementById("user").innerText = "مرحبا " + user.email;
+}else{
+document.getElementById("user").innerText = "غير مسجل";
+}
+});
+</script>
 
 </body>
 </html>
