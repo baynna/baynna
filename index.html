@@ -2,68 +2,134 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>نسخ الكود بسهولة</title>
+<title>بيننا</title>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <style>
-body{
-font-family:Arial;
-background:#eef3f7;
-text-align:center;
-padding:40px;
+body {
+  font-family: Arial;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+  text-align: center;
 }
 
-.box{
-max-width:600px;
-margin:auto;
-background:#fff;
-padding:20px;
-border-radius:15px;
-box-shadow:0 0 10px rgba(0,0,0,0.1);
+.box {
+  background: white;
+  color: black;
+  padding: 20px;
+  border-radius: 15px;
+  width: 320px;
+  margin: 50px auto;
 }
 
-textarea{
-width:100%;
-height:200px;
-padding:10px;
-border-radius:10px;
-border:1px solid #ccc;
+input, textarea {
+  width: 90%;
+  padding: 10px;
+  margin: 10px;
 }
 
-button{
-margin-top:10px;
-padding:12px;
-width:100%;
-background:#222;
-color:#fff;
-border:none;
-border-radius:10px;
-cursor:pointer;
-font-size:16px;
+button {
+  width: 90%;
+  padding: 12px;
+  margin: 5px;
+  background: black;
+  color: white;
+  border: none;
+  cursor: pointer;
 }
 </style>
 
 </head>
-
 <body>
 
 <div class="box">
-<h2>انسخ الكود بضغطة واحدة</h2>
 
-<textarea id="code">
-console.log("هذا مثال كود ينسخ مباشرة");
-</textarea>
+<h2>بيننا</h2>
 
-<button onclick="copyCode()">📋 نسخ الكود</button>
+<input id="email" placeholder="البريد"><br>
+<input id="password" type="password" placeholder="كلمة المرور"><br>
+
+<button onclick="register()">إنشاء حساب</button>
+<button onclick="login()">دخول</button>
+<button onclick="logout()">خروج</button>
+
+<p id="user">غير مسجل</p>
+
+<hr>
+
+<textarea id="postText" placeholder="اكتب هنا..."></textarea>
+<button onclick="addPost()">نشر</button>
+
+<div id="posts"></div>
 
 </div>
 
 <script>
-function copyCode(){
-let text = document.getElementById("code");
-text.select();
-document.execCommand("copy");
-alert("تم النسخ ✔");
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
+  authDomain: "baynna-9884f.firebaseapp.com",
+  projectId: "baynna-9884f"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+function register() {
+  auth.createUserWithEmailAndPassword(
+    email.value,
+    password.value
+  );
 }
+
+function login() {
+  auth.signInWithEmailAndPassword(
+    email.value,
+    password.value
+  );
+}
+
+function logout() {
+  auth.signOut();
+}
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById("user").innerText = user.email;
+    loadPosts();
+  } else {
+    document.getElementById("user").innerText = "غير مسجل";
+  }
+});
+
+function addPost() {
+  if (!auth.currentUser) return alert("سجل دخول");
+
+  db.collection("posts").add({
+    text: postText.value,
+    user: auth.currentUser.email
+  });
+
+  postText.value = "";
+}
+
+function loadPosts() {
+  db.collection("posts").onSnapshot(snapshot => {
+    posts.innerHTML = "";
+
+    snapshot.forEach(doc => {
+      let p = doc.data();
+      posts.innerHTML += `
+        <p><b>${p.user}</b>: ${p.text}</p>
+      `;
+    });
+  });
+}
+
 </script>
 
 </body>
