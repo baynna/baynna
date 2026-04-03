@@ -80,17 +80,15 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 function register() {
-  auth.createUserWithEmailAndPassword(
-    email.value,
-    password.value
-  );
+  auth.createUserWithEmailAndPassword(email.value, password.value)
+  .then(() => alert("تم إنشاء الحساب"))
+  .catch(e => alert(e.message));
 }
 
 function login() {
-  auth.signInWithEmailAndPassword(
-    email.value,
-    password.value
-  );
+  auth.signInWithEmailAndPassword(email.value, password.value)
+  .then(() => alert("تم تسجيل الدخول"))
+  .catch(e => alert(e.message));
 }
 
 function logout() {
@@ -123,9 +121,7 @@ function loadPosts() {
 
     snapshot.forEach(doc => {
       let p = doc.data();
-      posts.innerHTML += `
-        <p><b>${p.user}</b>: ${p.text}</p>
-      `;
+      posts.innerHTML += `<p><b>${p.user}</b>: ${p.text}</p>`;
     });
   });
 }
