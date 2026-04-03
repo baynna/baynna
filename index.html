@@ -1,94 +1,272 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>بيننا</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>بيننا</title>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+    }
 
-<style>
-body{
-font-family: Arial;
-background:#f5f5f5;
-text-align:center;
-padding:20px;
-}
-.box{
-background:#fff;
-padding:25px;
-border-radius:15px;
-max-width:400px;
-margin:auto;
-}
-input,button{
-width:100%;
-padding:10px;
-margin:8px 0;
-}
-button{
-background:#222;
-color:#fff;
-border:none;
-cursor:pointer;
-}
-</style>
+    .box {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    input, textarea, select {
+      width: 90%;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 95%;
+      padding: 12px;
+      margin: 6px 0;
+      border: none;
+      background: #222;
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .post {
+      background: #fff;
+      padding: 12px;
+      margin: 12px auto;
+      border-radius: 10px;
+      max-width: 500px;
+      text-align: right;
+      box-shadow: 0 0 8px rgba(0,0,0,0.08);
+    }
+
+    .post-type {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .post-user {
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .post-time {
+      color: #999;
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .reply {
+      margin-top: 10px;
+      padding: 10px;
+      background: #f0f0f0;
+      border-radius: 8px;
+      color: #333;
+    }
+  </style>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
-
 <body>
 
-<div class="box">
-<h2>بيننا</h2>
+  <div class="box">
+    <h2>بيننا</h2>
 
-<input id="email" placeholder="البريد">
-<input id="password" type="password" placeholder="كلمة المرور">
+    <input id="email" placeholder="البريد" />
+    <input id="password" type="password" placeholder="كلمة المرور" />
 
-<button onclick="register()">إنشاء حساب</button>
-<button onclick="login()">دخول</button>
-<button onclick="logout()">خروج</button>
+    <button onclick="register()">إنشاء حساب</button>
+    <button onclick="login()">دخول</button>
+    <button onclick="logout()">خروج</button>
 
-<p id="user">غير مسجل</p>
-</div>
+    <p id="user">غير مسجل</p>
 
-<script>
-const firebaseConfig = {
-apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
-authDomain: "baynna-9884f.firebaseapp.com",
-projectId: "baynna-9884f"
-};
+    <hr>
 
-firebase.initializeApp(firebaseConfig);
+    <h3>اكتب ما بداخلك</h3>
 
-function register(){
-firebase.auth().createUserWithEmailAndPassword(
-email.value,
-password.value
-)
-.then(()=>alert("تم إنشاء الحساب"))
-.catch(e=>alert(e.message));
-}
+    <select id="type">
+      <option value="مشاعري">💗 مشاعري</option>
+      <option value="عام">🌍 عام</option>
+    </select>
 
-function login(){
-firebase.auth().signInWithEmailAndPassword(
-email.value,
-password.value
-)
-.then(()=>alert("تم تسجيل الدخول"))
-.catch(e=>alert(e.message));
-}
+    <textarea id="postText" placeholder="اكتب هنا..." rows="5"></textarea>
 
-function logout(){
-firebase.auth().signOut();
-}
+    <button onclick="addPost()">نشر</button>
+  </div>
 
-firebase.auth().onAuthStateChanged(user=>{
-if(user){
-document.getElementById("user").innerText = user.email;
-}else{
-document.getElementById("user").innerText = "غير مسجل";
-}
-});
-</script>
+  <h3>المنشورات</h3>
+  <div id="posts"></div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
+      authDomain: "baynna-9884f.firebaseapp.com",
+      projectId: "baynna-9884f",
+      storageBucket: "baynna-9884f.appspot.com",
+      messagingSenderId: "377002437252",
+      appId: "1:377002437252:web:dc7f507818e8abace970d1"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    function register() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        alert("اكتب البريد وكلمة المرور");
+        return;
+      }
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          alert("تم إنشاء الحساب");
+        })
+        .catch(error => {
+          alert(error.message);
+        });
+    }
+
+    function login() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        alert("اكتب البريد وكلمة المرور");
+        return;
+      }
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          alert("تم تسجيل الدخول");
+        })
+        .catch(error => {
+          alert(error.message);
+        });
+    }
+
+    function logout() {
+      auth.signOut()
+        .then(() => {
+          alert("تم تسجيل الخروج");
+        })
+        .catch(error => {
+          alert(error.message);
+        });
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("user").innerText = "مرحباً " + user.email;
+      } else {
+        document.getElementById("user").innerText = "غير مسجل";
+      }
+    });
+
+    function getBaynnaReply(text) {
+      if (text.includes("حب")) return "الحب الصادق لا يضيع، حتى لو لم يكتمل كما تمنينا.";
+      if (text.includes("خيانة")) return "الخيانة لا تقلل من قيمتك، بل تكشف حقيقة الطرف الآخر.";
+      if (text.includes("تعب")) return "أحياناً التعب ليس ضعفاً، بل لأنك تحملت أكثر مما يجب.";
+      if (text.includes("حزن") || text.includes("حزين")) return "الحزن مرحلة، وليس عيباً أن تمر بها بهدوء.";
+      return "بيننا يسمعك، وأحياناً الكلام الصادق هو بداية الراحة.";
+    }
+
+    function addPost() {
+      const user = auth.currentUser;
+      const text = document.getElementById("postText").value.trim();
+      const type = document.getElementById("type").value;
+
+      if (!user) {
+        alert("سجل دخول أولاً");
+        return;
+      }
+
+      if (!text) {
+        alert("اكتب منشوراً أولاً");
+        return;
+      }
+
+      const reply = type === "مشاعري" ? getBaynnaReply(text) : "";
+
+      db.collection("posts").add({
+        text: text,
+        type: type,
+        user: user.email,
+        reply: reply,
+        time: firebase.firestore.FieldValue.serverTimestamp()
+      })
+      .then(() => {
+        document.getElementById("postText").value = "";
+        alert("تم نشر المنشور");
+      })
+      .catch(error => {
+        alert(error.message);
+      });
+    }
+
+    db.collection("posts")
+      .orderBy("time", "desc")
+      .onSnapshot(snapshot => {
+        const postsDiv = document.getElementById("posts");
+        postsDiv.innerHTML = "";
+
+        if (snapshot.empty) {
+          postsDiv.innerHTML = '<div class="post">لا توجد منشورات</div>';
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const text = data.text || "منشور بدون نص";
+          const type = data.type || "عام";
+          const user = data.user || "مستخدم";
+          const reply = data.reply || "";
+          const time = data.time && data.time.toDate
+            ? data.time.toDate().toLocaleString("ar-IQ")
+            : "";
+
+          postsDiv.innerHTML += `
+            <div class="post">
+              <div class="post-type">${type}</div>
+              <div class="post-user">${user}</div>
+              <div>${text}</div>
+              ${reply ? `<div class="reply"><strong>بيننا:</strong><br>${reply}</div>` : ""}
+              <div class="post-time">${time}</div>
+            </div>
+          `;
+        });
+      }, error => {
+        document.getElementById("posts").innerHTML =
+          '<div class="post">حدث خطأ في عرض المنشورات</div>';
+        console.log(error);
+      });
+  </script>
 
 </body>
 </html>
