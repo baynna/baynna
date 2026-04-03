@@ -20,53 +20,70 @@ height:100vh;
 
 .box{
 background:#fff;
-padding:20px;
-border-radius:10px;
-width:260px;
+padding:25px;
+border-radius:15px;
+width:300px;
 text-align:center;
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
 }
 
 input{
 width:100%;
-padding:10px;
+padding:12px;
 margin:10px 0;
+border:1px solid #ccc;
+border-radius:6px;
+box-sizing:border-box;
 }
 
 button{
 width:100%;
-padding:10px;
-margin:5px 0;
+padding:12px;
+margin:6px 0;
 background:#1e3a8a;
 color:#fff;
 border:none;
+border-radius:6px;
 cursor:pointer;
+font-size:15px;
+}
+
+button:hover{
+background:#162c66;
+}
+
+#msg{
+margin-top:10px;
+font-size:14px;
+word-break:break-word;
 }
 </style>
+
 </head>
 
 <body>
 
 <div class="box">
-<h3>بيننا</h3>
+<h2>بيننا</h2>
 
 <input id="email" placeholder="البريد">
 <input id="password" type="password" placeholder="كلمة المرور">
 
 <button onclick="register()">إنشاء حساب</button>
 <button onclick="login()">دخول</button>
+<button onclick="logout()">خروج</button>
 
 <p id="msg">...</p>
-
 </div>
 
 <script>
 const firebaseConfig = {
-apiKey: "AIzaSyDenhDd7d-7GmslPRzw88ser50rfp63OE",
-authDomain: "baynnaa.firebaseapp.com",
-projectId: "baynnaa",
-storageBucket: "baynnaa.appspot.com",
-messagingSenderId: "694347629104",
-appId: "1:694347629104:web:a752786cb26d320398e3f5"
+  apiKey: "AIzaSyDenhDd7d-7GmslPRzw88ser50rfp63OE",
+  authDomain: "baynnaa.firebaseapp.com",
+  projectId: "baynnaa",
+  storageBucket: "baynnaa.firebasestorage.app",
+  messagingSenderId: "694347629104",
+  appId: "1:694347629104:web:a752786cb26d320398e3f5"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -88,6 +105,17 @@ firebase.auth().signInWithEmailAndPassword(e,p)
 .then(()=>msg.innerText="تم الدخول بنجاح")
 .catch(err=>msg.innerText=err.message);
 }
+
+function logout(){
+firebase.auth().signOut()
+.then(()=>msg.innerText="تم تسجيل الخروج");
+}
+
+firebase.auth().onAuthStateChanged(user=>{
+if(user){
+msg.innerText="مرحباً "+user.email;
+}
+});
 </script>
 
 </body>
