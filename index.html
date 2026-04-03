@@ -4,95 +4,124 @@
 <meta charset="UTF-8">
 <title>بيننا</title>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
 <style>
 body {
-  font-family: Arial;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  color: white;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #0f172a, #1e3a8a);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.card {
+  width: 340px;
+  background: white;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
   text-align: center;
 }
-
-.box {
-  background: white;
-  color: black;
-  padding: 20px;
-  border-radius: 15px;
-  width: 320px;
-  margin: 50px auto;
+h2 {
+  margin-top: 0;
 }
-
-input, textarea {
-  width: 90%;
-  padding: 10px;
-  margin: 10px;
-}
-
-button {
-  width: 90%;
+input, textarea, button {
+  width: 100%;
+  box-sizing: border-box;
   padding: 12px;
-  margin: 5px;
-  background: black;
-  color: white;
+  margin: 8px 0;
+  border-radius: 10px;
+  font-size: 15px;
+}
+input, textarea {
+  border: 1px solid #ccc;
+}
+button {
   border: none;
+  background: #1e3a8a;
+  color: white;
   cursor: pointer;
+}
+button:hover {
+  opacity: .95;
+}
+#posts {
+  margin-top: 14px;
+  text-align: right;
+}
+.post {
+  background: #f3f4f6;
+  padding: 10px;
+  border-radius: 10px;
+  margin-top: 8px;
+}
+#status {
+  color: #444;
+  font-size: 14px;
 }
 </style>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 </head>
 <body>
 
-<div class="box">
+<div class="card">
+  <h2>بيننا</h2>
 
-<h2>بيننا</h2>
+  <input id="email" placeholder="البريد">
+  <input id="password" type="password" placeholder="كلمة المرور">
 
-<input id="email" placeholder="البريد"><br>
-<input id="password" type="password" placeholder="كلمة المرور"><br>
+  <button onclick="register()">إنشاء حساب</button>
+  <button onclick="login()">دخول</button>
+  <button onclick="logout()">خروج</button>
 
-<button onclick="register()">إنشاء حساب</button>
-<button onclick="login()">دخول</button>
-<button onclick="logout()">خروج</button>
+  <p id="user">غير مسجل</p>
+  <p id="status"></p>
 
-<p id="user">غير مسجل</p>
+  <hr>
 
-<hr>
+  <textarea id="postText" placeholder="اكتب هنا..."></textarea>
+  <button onclick="addPost()">نشر</button>
 
-<textarea id="postText" placeholder="اكتب هنا..."></textarea>
-<button onclick="addPost()">نشر</button>
-
-<div id="posts"></div>
-
+  <div id="posts"></div>
 </div>
 
 <script>
-
 const firebaseConfig = {
   apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
   authDomain: "baynna-9884f.firebaseapp.com",
-  projectId: "baynna-9884f"
+  projectId: "baynna-9884f",
+  storageBucket: "baynna-9884f.appspot.com",
+  messagingSenderId: "377002437252",
+  appId: "1:377002437252:web:dc7f507818e8abace970d1"
 };
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+function setStatus(text) {
+  document.getElementById("status").innerText = text;
+}
+
 function register() {
   auth.createUserWithEmailAndPassword(email.value, password.value)
-  .then(() => alert("تم إنشاء الحساب"))
-  .catch(e => alert(e.message));
+    .then(() => setStatus("تم إنشاء الحساب"))
+    .catch(e => setStatus(e.message));
 }
 
 function login() {
   auth.signInWithEmailAndPassword(email.value, password.value)
-  .then(() => alert("تم تسجيل الدخول"))
-  .catch(e => alert(e.message));
+    .then(() => setStatus("تم تسجيل الدخول"))
+    .catch(e => setStatus(e.message));
 }
 
 function logout() {
-  auth.signOut();
+  auth.signOut()
+    .then(() => setStatus("تم تسجيل الخروج"))
+    .catch(e => setStatus(e.message));
 }
 
 auth.onAuthStateChanged(user => {
@@ -105,27 +134,38 @@ auth.onAuthStateChanged(user => {
 });
 
 function addPost() {
-  if (!auth.currentUser) return alert("سجل دخول");
+  if (!auth.currentUser) {
+    setStatus("سجل دخول أولاً");
+    return;
+  }
+
+  if (!postText.value.trim()) {
+    setStatus("اكتب منشوراً أولاً");
+    return;
+  }
 
   db.collection("posts").add({
     text: postText.value,
-    user: auth.currentUser.email
-  });
-
-  postText.value = "";
+    user: auth.currentUser.email,
+    time: Date.now()
+  }).then(() => {
+    postText.value = "";
+    setStatus("تم نشر المنشور");
+  }).catch(e => setStatus(e.message));
 }
 
 function loadPosts() {
-  db.collection("posts").onSnapshot(snapshot => {
-    posts.innerHTML = "";
-
-    snapshot.forEach(doc => {
-      let p = doc.data();
-      posts.innerHTML += `<p><b>${p.user}</b>: ${p.text}</p>`;
-    });
-  });
+  db.collection("posts")
+    .orderBy("time", "desc")
+    .onSnapshot(snapshot => {
+      let html = "";
+      snapshot.forEach(doc => {
+        const p = doc.data();
+        html += "<div class='post'><b>" + p.user + "</b><br>" + p.text + "</div>";
+      });
+      document.getElementById("posts").innerHTML = html;
+    }, e => setStatus(e.message));
 }
-
 </script>
 
 </body>
