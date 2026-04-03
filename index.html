@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>بيننا</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -9,98 +10,169 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <style>
+*{box-sizing:border-box}
 body{
-margin:0;
-font-family:Arial;
-background:linear-gradient(135deg,#0f172a,#1e3a8a);
-display:flex;
-justify-content:center;
-align-items:center;
-min-height:100vh;
-padding:20px;
-box-sizing:border-box;
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#0f172a,#1e3a8a);
+  min-height:100vh;
+  padding:20px;
 }
-
-.box{
-background:#fff;
-padding:20px;
-border-radius:12px;
-width:320px;
-text-align:center;
-box-shadow:0 10px 25px rgba(0,0,0,0.2);
+.container{
+  max-width:700px;
+  margin:auto;
 }
-
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.18);
+  margin-bottom:20px;
+}
+h1,h2,h3,p{margin-top:0}
+h1{
+  text-align:center;
+  color:#fff;
+  margin-bottom:20px;
+}
+input,textarea,button{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:8px;
+  font-size:15px;
+  font-family:Arial,sans-serif;
+}
 input,textarea{
-width:100%;
-padding:10px;
-margin:8px 0;
-border:1px solid #ccc;
-border-radius:6px;
-box-sizing:border-box;
-font-family:Arial;
+  border:1px solid #ccc;
 }
-
+textarea{
+  resize:vertical;
+  min-height:90px;
+}
 button{
-width:100%;
-padding:10px;
-margin:5px 0;
-background:#1e3a8a;
-color:#fff;
-border:none;
-border-radius:6px;
-cursor:pointer;
-font-size:15px;
+  border:none;
+  background:#1e3a8a;
+  color:#fff;
+  cursor:pointer;
 }
-
 button:hover{
-background:#162c66;
+  background:#162c66;
 }
-
-#msg{
-margin-top:10px;
-font-size:14px;
-color:#333;
-word-break:break-word;
+.status{
+  color:#333;
+  font-size:14px;
+  word-break:break-word;
+  margin-top:8px;
 }
-
-#posts{
-margin-top:15px;
-text-align:right;
-max-height:250px;
-overflow:auto;
-border-top:1px solid #ddd;
-padding-top:10px;
-}
-
 .post{
-background:#f3f4f6;
-padding:10px;
-border-radius:8px;
-margin-bottom:8px;
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:14px;
+  margin-top:14px;
+}
+.post-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:10px;
+}
+.post-user{
+  font-weight:bold;
+  color:#111827;
+}
+.post-time{
+  font-size:12px;
+  color:#6b7280;
+}
+.post-text{
+  color:#111827;
+  line-height:1.8;
+  white-space:pre-wrap;
+  margin-bottom:12px;
+}
+.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.actions button{
+  width:auto;
+  margin:0;
+  padding:8px 14px;
+}
+.likes-count{
+  color:#374151;
+  font-size:14px;
+  margin-bottom:10px;
+}
+.comment-box{
+  margin-top:10px;
+  border-top:1px solid #e5e7eb;
+  padding-top:10px;
+}
+.comment{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:8px;
+  padding:8px 10px;
+  margin-top:8px;
+}
+.comment-user{
+  font-weight:bold;
+  font-size:13px;
+  color:#1f2937;
+  margin-bottom:4px;
+}
+.comment-text{
+  font-size:14px;
+  color:#111827;
+  white-space:pre-wrap;
+}
+.comment-time{
+  font-size:11px;
+  color:#6b7280;
+  margin-top:4px;
+}
+.small-input{
+  min-height:70px;
+}
+.empty{
+  text-align:center;
+  color:#6b7280;
+  padding:10px 0;
 }
 </style>
-
 </head>
 <body>
 
-<div class="box">
-<h2>بيننا</h2>
+<div class="container">
+  <h1>بيننا</h1>
 
-<input id="email" placeholder="البريد">
-<input id="password" type="password" placeholder="كلمة المرور">
+  <div class="card">
+    <h2>الحساب</h2>
+    <input id="email" placeholder="البريد">
+    <input id="password" type="password" placeholder="كلمة المرور">
+    <button onclick="register()">إنشاء حساب</button>
+    <button onclick="login()">دخول</button>
+    <button onclick="logout()">خروج</button>
+    <div id="msg" class="status">غير مسجل</div>
+  </div>
 
-<button onclick="register()">إنشاء حساب</button>
-<button onclick="login()">دخول</button>
-<button onclick="logout()">خروج</button>
+  <div class="card">
+    <h2>اكتب منشورًا</h2>
+    <textarea id="postText" placeholder="اكتب هنا..."></textarea>
+    <button onclick="addPost()">نشر</button>
+  </div>
 
-<p id="msg">...</p>
-
-<hr>
-
-<textarea id="postText" placeholder="اكتب هنا..."></textarea>
-<button onclick="addPost()">نشر</button>
-
-<div id="posts"></div>
+  <div class="card">
+    <h2>المنشورات</h2>
+    <div id="posts"><div class="empty">جاري تحميل المنشورات...</div></div>
+  </div>
 </div>
 
 <script>
@@ -118,74 +190,189 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-function register(){
-let e = email.value;
-let p = password.value;
+function escapeHtml(text){
+  return (text || "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
 
-auth.createUserWithEmailAndPassword(e,p)
-.then(()=>msg.innerText="تم إنشاء الحساب")
-.catch(err=>msg.innerText=err.message);
+function showMsg(text){
+  document.getElementById("msg").innerText = text;
+}
+
+function formatTime(value){
+  if(!value) return "";
+  try{
+    const d = value.toDate ? value.toDate() : new Date(value);
+    return d.toLocaleString("ar-IQ");
+  }catch{
+    return "";
+  }
+}
+
+function register(){
+  const e = document.getElementById("email").value.trim();
+  const p = document.getElementById("password").value.trim();
+
+  auth.createUserWithEmailAndPassword(e,p)
+  .then(()=>showMsg("تم إنشاء الحساب"))
+  .catch(err=>showMsg(err.message));
 }
 
 function login(){
-let e = email.value;
-let p = password.value;
+  const e = document.getElementById("email").value.trim();
+  const p = document.getElementById("password").value.trim();
 
-auth.signInWithEmailAndPassword(e,p)
-.then(()=>msg.innerText="تم الدخول بنجاح")
-.catch(err=>msg.innerText=err.message);
+  auth.signInWithEmailAndPassword(e,p)
+  .then(()=>showMsg("تم الدخول بنجاح"))
+  .catch(err=>showMsg(err.message));
 }
 
 function logout(){
-auth.signOut()
-.then(()=>msg.innerText="تم تسجيل الخروج");
+  auth.signOut()
+  .then(()=>showMsg("تم تسجيل الخروج"))
+  .catch(err=>showMsg(err.message));
 }
 
 auth.onAuthStateChanged(user=>{
-if(user){
-msg.innerText="مرحباً " + user.email;
-loadPosts();
-}else{
-msg.innerText="غير مسجل";
-posts.innerHTML="";
-}
+  if(user){
+    showMsg("مرحباً " + user.email);
+  }else{
+    showMsg("غير مسجل");
+  }
 });
 
 function addPost(){
-if(!auth.currentUser){
-msg.innerText="سجل دخول أولاً";
-return;
+  const user = auth.currentUser;
+  const text = document.getElementById("postText").value.trim();
+
+  if(!user){
+    showMsg("سجل دخول أولاً");
+    return;
+  }
+
+  if(!text){
+    showMsg("اكتب منشوراً أولاً");
+    return;
+  }
+
+  db.collection("posts").add({
+    text:text,
+    user:user.email,
+    time:firebase.firestore.FieldValue.serverTimestamp(),
+    likeCount:0,
+    comments:[]
+  })
+  .then(()=>{
+    document.getElementById("postText").value = "";
+    showMsg("تم نشر المنشور");
+  })
+  .catch(err=>showMsg(err.message));
 }
 
-if(!postText.value.trim()){
-msg.innerText="اكتب منشوراً أولاً";
-return;
+function likePost(postId){
+  if(!auth.currentUser){
+    showMsg("سجل دخول أولاً");
+    return;
+  }
+
+  db.collection("posts").doc(postId).update({
+    likeCount: firebase.firestore.FieldValue.increment(1)
+  }).catch(err=>showMsg(err.message));
 }
 
-db.collection("posts").add({
-text: postText.value,
-user: auth.currentUser.email,
-time: Date.now()
-})
-.then(()=>{
-postText.value="";
-msg.innerText="تم نشر المنشور";
-})
-.catch(err=>msg.innerText=err.message);
+function addComment(postId){
+  const user = auth.currentUser;
+  const input = document.getElementById("comment-" + postId);
+
+  if(!user){
+    showMsg("سجل دخول أولاً");
+    return;
+  }
+
+  const text = input.value.trim();
+  if(!text){
+    showMsg("اكتب تعليقاً أولاً");
+    return;
+  }
+
+  db.collection("posts").doc(postId).update({
+    comments: firebase.firestore.FieldValue.arrayUnion({
+      user:user.email,
+      text:text,
+      time:new Date().toISOString()
+    })
+  })
+  .then(()=>{
+    input.value = "";
+    showMsg("تمت إضافة التعليق");
+  })
+  .catch(err=>showMsg(err.message));
 }
 
-function loadPosts(){
 db.collection("posts")
 .orderBy("time","desc")
 .onSnapshot(snapshot=>{
-let html="";
-snapshot.forEach(doc=>{
-let p = doc.data();
-html += "<div class='post'><b>"+p.user+"</b><br>"+p.text+"</div>";
+  const postsDiv = document.getElementById("posts");
+
+  if(snapshot.empty){
+    postsDiv.innerHTML = '<div class="empty">لا توجد منشورات بعد</div>';
+    return;
+  }
+
+  let html = "";
+
+  snapshot.forEach(doc=>{
+    const post = doc.data();
+    const postId = doc.id;
+    const comments = Array.isArray(post.comments) ? post.comments : [];
+
+    let commentsHtml = "";
+    if(comments.length === 0){
+      commentsHtml = '<div class="empty">لا توجد تعليقات</div>';
+    }else{
+      comments.forEach(c=>{
+        commentsHtml += `
+          <div class="comment">
+            <div class="comment-user">${escapeHtml(c.user)}</div>
+            <div class="comment-text">${escapeHtml(c.text)}</div>
+            <div class="comment-time">${formatTime(c.time)}</div>
+          </div>
+        `;
+      });
+    }
+
+    html += `
+      <div class="post">
+        <div class="post-head">
+          <div class="post-user">${escapeHtml(post.user || "")}</div>
+          <div class="post-time">${formatTime(post.time)}</div>
+        </div>
+
+        <div class="post-text">${escapeHtml(post.text || "")}</div>
+
+        <div class="likes-count">الإعجابات: ${post.likeCount || 0}</div>
+
+        <div class="actions">
+          <button onclick="likePost('${postId}')">❤️ لايك</button>
+        </div>
+
+        <div class="comment-box">
+          <textarea id="comment-${postId}" class="small-input" placeholder="اكتب تعليقاً..."></textarea>
+          <button onclick="addComment('${postId}')">إضافة تعليق</button>
+          ${commentsHtml}
+        </div>
+      </div>
+    `;
+  });
+
+  postsDiv.innerHTML = html;
+}, err=>{
+  showMsg(err.message);
 });
-posts.innerHTML = html;
-});
-}
 </script>
 
 </body>
