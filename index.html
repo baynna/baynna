@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>بيننا</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -9,203 +10,625 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <style>
+*{box-sizing:border-box}
 body{
-font-family:Arial;
-background:linear-gradient(135deg,#0f172a,#1e3a8a);
-margin:0;
-padding:20px;
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#0f172a,#1e3a8a);
+  min-height:100vh;
+  padding:20px;
 }
-.box{
-background:white;
-padding:20px;
-border-radius:15px;
-width:350px;
-margin:auto;
-margin-bottom:20px;
+.container{
+  max-width:760px;
+  margin:auto;
+}
+.card{
+  background:#fff;
+  border-radius:16px;
+  padding:20px;
+  margin-bottom:20px;
+  box-shadow:0 10px 25px rgba(0,0,0,.18);
+}
+h1{
+  text-align:center;
+  color:#fff;
+  margin:0 0 20px 0;
+}
+h2{
+  margin:0 0 10px 0;
+  color:#111827;
 }
 input,textarea,button{
-width:100%;
-margin:5px 0;
-padding:10px;
-border-radius:8px;
-border:1px solid #ccc;
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:10px;
+  font-size:15px;
+  font-family:Arial,sans-serif;
+}
+input,textarea{
+  border:1px solid #d1d5db;
+}
+textarea{
+  resize:vertical;
+  min-height:90px;
 }
 button{
-background:#1e3a8a;
-color:white;
-border:none;
+  border:none;
+  background:#1e3a8a;
+  color:#fff;
+  cursor:pointer;
+}
+button:hover{
+  background:#162c66;
+}
+.small-btn{
+  width:auto;
+  padding:8px 14px;
+  margin:0;
+}
+.status{
+  color:#374151;
+  font-size:14px;
+  word-break:break-word;
+}
+.file-label{
+  display:block;
+  text-align:center;
+  background:#eef2ff;
+  color:#1e3a8a;
+  border:1px dashed #93c5fd;
+  border-radius:10px;
+  padding:12px;
+  margin:8px 0;
+  cursor:pointer;
+}
+#imageInput{
+  display:none;
+}
+#imagePreview{
+  display:none;
+  width:100%;
+  max-height:280px;
+  object-fit:cover;
+  border-radius:10px;
+  border:1px solid #e5e7eb;
+  margin-top:8px;
 }
 .post{
-background:white;
-padding:15px;
-margin:10px auto;
-width:350px;
-border-radius:10px;
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:16px;
+  margin-top:16px;
 }
-img{
-width:100%;
-border-radius:10px;
+.post-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.post-user{
+  font-weight:bold;
+  color:#111827;
+}
+.post-time{
+  font-size:12px;
+  color:#6b7280;
+}
+.post-text{
+  white-space:pre-wrap;
+  line-height:1.8;
+  color:#111827;
+  margin:10px 0;
+}
+.post-image{
+  width:100%;
+  max-height:420px;
+  object-fit:cover;
+  border-radius:12px;
+  border:1px solid #e5e7eb;
+  margin-bottom:10px;
+}
+.row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin-top:10px;
+}
+.count{
+  font-size:14px;
+  color:#374151;
+}
+.comments{
+  margin-top:14px;
+  border-top:1px solid #e5e7eb;
+  padding-top:12px;
+}
+.comment{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:10px;
+  padding:10px;
+  margin-top:10px;
+}
+.comment-user{
+  font-weight:bold;
+  font-size:14px;
+  color:#111827;
+}
+.comment-text{
+  white-space:pre-wrap;
+  color:#111827;
+  margin-top:4px;
+}
+.comment-time{
+  font-size:11px;
+  color:#6b7280;
+  margin-top:6px;
+}
+.reply{
+  background:#f9fafb;
+  border:1px solid #e5e7eb;
+  border-radius:8px;
+  padding:8px;
+  margin-top:8px;
+  margin-right:18px;
+}
+.reply-user{
+  font-weight:bold;
+  font-size:13px;
+}
+.reply-text{
+  font-size:14px;
+  margin-top:4px;
+  white-space:pre-wrap;
+}
+.reply-time{
+  font-size:11px;
+  color:#6b7280;
+  margin-top:4px;
+}
+.empty{
+  color:#6b7280;
+  text-align:center;
+  padding:10px 0;
 }
 </style>
 </head>
-
 <body>
 
-<div class="box">
-<h3>بيننا</h3>
+<div class="container">
+  <h1>بيننا</h1>
 
-<input id="email" placeholder="البريد">
-<input id="password" type="password" placeholder="كلمة المرور">
+  <div class="card">
+    <h2>الحساب</h2>
+    <input id="username" placeholder="اسم المستخدم">
+    <input id="email" placeholder="البريد">
+    <input id="password" type="password" placeholder="كلمة المرور">
+    <button onclick="register()">إنشاء حساب</button>
+    <button onclick="login()">دخول</button>
+    <button onclick="logout()">خروج</button>
+    <div id="msg" class="status">غير مسجل</div>
+  </div>
 
-<button onclick="register()">إنشاء حساب</button>
-<button onclick="login()">دخول</button>
-<button onclick="logout()">خروج</button>
+  <div class="card">
+    <h2>منشور جديد</h2>
+    <textarea id="postText" placeholder="اكتب منشورك هنا..."></textarea>
+    <label class="file-label" for="imageInput">📸 اختر صورة للمنشور</label>
+    <input id="imageInput" type="file" accept="image/*">
+    <img id="imagePreview" alt="preview">
+    <button onclick="addPost()">نشر</button>
+  </div>
 
-<p id="user">غير مسجل</p>
-
-<textarea id="postText" placeholder="اكتب منشور"></textarea>
-<input type="file" id="imageInput">
-
-<button onclick="addPost()">نشر</button>
+  <div class="card">
+    <h2>المنشورات</h2>
+    <div id="posts"><div class="empty">جاري التحميل...</div></div>
+  </div>
 </div>
 
-<div id="posts"></div>
-
 <script>
-
 const firebaseConfig = {
-apiKey: "AIzaSyDenhDdt7d-7GmslPRzw88ser5Orfp63OE",
-authDomain: "baynnaa.firebaseapp.com",
-projectId: "baynnaa",
-storageBucket: "baynnaa.firebasestorage.app",
-messagingSenderId: "694347629104",
-appId: "1:694347629104:web:a752786cb26d320398e3f5"
+  apiKey: "AIzaSyDenhDdt7d-7GmslPRzw88ser5Orfp63OE",
+  authDomain: "baynnaa.firebaseapp.com",
+  projectId: "baynnaa",
+  storageBucket: "baynnaa.firebasestorage.app",
+  messagingSenderId: "694347629104",
+  appId: "1:694347629104:web:a752786cb26d320398e3f5",
+  measurementId: "G-16D317R880"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let imageBase64="";
+let selectedImageBase64 = "";
+let currentPosts = [];
 
-document.getElementById("imageInput").onchange=function(e){
-const file=e.target.files[0];
-const reader=new FileReader();
-reader.onload=function(){
-imageBase64=reader.result;
-}
-reader.readAsDataURL(file);
+function showMsg(text){
+  document.getElementById("msg").innerText = text;
 }
 
-function register(){
-let e=email.value;
-let p=password.value;
-auth.createUserWithEmailAndPassword(e,p);
+function escapeHtml(text){
+  return (text || "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
 }
 
-function login(){
-let e=email.value;
-let p=password.value;
-auth.signInWithEmailAndPassword(e,p);
+function formatTime(value){
+  if(!value) return "";
+  try{
+    const d = value.toDate ? value.toDate() : new Date(value);
+    return d.toLocaleString("ar-IQ");
+  }catch(e){
+    return "";
+  }
+}
+
+function defaultUsernameFromEmail(email){
+  return (email || "").split("@")[0] || "مستخدم";
+}
+
+document.getElementById("imageInput").addEventListener("change", function(e){
+  const file = e.target.files[0];
+  if(!file){
+    selectedImageBase64 = "";
+    document.getElementById("imagePreview").style.display = "none";
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    selectedImageBase64 = ev.target.result;
+    const img = document.getElementById("imagePreview");
+    img.src = selectedImageBase64;
+    img.style.display = "block";
+  };
+  reader.readAsDataURL(file);
+});
+
+function clearImage(){
+  selectedImageBase64 = "";
+  document.getElementById("imageInput").value = "";
+  const img = document.getElementById("imagePreview");
+  img.src = "";
+  img.style.display = "none";
+}
+
+async function ensureUserProfile(user, usernameInput){
+  const ref = db.collection("users").doc(user.uid);
+  const snap = await ref.get();
+
+  if(!snap.exists){
+    const username = usernameInput || defaultUsernameFromEmail(user.email);
+    await ref.set({
+      username: username,
+      email: user.email,
+      userId: user.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    return username;
+  }
+
+  const data = snap.data() || {};
+  if(!data.username){
+    const username = usernameInput || defaultUsernameFromEmail(user.email);
+    await ref.set({
+      username: username,
+      email: user.email,
+      userId: user.uid
+    }, { merge:true });
+    return username;
+  }
+
+  return data.username;
+}
+
+async function getCurrentUsername(){
+  const user = auth.currentUser;
+  if(!user) return "";
+  const ref = db.collection("users").doc(user.uid);
+  const snap = await ref.get();
+  if(snap.exists){
+    const data = snap.data() || {};
+    return data.username || defaultUsernameFromEmail(user.email);
+  }
+  return defaultUsernameFromEmail(user.email);
+}
+
+async function register(){
+  const username = document.getElementById("username").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+
+  if(!username){
+    showMsg("اكتب اسم المستخدم");
+    return;
+  }
+
+  auth.createUserWithEmailAndPassword(email,password)
+  .then(async (cred)=>{
+    await ensureUserProfile(cred.user, username);
+    showMsg("تم إنشاء الحساب");
+  })
+  .catch(err=>showMsg(err.message));
+}
+
+async function login(){
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+
+  auth.signInWithEmailAndPassword(email,password)
+  .then(async (cred)=>{
+    await ensureUserProfile(cred.user, "");
+    showMsg("تم الدخول بنجاح");
+  })
+  .catch(err=>showMsg(err.message));
 }
 
 function logout(){
-auth.signOut();
+  auth.signOut()
+  .then(()=>showMsg("تم تسجيل الخروج"))
+  .catch(err=>showMsg(err.message));
 }
 
-auth.onAuthStateChanged(user=>{
-if(user){
-document.getElementById("user").innerText=user.email;
-}else{
-document.getElementById("user").innerText="غير مسجل";
-}
+auth.onAuthStateChanged(async (user)=>{
+  if(user){
+    const username = await ensureUserProfile(user, "");
+    showMsg("مرحباً " + username);
+  }else{
+    showMsg("غير مسجل");
+  }
 });
 
-function addPost(){
-let user=auth.currentUser;
+async function addPost(){
+  const user = auth.currentUser;
+  const text = document.getElementById("postText").value.trim();
 
-db.collection("posts").add({
-text:postText.value,
-image:imageBase64,
-user:user.email,
-likes:[],
-comments:[],
-time:new Date()
-});
+  if(!user){
+    showMsg("سجل دخول أولاً");
+    return;
+  }
 
-postText.value="";
-imageBase64="";
-}
+  if(!text && !selectedImageBase64){
+    showMsg("اكتب منشوراً أو اختر صورة");
+    return;
+  }
 
-function likePost(id){
-let user=auth.currentUser;
+  const username = await getCurrentUsername();
 
-db.collection("posts").doc(id).get().then(doc=>{
-let data=doc.data();
-let likes=data.likes||[];
-
-if(!likes.includes(user.uid)){
-likes.push(user.uid);
-
-db.collection("posts").doc(id).update({
-likes:likes
-});
-}
-});
-}
-
-function commentPost(id){
-let txt=document.getElementById("c"+id).value;
-let user=auth.currentUser;
-
-db.collection("posts").doc(id).update({
-comments:firebase.firestore.FieldValue.arrayUnion({
-text:txt,
-user:user.email
-})
-});
+  db.collection("posts").add({
+    text: text,
+    image: selectedImageBase64 || "",
+    userId: user.uid,
+    userEmail: user.email,
+    username: username,
+    likes: [],
+    likeCount: 0,
+    time: firebase.firestore.FieldValue.serverTimestamp()
+  })
+  .then(()=>{
+    document.getElementById("postText").value = "";
+    clearImage();
+    showMsg("تم نشر المنشور");
+  })
+  .catch(err=>showMsg(err.message));
 }
 
-db.collection("posts").orderBy("time","desc")
-.onSnapshot(snap=>{
+async function likePost(postId){
+  const user = auth.currentUser;
 
-let html="";
+  if(!user){
+    showMsg("سجل دخول أولاً");
+    return;
+  }
 
-snap.forEach(doc=>{
-let p=doc.data();
+  const ref = db.collection("posts").doc(postId);
+  const snap = await ref.get();
+  const data = snap.data() || {};
+  let likes = data.likes || [];
 
-html+=`
-<div class="post">
-<b>${p.user}</b><br><br>
+  if(likes.includes(user.uid)){
+    showMsg("أنت ضغطت لايك مسبقاً");
+    return;
+  }
 
-${p.text}<br><br>
+  likes.push(user.uid);
 
-${p.image ? `<img src="${p.image}">` : ""}
+  ref.update({
+    likes: likes,
+    likeCount: likes.length
+  }).catch(err=>showMsg(err.message));
+}
 
-<br><br>
+async function addComment(postId){
+  const user = auth.currentUser;
 
-❤️ ${p.likes ? p.likes.length : 0}
+  if(!user){
+    showMsg("سجل دخول أولاً");
+    return;
+  }
 
-<button onclick="likePost('${doc.id}')">لايك</button>
+  const input = document.getElementById("comment-" + postId);
+  const text = input.value.trim();
 
-<br><br>
+  if(!text){
+    showMsg("اكتب تعليقاً أولاً");
+    return;
+  }
 
-<input id="c${doc.id}" placeholder="تعليق">
-<button onclick="commentPost('${doc.id}')">إرسال</button>
+  const username = await getCurrentUsername();
 
-<br>
+  db.collection("posts").doc(postId).collection("comments").add({
+    text: text,
+    userId: user.uid,
+    userEmail: user.email,
+    username: username,
+    likes: [],
+    likeCount: 0,
+    time: firebase.firestore.FieldValue.serverTimestamp()
+  })
+  .then(()=>{
+    input.value = "";
+    showMsg("تمت إضافة التعليق");
+    renderPosts();
+  })
+  .catch(err=>showMsg(err.message));
+}
 
-${p.comments ? p.comments.map(c=>`<p><b>${c.user}</b>: ${c.text}</p>`).join("") : ""}
+async function likeComment(postId, commentId){
+  const user = auth.currentUser;
 
-</div>
-`;
+  if(!user){
+    showMsg("سجل دخول أولاً");
+    return;
+  }
+
+  const ref = db.collection("posts").doc(postId).collection("comments").doc(commentId);
+  const snap = await ref.get();
+  const data = snap.data() || {};
+  let likes = data.likes || [];
+
+  if(likes.includes(user.uid)){
+    showMsg("أنت ضغطت لايك مسبقاً على هذا التعليق");
+    return;
+  }
+
+  likes.push(user.uid);
+
+  ref.update({
+    likes: likes,
+    likeCount: likes.length
+  })
+  .then(()=>renderPosts())
+  .catch(err=>showMsg(err.message));
+}
+
+async function addReply(postId, commentId){
+  const user = auth.currentUser;
+
+  if(!user){
+    showMsg("سجل دخول أولاً");
+    return;
+  }
+
+  const input = document.getElementById("reply-" + commentId);
+  const text = input.value.trim();
+
+  if(!text){
+    showMsg("اكتب ردًا أولاً");
+    return;
+  }
+
+  const username = await getCurrentUsername();
+
+  db.collection("posts").doc(postId).collection("comments").doc(commentId).collection("replies").add({
+    text: text,
+    userId: user.uid,
+    userEmail: user.email,
+    username: username,
+    time: firebase.firestore.FieldValue.serverTimestamp()
+  })
+  .then(()=>{
+    input.value = "";
+    showMsg("تم إضافة الرد");
+    renderPosts();
+  })
+  .catch(err=>showMsg(err.message));
+}
+
+async function renderPosts(){
+  const postsDiv = document.getElementById("posts");
+
+  if(currentPosts.length === 0){
+    postsDiv.innerHTML = '<div class="empty">لا توجد منشورات بعد</div>';
+    return;
+  }
+
+  let html = "";
+
+  for(const item of currentPosts){
+    const postId = item.id;
+    const post = item.data;
+
+    const commentsSnap = await db.collection("posts").doc(postId).collection("comments").orderBy("time","asc").get();
+    let commentsHtml = "";
+
+    if(commentsSnap.empty){
+      commentsHtml = '<div class="empty">لا توجد تعليقات</div>';
+    }else{
+      for(const commentDoc of commentsSnap.docs){
+        const c = commentDoc.data();
+        const repliesSnap = await db.collection("posts").doc(postId).collection("comments").doc(commentDoc.id).collection("replies").orderBy("time","asc").get();
+
+        let repliesHtml = "";
+        if(!repliesSnap.empty){
+          repliesSnap.forEach(replyDoc=>{
+            const r = replyDoc.data();
+            repliesHtml +=
+              '<div class="reply">' +
+                '<div class="reply-user">' + escapeHtml(r.username || defaultUsernameFromEmail(r.userEmail)) + '</div>' +
+                '<div class="reply-text">' + escapeHtml(r.text) + '</div>' +
+                '<div class="reply-time">' + formatTime(r.time) + '</div>' +
+              '</div>';
+          });
+        }
+
+        commentsHtml +=
+          '<div class="comment">' +
+            '<div class="comment-user">' + escapeHtml(c.username || defaultUsernameFromEmail(c.userEmail)) + '</div>' +
+            '<div class="comment-text">' + escapeHtml(c.text) + '</div>' +
+            '<div class="row">' +
+              '<div class="count">❤️ ' + (c.likeCount || 0) + '</div>' +
+              '<button class="small-btn" onclick="likeComment(\'' + postId + '\', \'' + commentDoc.id + '\')">لايك التعليق</button>' +
+            '</div>' +
+            '<div class="comment-time">' + formatTime(c.time) + '</div>' +
+            repliesHtml +
+            '<textarea id="reply-' + commentDoc.id + '" class="small-input" placeholder="اكتب ردًا..."></textarea>' +
+            '<button onclick="addReply(\'' + postId + '\', \'' + commentDoc.id + '\')">إضافة رد</button>' +
+          '</div>';
+      }
+    }
+
+    html +=
+      '<div class="post">' +
+        '<div class="post-head">' +
+          '<div class="post-user">' + escapeHtml(post.username || defaultUsernameFromEmail(post.userEmail)) + '</div>' +
+          '<div class="post-time">' + formatTime(post.time) + '</div>' +
+        '</div>' +
+        (post.text ? '<div class="post-text">' + escapeHtml(post.text) + '</div>' : '') +
+        (post.image ? '<img class="post-image" src="' + post.image + '" alt="post image">' : '') +
+        '<div class="row">' +
+          '<div class="count">❤️ ' + (post.likeCount || 0) + '</div>' +
+          '<button class="small-btn" onclick="likePost(\'' + postId + '\')">لايك</button>' +
+        '</div>' +
+        '<div class="comments">' +
+          '<textarea id="comment-' + postId + '" class="small-input" placeholder="اكتب تعليقاً..."></textarea>' +
+          '<button onclick="addComment(\'' + postId + '\')">إرسال التعليق</button>' +
+          commentsHtml +
+        '</div>' +
+      '</div>';
+  }
+
+  postsDiv.innerHTML = html;
+}
+
+db.collection("posts").orderBy("time","desc").onSnapshot(async (snapshot)=>{
+  currentPosts = [];
+  snapshot.forEach(doc=>{
+    currentPosts.push({
+      id: doc.id,
+      data: doc.data()
+    });
+  });
+  renderPosts();
+}, err=>{
+  showMsg(err.message);
 });
-
-posts.innerHTML=html;
-
-});
-
 </script>
 
 </body>
