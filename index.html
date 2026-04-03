@@ -72,29 +72,6 @@ button:hover{
   font-size:14px;
   word-break:break-word;
 }
-.file-label{
-  display:block;
-  text-align:center;
-  background:#eef2ff;
-  color:#1e3a8a;
-  border:1px dashed #93c5fd;
-  border-radius:10px;
-  padding:12px;
-  margin:8px 0;
-  cursor:pointer;
-}
-#imageInput{
-  display:none;
-}
-#imagePreview{
-  display:none;
-  width:100%;
-  max-height:280px;
-  object-fit:cover;
-  border-radius:10px;
-  border:1px solid #e5e7eb;
-  margin-top:8px;
-}
 .post{
   background:#f8fafc;
   border:1px solid #e5e7eb;
@@ -122,14 +99,6 @@ button:hover{
   line-height:1.8;
   color:#111827;
   margin:10px 0;
-}
-.post-image{
-  width:100%;
-  max-height:420px;
-  object-fit:cover;
-  border-radius:12px;
-  border:1px solid #e5e7eb;
-  margin-bottom:10px;
 }
 .row{
   display:flex;
@@ -217,9 +186,6 @@ button:hover{
   <div class="card">
     <h2>منشور جديد</h2>
     <textarea id="postText" placeholder="اكتب منشورك هنا..."></textarea>
-    <label class="file-label" for="imageInput">📸 اختر صورة للمنشور</label>
-    <input id="imageInput" type="file" accept="image/*">
-    <img id="imagePreview" alt="preview">
     <button onclick="addPost()">نشر</button>
   </div>
 
@@ -244,7 +210,6 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let selectedImageBase64 = "";
 let currentPosts = [];
 
 function showMsg(text){
@@ -272,31 +237,6 @@ function formatTime(value){
 
 function defaultUsernameFromEmail(email){
   return (email || "").split("@")[0] || "مستخدم";
-}
-
-document.getElementById("imageInput").addEventListener("change", function(e){
-  const file = e.target.files[0];
-  if(!file){
-    selectedImageBase64 = "";
-    document.getElementById("imagePreview").style.display = "none";
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = function(ev){
-    selectedImageBase64 = ev.target.result;
-    const img = document.getElementById("imagePreview");
-    img.src = selectedImageBase64;
-    img.style.display = "block";
-  };
-  reader.readAsDataURL(file);
-});
-
-function clearImage(){
-  selectedImageBase64 = "";
-  document.getElementById("imageInput").value = "";
-  const img = document.getElementById("imagePreview");
-  img.src = "";
-  img.style.display = "none";
 }
 
 async function ensureUserProfile(user, usernameInput){
@@ -394,8 +334,8 @@ async function addPost(){
     return;
   }
 
-  if(!text && !selectedImageBase64){
-    showMsg("اكتب منشوراً أو اختر صورة");
+  if(!text){
+    showMsg("اكتب منشوراً أولاً");
     return;
   }
 
@@ -403,7 +343,6 @@ async function addPost(){
 
   db.collection("posts").add({
     text: text,
-    image: selectedImageBase64 || "",
     userId: user.uid,
     userEmail: user.email,
     username: username,
@@ -413,7 +352,6 @@ async function addPost(){
   })
   .then(()=>{
     document.getElementById("postText").value = "";
-    clearImage();
     showMsg("تم نشر المنشور");
   })
   .catch(err=>showMsg(err.message));
@@ -588,7 +526,7 @@ async function renderPosts(){
             '</div>' +
             '<div class="comment-time">' + formatTime(c.time) + '</div>' +
             repliesHtml +
-            '<textarea id="reply-' + commentDoc.id + '" class="small-input" placeholder="اكتب ردًا..."></textarea>' +
+            '<textarea id="reply-' + commentDoc.id + '" placeholder="اكتب ردًا..."></textarea>' +
             '<button onclick="addReply(\'' + postId + '\', \'' + commentDoc.id + '\')">إضافة رد</button>' +
           '</div>';
       }
@@ -600,14 +538,13 @@ async function renderPosts(){
           '<div class="post-user">' + escapeHtml(post.username || defaultUsernameFromEmail(post.userEmail)) + '</div>' +
           '<div class="post-time">' + formatTime(post.time) + '</div>' +
         '</div>' +
-        (post.text ? '<div class="post-text">' + escapeHtml(post.text) + '</div>' : '') +
-        (post.image ? '<img class="post-image" src="' + post.image + '" alt="post image">' : '') +
+        '<div class="post-text">' + escapeHtml(post.text || "") + '</div>' +
         '<div class="row">' +
           '<div class="count">❤️ ' + (post.likeCount || 0) + '</div>' +
           '<button class="small-btn" onclick="likePost(\'' + postId + '\')">لايك</button>' +
         '</div>' +
         '<div class="comments">' +
-          '<textarea id="comment-' + postId + '" class="small-input" placeholder="اكتب تعليقاً..."></textarea>' +
+          '<textarea id="comment-' + postId + '" placeholder="اكتب تعليقاً..."></textarea>' +
           '<button onclick="addComment(\'' + postId + '\')">إرسال التعليق</button>' +
           commentsHtml +
         '</div>' +
