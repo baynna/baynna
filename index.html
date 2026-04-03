@@ -3,68 +3,58 @@
 <head>
 <meta charset="UTF-8">
 <title>بيننا</title>
-
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
-margin:0;
-font-family:Arial;
-background:linear-gradient(135deg,#0f172a,#1e3a8a);
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
+  margin:0;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:linear-gradient(135deg,#1e3c72,#2a5298);
+  font-family:Arial;
 }
-
 .box{
-background:#fff;
-padding:25px;
-border-radius:15px;
-width:300px;
-text-align:center;
-box-shadow:0 10px 25px rgba(0,0,0,0.2);
+  background:#fff;
+  padding:30px;
+  border-radius:12px;
+  width:300px;
+  text-align:center;
+  box-shadow:0 0 20px rgba(0,0,0,0.2);
 }
-
 input{
-width:100%;
-padding:12px;
-margin:10px 0;
-border:1px solid #ccc;
-border-radius:6px;
-box-sizing:border-box;
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:6px;
+  border:1px solid #ccc;
 }
-
 button{
-width:100%;
-padding:12px;
-margin:6px 0;
-background:#1e3a8a;
-color:#fff;
-border:none;
-border-radius:6px;
-cursor:pointer;
-font-size:15px;
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+  border:none;
+  border-radius:6px;
+  background:#2a5298;
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
 }
-
-button:hover{
-background:#162c66;
-}
-
-#msg{
-margin-top:10px;
-font-size:14px;
-word-break:break-word;
+#user{
+  margin-top:10px;
+  color:#333;
 }
 </style>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 </head>
 
 <body>
 
 <div class="box">
-<h2>بيننا</h2>
+<h3>بيننا</h3>
 
 <input id="email" placeholder="البريد">
 <input id="password" type="password" placeholder="كلمة المرور">
@@ -73,48 +63,59 @@ word-break:break-word;
 <button onclick="login()">دخول</button>
 <button onclick="logout()">خروج</button>
 
-<p id="msg">...</p>
+<p id="user">غير مسجل</p>
 </div>
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyDenhDd7d-7GmslPRzw88ser50rfp63OE",
+  apiKey: "AIzaSyDenhDdt7d-7GmslPRzw88ser5Orfp63OE",
   authDomain: "baynnaa.firebaseapp.com",
   projectId: "baynnaa",
   storageBucket: "baynnaa.firebasestorage.app",
   messagingSenderId: "694347629104",
-  appId: "1:694347629104:web:a752786cb26d320398e3f5"
+  appId: "1:694347629104:web:a752786cb26d320398e3f5",
+  measurementId: "G-16D317R880"
 };
 
 firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 
 function register(){
-let e = email.value;
-let p = password.value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-firebase.auth().createUserWithEmailAndPassword(e,p)
-.then(()=>msg.innerText="تم إنشاء الحساب")
-.catch(err=>msg.innerText=err.message);
+  auth.createUserWithEmailAndPassword(email,password)
+  .then(()=>{
+    alert("تم إنشاء الحساب");
+  })
+  .catch(e=>{
+    alert(e.message);
+  });
 }
 
 function login(){
-let e = email.value;
-let p = password.value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-firebase.auth().signInWithEmailAndPassword(e,p)
-.then(()=>msg.innerText="تم الدخول بنجاح")
-.catch(err=>msg.innerText=err.message);
+  auth.signInWithEmailAndPassword(email,password)
+  .then(()=>{
+    alert("تم تسجيل الدخول");
+  })
+  .catch(e=>{
+    alert(e.message);
+  });
 }
 
 function logout(){
-firebase.auth().signOut()
-.then(()=>msg.innerText="تم تسجيل الخروج");
+  auth.signOut();
 }
 
-firebase.auth().onAuthStateChanged(user=>{
-if(user){
-msg.innerText="مرحباً "+user.email;
-}
+auth.onAuthStateChanged(user=>{
+  if(user){
+    document.getElementById("user").innerText = user.email;
+  }else{
+    document.getElementById("user").innerText = "غير مسجل";
+  }
 });
 </script>
 
