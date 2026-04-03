@@ -3,58 +3,88 @@
 <head>
 <meta charset="UTF-8">
 <title>بيننا</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-body{
-  margin:0;
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:linear-gradient(135deg,#1e3c72,#2a5298);
-  font-family:Arial;
-}
-.box{
-  background:#fff;
-  padding:30px;
-  border-radius:12px;
-  width:300px;
-  text-align:center;
-  box-shadow:0 0 20px rgba(0,0,0,0.2);
-}
-input{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  border-radius:6px;
-  border:1px solid #ccc;
-}
-button{
-  width:100%;
-  padding:10px;
-  margin:5px 0;
-  border:none;
-  border-radius:6px;
-  background:#2a5298;
-  color:#fff;
-  font-size:16px;
-  cursor:pointer;
-}
-#user{
-  margin-top:10px;
-  color:#333;
-}
-</style>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-</head>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg,#0f172a,#1e3a8a);
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+padding:20px;
+box-sizing:border-box;
+}
+
+.box{
+background:#fff;
+padding:20px;
+border-radius:12px;
+width:320px;
+text-align:center;
+box-shadow:0 10px 25px rgba(0,0,0,0.2);
+}
+
+input,textarea{
+width:100%;
+padding:10px;
+margin:8px 0;
+border:1px solid #ccc;
+border-radius:6px;
+box-sizing:border-box;
+font-family:Arial;
+}
+
+button{
+width:100%;
+padding:10px;
+margin:5px 0;
+background:#1e3a8a;
+color:#fff;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-size:15px;
+}
+
+button:hover{
+background:#162c66;
+}
+
+#msg{
+margin-top:10px;
+font-size:14px;
+color:#333;
+word-break:break-word;
+}
+
+#posts{
+margin-top:15px;
+text-align:right;
+max-height:250px;
+overflow:auto;
+border-top:1px solid #ddd;
+padding-top:10px;
+}
+
+.post{
+background:#f3f4f6;
+padding:10px;
+border-radius:8px;
+margin-bottom:8px;
+}
+</style>
+
+</head>
 <body>
 
 <div class="box">
-<h3>بيننا</h3>
+<h2>بيننا</h2>
 
 <input id="email" placeholder="البريد">
 <input id="password" type="password" placeholder="كلمة المرور">
@@ -63,7 +93,14 @@ button{
 <button onclick="login()">دخول</button>
 <button onclick="logout()">خروج</button>
 
-<p id="user">غير مسجل</p>
+<p id="msg">...</p>
+
+<hr>
+
+<textarea id="postText" placeholder="اكتب هنا..."></textarea>
+<button onclick="addPost()">نشر</button>
+
+<div id="posts"></div>
 </div>
 
 <script>
@@ -79,44 +116,76 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+const db = firebase.firestore();
 
 function register(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+let e = email.value;
+let p = password.value;
 
-  auth.createUserWithEmailAndPassword(email,password)
-  .then(()=>{
-    alert("تم إنشاء الحساب");
-  })
-  .catch(e=>{
-    alert(e.message);
-  });
+auth.createUserWithEmailAndPassword(e,p)
+.then(()=>msg.innerText="تم إنشاء الحساب")
+.catch(err=>msg.innerText=err.message);
 }
 
 function login(){
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+let e = email.value;
+let p = password.value;
 
-  auth.signInWithEmailAndPassword(email,password)
-  .then(()=>{
-    alert("تم تسجيل الدخول");
-  })
-  .catch(e=>{
-    alert(e.message);
-  });
+auth.signInWithEmailAndPassword(e,p)
+.then(()=>msg.innerText="تم الدخول بنجاح")
+.catch(err=>msg.innerText=err.message);
 }
 
 function logout(){
-  auth.signOut();
+auth.signOut()
+.then(()=>msg.innerText="تم تسجيل الخروج");
 }
 
 auth.onAuthStateChanged(user=>{
-  if(user){
-    document.getElementById("user").innerText = user.email;
-  }else{
-    document.getElementById("user").innerText = "غير مسجل";
-  }
+if(user){
+msg.innerText="مرحباً " + user.email;
+loadPosts();
+}else{
+msg.innerText="غير مسجل";
+posts.innerHTML="";
+}
 });
+
+function addPost(){
+if(!auth.currentUser){
+msg.innerText="سجل دخول أولاً";
+return;
+}
+
+if(!postText.value.trim()){
+msg.innerText="اكتب منشوراً أولاً";
+return;
+}
+
+db.collection("posts").add({
+text: postText.value,
+user: auth.currentUser.email,
+time: Date.now()
+})
+.then(()=>{
+postText.value="";
+msg.innerText="تم نشر المنشور";
+})
+.catch(err=>msg.innerText=err.message);
+}
+
+function loadPosts(){
+db.collection("posts")
+.orderBy("time","desc")
+.onSnapshot(snapshot=>{
+let html="";
+snapshot.forEach(doc=>{
+let p = doc.data();
+html += "<div class='post'><b>"+p.user+"</b><br>"+p.text+"</div>";
+});
+posts.innerHTML = html;
+});
+}
 </script>
 
 </body>
