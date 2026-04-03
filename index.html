@@ -8,46 +8,87 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
 <style>
-body {
-  margin:0;
-  font-family:Arial;
-  background: linear-gradient(135deg,#0f172a,#1e3a8a);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  height:100vh;
+body{
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg,#0f172a,#1e3a8a);
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
 }
 
-.box {
-  background:#fff;
-  padding:25px;
-  border-radius:15px;
-  width:300px;
-  text-align:center;
+.box{
+background:#fff;
+padding:20px;
+border-radius:10px;
+width:260px;
+text-align:center;
 }
 
-input {
-  width:100%;
-  padding:10px;
-  margin:10px 0;
+input{
+width:100%;
+padding:10px;
+margin:10px 0;
 }
 
-button {
-  width:100%;
-  padding:10px;
-  margin:5px 0;
-  background:#1e3a8a;
-  color:#fff;
-  border:none;
-  cursor:pointer;
+button{
+width:100%;
+padding:10px;
+margin:5px 0;
+background:#1e3a8a;
+color:#fff;
+border:none;
+cursor:pointer;
 }
 </style>
-
 </head>
+
 <body>
 
 <div class="box">
-<h2>بيننا</h2>
+<h3>بيننا</h3>
 
 <input id="email" placeholder="البريد">
-<input 
+<input id="password" type="password" placeholder="كلمة المرور">
+
+<button onclick="register()">إنشاء حساب</button>
+<button onclick="login()">دخول</button>
+
+<p id="msg">...</p>
+
+</div>
+
+<script>
+const firebaseConfig = {
+apiKey: "AIzaSyDenhDd7d-7GmslPRzw88ser50rfp63OE",
+authDomain: "baynnaa.firebaseapp.com",
+projectId: "baynnaa",
+storageBucket: "baynnaa.appspot.com",
+messagingSenderId: "694347629104",
+appId: "1:694347629104:web:a752786cb26d320398e3f5"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+function register(){
+let e = email.value;
+let p = password.value;
+
+firebase.auth().createUserWithEmailAndPassword(e,p)
+.then(()=>msg.innerText="تم إنشاء الحساب")
+.catch(err=>msg.innerText=err.message);
+}
+
+function login(){
+let e = email.value;
+let p = password.value;
+
+firebase.auth().signInWithEmailAndPassword(e,p)
+.then(()=>msg.innerText="تم الدخول بنجاح")
+.catch(err=>msg.innerText=err.message);
+}
+</script>
+
+</body>
+</html>
