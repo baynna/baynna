@@ -99,6 +99,24 @@
       background: #4b5563;
     }
 
+    .like-btn {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .like-btn:hover {
+      background: #d1d5db;
+    }
+
+    .liked-btn {
+      background: #2563eb;
+      color: white;
+    }
+
+    .liked-btn:hover {
+      background: #1d4ed8;
+    }
+
     .muted {
       color: #666;
       font-size: 14px;
@@ -141,6 +159,19 @@
 
     .edit-area {
       margin-top: 10px;
+    }
+
+    .post-bottom {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .likes-count {
+      font-size: 14px;
+      color: #444;
     }
 
     #authBox {
@@ -279,7 +310,8 @@
         text: text,
         name: user.email,
         uid: user.uid,
-        time: Date.now()
+        time: Date.now(),
+        likes: []
       }).then(function() {
         document.getElementById("text").value = "";
       }).catch(function(error) {
@@ -339,6 +371,31 @@
       });
     }
 
+    function toggleLike(postId, liked) {
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("سجل الدخول أولاً");
+        return;
+      }
+
+      const ref = db.collection("posts").doc(postId);
+
+      if (liked) {
+        ref.update({
+          likes: firebase.firestore.FieldValue.arrayRemove(user.uid)
+        }).catch(function(error) {
+          alert(error.message);
+        });
+      } else {
+        ref.update({
+          likes: firebase.firestore.FieldValue.arrayUnion(user.uid)
+        }).catch(function(error) {
+          alert(error.message);
+        });
+      }
+    }
+
     function formatTime(timeValue) {
       if (!timeValue) return "";
 
@@ -385,6 +442,8 @@
         const data = item.data || {};
         const postTime = formatTime(data.time);
         const isOwner = user && data.uid === user.uid;
+        const likes = Array.isArray(data.likes) ? data.likes : [];
+        const liked = user ? likes.includes(user.uid) : false;
 
         let actions = "";
 
@@ -411,6 +470,9 @@
           content = "<div class='post-text'>" + escapeHtml(data.text || "") + "</div>";
         }
 
+        let likeButtonClass = liked ? "liked-btn" : "like-btn";
+        let likeButtonText = liked ? "إلغاء اللايك" : "لايك";
+
         html +=
           "<div class='post'>" +
             "<div class='post-top'>" +
@@ -421,6 +483,10 @@
               actions +
             "</div>" +
             content +
+            "<div class='post-bottom'>" +
+              "<button class='" + likeButtonClass + "' onclick=\"toggleLike('" + postId + "', " + liked + ")\">" + likeButtonText + "</button>" +
+              "<div class='likes-count'>عدد اللايكات: " + likes.length + "</div>" +
+            "</div>" +
           "</div>";
       });
 
