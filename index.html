@@ -59,15 +59,6 @@
       background: #1d4ed8;
     }
 
-    .delete-btn {
-      background: #dc2626;
-      margin-top: 8px;
-    }
-
-    .delete-btn:hover {
-      background: #b91c1c;
-    }
-
     .muted {
       color: #666;
       font-size: 14px;
@@ -79,17 +70,6 @@
       padding: 12px;
       margin-bottom: 10px;
       border-radius: 8px;
-    }
-
-    .post-name {
-      font-weight: bold;
-      margin-bottom: 6px;
-    }
-
-    .post-time {
-      color: #666;
-      font-size: 12px;
-      margin-top: 6px;
     }
 
     #authBox {
@@ -153,10 +133,10 @@
       }
 
       auth.createUserWithEmailAndPassword(email, password)
-        .then(() => {
+        .then(function() {
           alert("تم إنشاء الحساب");
         })
-        .catch((error) => {
+        .catch(function(error) {
           alert(error.message);
         });
     }
@@ -171,18 +151,18 @@
       }
 
       auth.signInWithEmailAndPassword(email, password)
-        .catch((error) => {
+        .catch(function(error) {
           alert(error.message);
         });
     }
 
     function logout() {
-      auth.signOut().catch((error) => {
-        alert(error.message);
+      auth.signOut().then(function() {
+        document.getElementById("user").innerText = "غير مسجل";
       });
     }
 
-    auth.onAuthStateChanged((user) => {
+    auth.onAuthStateChanged(function(user) {
       if (user) {
         document.getElementById("user").innerText = "مسجل: " + user.email;
       } else {
@@ -199,60 +179,35 @@
         return;
       }
 
-      if (!text) return;
+      if (text === "") return;
 
       db.collection("posts").add({
         text: text,
         name: user.email,
         uid: user.uid,
         time: Date.now()
-      })
-      .then(() => {
+      }).then(function() {
         document.getElementById("text").value = "";
-      })
-      .catch((error) => {
+      }).catch(function(error) {
         alert(error.message);
       });
     }
 
-    function deletePost(id) {
-      db.collection("posts").doc(id).delete()
-        .catch((error) => {
-          alert(error.message);
-        });
-    }
-
     db.collection("posts")
       .orderBy("time", "desc")
-      .onSnapshot((snapshot) => {
-        let html = "";
-        const currentUser = auth.currentUser;
+      .onSnapshot(function(snapshot) {
+        var html = "";
 
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-
-          let postTime = "";
-          if (data.time) {
-            postTime = new Date(data.time).toLocaleString();
-          }
-
-          let deleteButton = "";
-          if (currentUser && currentUser.uid === data.uid) {
-            deleteButton = "<button class='delete-btn' onclick=\"deletePost('" + doc.id + "')\">حذف</button>";
-          }
-
-          html +=
-            "<div class='post'>" +
-              "<div class='post-name'>" + (data.name || "مستخدم") + "</div>" +
-              "<div>" + (data.text || "") + "</div>" +
-              "<div class='post-time'>" + postTime + "</div>" +
-              deleteButton +
+        snapshot.forEach(function(doc) {
+          var data = doc.data();
+          html += "<div class='post'><strong>" +
+            (data.name || "مستخدم") +
+            "</strong><br>" +
+            (data.text || "") +
             "</div>";
         });
 
         document.getElementById("posts").innerHTML = html;
-      }, (error) => {
-        alert(error.message);
       });
   </script>
 
