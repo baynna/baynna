@@ -46,6 +46,7 @@
       border: 1px solid #ccc;
       border-radius: 8px;
       font-family: inherit;
+      box-sizing: border-box;
     }
 
     textarea {
@@ -117,6 +118,24 @@
       background: #1d4ed8;
     }
 
+    .comment-btn {
+      background: #2563eb;
+    }
+
+    .comment-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .comment-delete-btn {
+      background: #dc2626;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .comment-delete-btn:hover {
+      background: #b91c1c;
+    }
+
     .muted {
       color: #666;
       font-size: 14px;
@@ -172,6 +191,54 @@
     .likes-count {
       font-size: 14px;
       color: #444;
+    }
+
+    .comments-box {
+      margin-top: 15px;
+      padding-top: 12px;
+      border-top: 1px solid #d1d5db;
+    }
+
+    .comment-input-box {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .comment {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+
+    .comment-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    .comment-name {
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .comment-time {
+      color: #666;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .comment-text {
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.6;
+      font-size: 14px;
     }
 
     #authBox {
@@ -235,6 +302,7 @@
     const db = firebase.firestore();
 
     let currentPosts = [];
+    let currentComments = {};
     let editingPostId = null;
 
     function register() {
@@ -396,6 +464,51 @@
       }
     }
 
+    function addComment(postId) {
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("سجل الدخول أولاً");
+        return;
+      }
+
+      const input = document.getElementById("commentText-" + postId);
+      const text = input.value.trim();
+
+      if (text === "") {
+        alert("اكتب تعليقاً أولاً");
+        return;
+      }
+
+      db.collection("posts").doc(postId).collection("comments").add({
+        text: text,
+        name: user.email,
+        uid: user.uid,
+        time: Date.now()
+      }).then(function() {
+        input.value = "";
+      }).catch(function(error) {
+        alert(error.message);
+      });
+    }
+
+    function deleteComment(postId, commentId) {
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("سجل الدخول أولاً");
+        return;
+      }
+
+      const ok = confirm("هل تريد حذف هذا التعليق؟");
+      if (!ok) return;
+
+      db.collection("posts").doc(postId).collection("comments").doc(commentId).delete()
+        .catch(function(error) {
+          alert(error.message);
+        });
+    }
+
     function formatTime(timeValue) {
       if (!timeValue) return "";
 
@@ -427,6 +540,27 @@
         .replace(/'/g, "&#039;");
     }
 
+    function watchComments(postId) {
+      db.collection("posts")
+        .doc(postId)
+        .collection("comments")
+        .orderBy("time", "desc")
+        .onSnapshot(function(snapshot) {
+          currentComments[postId] = [];
+
+          snapshot.forEach(function(doc) {
+            currentComments[postId].push({
+              id: doc.id,
+              data: doc.data()
+            });
+          });
+
+          renderPosts();
+        }, function(error) {
+          alert(error.message);
+        });
+    }
+
     function renderPosts() {
       const postsDiv = document.getElementById("posts");
       const user = auth.currentUser;
@@ -444,6 +578,7 @@
         const isOwner = user && data.uid === user.uid;
         const likes = Array.isArray(data.likes) ? data.likes : [];
         const liked = user ? likes.includes(user.uid) : false;
+        const comments = Array.isArray(currentComments[postId]) ? currentComments[postId] : [];
 
         let actions = "";
 
@@ -473,6 +608,37 @@
         let likeButtonClass = liked ? "liked-btn" : "like-btn";
         let likeButtonText = liked ? "إلغاء اللايك" : "لايك";
 
+        let commentsHtml = "";
+
+        if (comments.length === 0) {
+          commentsHtml = "<div class='empty'>لا توجد تعليقات</div>";
+        } else {
+          comments.forEach(function(commentItem) {
+            const commentId = commentItem.id;
+            const commentData = commentItem.data || {};
+            const isCommentOwner = user && commentData.uid === user.uid;
+
+            let commentDeleteButton = "";
+
+            if (isCommentOwner) {
+              commentDeleteButton =
+                "<button class='comment-delete-btn' onclick=\"deleteComment('" + postId + "','" + commentId + "')\">حذف التعليق</button>";
+            }
+
+            commentsHtml +=
+              "<div class='comment'>" +
+                "<div class='comment-top'>" +
+                  "<div>" +
+                    "<div class='comment-name'>" + escapeHtml(commentData.name || "مستخدم") + "</div>" +
+                    "<div class='comment-time'>" + formatTime(commentData.time) + "</div>" +
+                  "</div>" +
+                  commentDeleteButton +
+                "</div>" +
+                "<div class='comment-text'>" + escapeHtml(commentData.text || "") + "</div>" +
+              "</div>";
+          });
+        }
+
         html +=
           "<div class='post'>" +
             "<div class='post-top'>" +
@@ -486,6 +652,13 @@
             "<div class='post-bottom'>" +
               "<button class='" + likeButtonClass + "' onclick=\"toggleLike('" + postId + "', " + liked + ")\">" + likeButtonText + "</button>" +
               "<div class='likes-count'>عدد اللايكات: " + likes.length + "</div>" +
+            "</div>" +
+            "<div class='comments-box'>" +
+              "<div class='comment-input-box'>" +
+                "<input id='commentText-" + postId + "' placeholder='اكتب تعليقاً'>" +
+                "<button class='comment-btn' onclick=\"addComment('" + postId + "')\">إرسال التعليق</button>" +
+              "</div>" +
+              commentsHtml +
             "</div>" +
           "</div>";
       });
@@ -503,6 +676,11 @@
             id: doc.id,
             data: doc.data()
           });
+
+          if (!currentComments[doc.id]) {
+            currentComments[doc.id] = [];
+            watchComments(doc.id);
+          }
         });
 
         renderPosts();
