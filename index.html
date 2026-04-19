@@ -37,13 +37,20 @@
       margin-bottom: 12px;
     }
 
-    input {
+    input,
+    textarea {
       flex: 1;
       min-width: 220px;
       padding: 10px;
       font-size: 16px;
       border: 1px solid #ccc;
       border-radius: 8px;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
     }
 
     button {
@@ -53,6 +60,7 @@
       background: #2563eb;
       color: white;
       cursor: pointer;
+      font-family: inherit;
     }
 
     button:hover {
@@ -65,6 +73,30 @@
 
     .delete-btn:hover {
       background: #b91c1c;
+    }
+
+    .edit-btn {
+      background: #f59e0b;
+    }
+
+    .edit-btn:hover {
+      background: #d97706;
+    }
+
+    .save-btn {
+      background: #059669;
+    }
+
+    .save-btn:hover {
+      background: #047857;
+    }
+
+    .cancel-btn {
+      background: #6b7280;
+    }
+
+    .cancel-btn:hover {
+      background: #4b5563;
     }
 
     .muted {
@@ -83,7 +115,7 @@
     .post-top {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       gap: 10px;
       flex-wrap: wrap;
       margin-bottom: 8px;
@@ -95,10 +127,32 @@
       margin-top: 6px;
     }
 
+    .post-text {
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.7;
+    }
+
+    .post-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .edit-area {
+      margin-top: 10px;
+    }
+
     #authBox {
       margin-bottom: 20px;
       padding-bottom: 15px;
       border-bottom: 1px solid #ddd;
+    }
+
+    .empty {
+      text-align: center;
+      color: #777;
+      padding: 20px 0;
     }
   </style>
 </head>
@@ -123,7 +177,10 @@
     </div>
 
     <div class="row">
-      <input id="text" placeholder="اكتب منشور">
+      <textarea id="text" placeholder="اكتب منشور"></textarea>
+    </div>
+
+    <div class="row">
       <button onclick="sendPost()">نشر</button>
     </div>
 
@@ -147,6 +204,7 @@
     const db = firebase.firestore();
 
     let currentPosts = [];
+    let editingPostId = null;
 
     function register() {
       const email = document.getElementById("email").value.trim();
@@ -182,12 +240,15 @@
     }
 
     function logout() {
-      auth.signOut().then(function() {
-        document.getElementById("user").innerText = "غير مسجل";
-        renderPosts();
-      }).catch(function(error) {
-        alert(error.message);
-      });
+      auth.signOut()
+        .then(function() {
+          document.getElementById("user").innerText = "غير مسجل";
+          editingPostId = null;
+          renderPosts();
+        })
+        .catch(function(error) {
+          alert(error.message);
+        });
     }
 
     auth.onAuthStateChanged(function(user) {
@@ -209,7 +270,10 @@
         return;
       }
 
-      if (text === "") return;
+      if (text === "") {
+        alert("اكتب منشوراً أولاً");
+        return;
+      }
 
       db.collection("posts").add({
         text: text,
@@ -232,7 +296,6 @@
       }
 
       const ok = confirm("هل تريد حذف هذا المنشور؟");
-
       if (!ok) return;
 
       db.collection("posts").doc(postId).delete()
@@ -241,40 +304,127 @@
         });
     }
 
-    function formatTime(time) {
-      if (!time) return "";
+    function startEdit(postId) {
+      editingPostId = postId;
+      renderPosts();
+    }
 
-      const date = new Date(time);
-      return date.toLocaleString();
+    function cancelEdit() {
+      editingPostId = null;
+      renderPosts();
+    }
+
+    function saveEdit(postId) {
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("سجل الدخول أولاً");
+        return;
+      }
+
+      const input = document.getElementById("editText-" + postId);
+      const newText = input.value.trim();
+
+      if (newText === "") {
+        alert("النص لا يمكن أن يكون فارغاً");
+        return;
+      }
+
+      db.collection("posts").doc(postId).update({
+        text: newText
+      }).then(function() {
+        editingPostId = null;
+      }).catch(function(error) {
+        alert(error.message);
+      });
+    }
+
+    function formatTime(timeValue) {
+      if (!timeValue) return "";
+
+      if (typeof timeValue === "number") {
+        const date = new Date(timeValue);
+        if (isNaN(date.getTime())) return "";
+        return date.toLocaleString("ar-IQ");
+      }
+
+      if (timeValue.toDate) {
+        const date = timeValue.toDate();
+        if (isNaN(date.getTime())) return "";
+        return date.toLocaleString("ar-IQ");
+      }
+
+      const date = new Date(timeValue);
+      if (isNaN(date.getTime())) return "";
+      return date.toLocaleString("ar-IQ");
+    }
+
+    function escapeHtml(text) {
+      if (!text) return "";
+
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
     function renderPosts() {
-      let html = "";
+      const postsDiv = document.getElementById("posts");
       const user = auth.currentUser;
+      let html = "";
+
+      if (currentPosts.length === 0) {
+        postsDiv.innerHTML = "<div class='empty'>لا توجد منشورات بعد</div>";
+        return;
+      }
 
       currentPosts.forEach(function(item) {
         const postId = item.id;
-        const data = item.data;
+        const data = item.data || {};
         const postTime = formatTime(data.time);
+        const isOwner = user && data.uid === user.uid;
 
-        let deleteButton = "";
+        let actions = "";
 
-        if (user && data.uid === user.uid) {
-          deleteButton = "<button class='delete-btn' onclick=\"deletePost('" + postId + "')\">حذف</button>";
+        if (isOwner) {
+          actions =
+            "<div class='post-actions'>" +
+              "<button class='edit-btn' onclick=\"startEdit('" + postId + "')\">تعديل</button>" +
+              "<button class='delete-btn' onclick=\"deletePost('" + postId + "')\">حذف</button>" +
+            "</div>";
+        }
+
+        let content = "";
+
+        if (editingPostId === postId && isOwner) {
+          content =
+            "<div class='edit-area'>" +
+              "<textarea id='editText-" + postId + "'>" + escapeHtml(data.text || "") + "</textarea>" +
+              "<div class='row'>" +
+                "<button class='save-btn' onclick=\"saveEdit('" + postId + "')\">حفظ</button>" +
+                "<button class='cancel-btn' onclick='cancelEdit()'>إلغاء</button>" +
+              "</div>" +
+            "</div>";
+        } else {
+          content = "<div class='post-text'>" + escapeHtml(data.text || "") + "</div>";
         }
 
         html +=
           "<div class='post'>" +
             "<div class='post-top'>" +
-              "<strong>" + (data.name || "مستخدم") + "</strong>" +
-              deleteButton +
+              "<div>" +
+                "<strong>" + escapeHtml(data.name || "مستخدم") + "</strong>" +
+                "<div class='post-time'>" + postTime + "</div>" +
+              "</div>" +
+              actions +
             "</div>" +
-            "<div>" + (data.text || "") + "</div>" +
-            "<div class='post-time'>" + postTime + "</div>" +
+            content +
           "</div>";
       });
 
-      document.getElementById("posts").innerHTML = html;
+      postsDiv.innerHTML = html;
     }
 
     db.collection("posts")
