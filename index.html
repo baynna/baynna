@@ -10,46 +10,24 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       font-family: Tahoma, Arial, sans-serif;
-      background: #f3f6fb;
+      background: #f5f7fb;
       margin: 0;
-      padding: 0;
-      color: #1f2937;
+      padding: 20px;
     }
 
-    .header {
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      color: white;
-      padding: 18px 20px;
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }
-
-    .page {
-      max-width: 760px;
-      margin: 24px auto;
-      padding: 0 14px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 18px;
-      margin-bottom: 18px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.06);
-      border: 1px solid #e5e7eb;
+    .box {
+      max-width: 700px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.08);
     }
 
     h2 {
       margin: 0 0 15px 0;
-      font-size: 20px;
     }
 
     .row {
@@ -63,136 +41,178 @@
     textarea {
       flex: 1;
       min-width: 220px;
-      padding: 12px;
-      font-size: 15px;
-      border: 1px solid #d1d5db;
-      border-radius: 10px;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
       font-family: inherit;
       box-sizing: border-box;
-      background: #fff;
     }
 
     textarea {
-      min-height: 100px;
+      min-height: 90px;
       resize: vertical;
     }
 
     button {
       padding: 10px 16px;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
+      background: #2563eb;
+      color: white;
       cursor: pointer;
       font-family: inherit;
-      font-size: 14px;
-      transition: 0.2s;
     }
 
     button:hover {
-      opacity: 0.92;
+      background: #1d4ed8;
     }
 
-    .btn-primary {
-      background: #2563eb;
-      color: white;
-    }
-
-    .btn-danger {
+    .delete-btn {
       background: #dc2626;
-      color: white;
     }
 
-    .btn-warning {
+    .delete-btn:hover {
+      background: #b91c1c;
+    }
+
+    .edit-btn {
       background: #f59e0b;
-      color: white;
     }
 
-    .btn-success {
+    .edit-btn:hover {
+      background: #d97706;
+    }
+
+    .save-btn {
       background: #059669;
-      color: white;
     }
 
-    .btn-gray {
+    .save-btn:hover {
+      background: #047857;
+    }
+
+    .cancel-btn {
       background: #6b7280;
-      color: white;
     }
 
-    .btn-light {
+    .cancel-btn:hover {
+      background: #4b5563;
+    }
+
+    .like-btn {
       background: #e5e7eb;
       color: #111827;
     }
 
-    .btn-liked {
+    .like-btn:hover {
+      background: #d1d5db;
+    }
+
+    .liked-btn {
       background: #2563eb;
       color: white;
     }
 
+    .liked-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .comment-btn {
+      background: #2563eb;
+    }
+
+    .comment-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .comment-delete-btn,
+    .reply-delete-btn {
+      background: #dc2626;
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .comment-delete-btn:hover,
+    .reply-delete-btn:hover {
+      background: #b91c1c;
+    }
+
+    .reply-btn {
+      background: #059669;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .reply-btn:hover {
+      background: #047857;
+    }
+
     .muted {
-      color: #6b7280;
+      color: #666;
       font-size: 14px;
-      margin-top: 6px;
+      margin-bottom: 15px;
     }
 
     .post {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 14px;
+      background: #eee;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 8px;
     }
 
     .post-top {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
-
-    .post-author {
-      font-weight: bold;
-      font-size: 16px;
-      color: #111827;
-      margin-bottom: 4px;
+      margin-bottom: 8px;
     }
 
     .post-time {
+      color: #666;
       font-size: 12px;
-      color: #6b7280;
+      margin-top: 6px;
     }
 
     .post-text {
       white-space: pre-wrap;
       word-break: break-word;
-      line-height: 1.8;
-      color: #1f2937;
-      margin-bottom: 12px;
+      line-height: 1.7;
     }
 
-    .post-actions,
-    .post-bottom {
+    .post-actions {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .likes-count {
-      font-size: 14px;
-      color: #374151;
     }
 
     .edit-area {
       margin-top: 10px;
     }
 
-    .comments-box {
-      margin-top: 16px;
-      border-top: 1px solid #e5e7eb;
-      padding-top: 14px;
+    .post-bottom {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
     }
 
-    .comment-input-box {
+    .likes-count {
+      font-size: 14px;
+      color: #444;
+    }
+
+    .comments-box {
+      margin-top: 15px;
+      padding-top: 12px;
+      border-top: 1px solid #d1d5db;
+    }
+
+    .comment-input-box,
+    .reply-input-box {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
@@ -200,14 +220,15 @@
     }
 
     .comment {
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
       padding: 10px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
-    .comment-top {
+    .comment-top,
+    .reply-top {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
@@ -216,75 +237,82 @@
       margin-bottom: 6px;
     }
 
-    .comment-name {
+    .comment-name,
+    .reply-name {
       font-weight: bold;
       font-size: 14px;
     }
 
-    .comment-time {
+    .comment-time,
+    .reply-time {
+      color: #666;
       font-size: 11px;
-      color: #6b7280;
       margin-top: 4px;
     }
 
-    .comment-text {
+    .comment-text,
+    .reply-text {
       white-space: pre-wrap;
       word-break: break-word;
-      line-height: 1.7;
+      line-height: 1.6;
       font-size: 14px;
     }
 
-    .comment-delete-btn {
-      background: #dc2626;
-      color: white;
-      padding: 6px 10px;
-      font-size: 12px;
+    .reply {
+      background: #f7f7f7;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 8px;
+      margin-top: 8px;
+      margin-right: 20px;
+    }
+
+    .replies-box {
+      margin-top: 10px;
+    }
+
+    #authBox {
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #ddd;
     }
 
     .empty {
       text-align: center;
-      color: #6b7280;
-      padding: 20px 0;
+      color: #777;
+      padding: 12px 0;
     }
   </style>
 </head>
 <body>
 
-  <div class="header">بيننا</div>
+  <div class="box">
+    <h2>بيننا</h2>
 
-  <div class="page">
-
-    <div class="card">
-      <h2>الحساب</h2>
-
+    <div id="authBox">
       <div class="row">
         <input id="email" type="email" placeholder="البريد الإلكتروني">
         <input id="password" type="password" placeholder="كلمة المرور">
       </div>
 
       <div class="row">
-        <button class="btn-primary" onclick="register()">إنشاء حساب</button>
-        <button class="btn-primary" onclick="login()">تسجيل الدخول</button>
-        <button class="btn-gray" onclick="logout()">خروج</button>
+        <button onclick="register()">إنشاء حساب</button>
+        <button onclick="login()">تسجيل الدخول</button>
+        <button onclick="logout()">خروج</button>
       </div>
 
       <p id="user" class="muted">غير مسجل</p>
     </div>
 
-    <div class="card">
-      <h2>منشور جديد</h2>
+    <div class="row">
+      <textarea id="text" placeholder="اكتب منشور"></textarea>
+    </div>
 
-      <div class="row">
-        <textarea id="text" placeholder="اكتب منشورك هنا"></textarea>
-      </div>
-
-      <div class="row">
-        <button class="btn-primary" onclick="sendPost()">نشر</button>
-      </div>
+    <div class="row">
+      <button onclick="sendPost()">نشر</button>
     </div>
 
     <div id="posts"></div>
-
   </div>
 
   <script>
@@ -305,6 +333,7 @@
 
     let currentPosts = [];
     let currentComments = {};
+    let currentReplies = {};
     let editingPostId = null;
 
     function register() {
@@ -511,6 +540,62 @@
         });
     }
 
+    function addReply(postId, commentId) {
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("سجل الدخول أولاً");
+        return;
+      }
+
+      const input = document.getElementById("replyText-" + commentId);
+      const text = input.value.trim();
+
+      if (text === "") {
+        alert("اكتب رداً أولاً");
+        return;
+      }
+
+      db.collection("posts")
+        .doc(postId)
+        .collection("comments")
+        .doc(commentId)
+        .collection("replies")
+        .add({
+          text: text,
+          name: user.email,
+          uid: user.uid,
+          time: Date.now()
+        }).then(function() {
+          input.value = "";
+        }).catch(function(error) {
+          alert(error.message);
+        });
+    }
+
+    function deleteReply(postId, commentId, replyId) {
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("سجل الدخول أولاً");
+        return;
+      }
+
+      const ok = confirm("هل تريد حذف هذا الرد؟");
+      if (!ok) return;
+
+      db.collection("posts")
+        .doc(postId)
+        .collection("comments")
+        .doc(commentId)
+        .collection("replies")
+        .doc(replyId)
+        .delete()
+        .catch(function(error) {
+          alert(error.message);
+        });
+    }
+
     function formatTime(timeValue) {
       if (!timeValue) return "";
 
@@ -542,6 +627,35 @@
         .replace(/'/g, "&#039;");
     }
 
+    function replyKey(postId, commentId) {
+      return postId + "__" + commentId;
+    }
+
+    function watchReplies(postId, commentId) {
+      const key = replyKey(postId, commentId);
+
+      db.collection("posts")
+        .doc(postId)
+        .collection("comments")
+        .doc(commentId)
+        .collection("replies")
+        .orderBy("time", "desc")
+        .onSnapshot(function(snapshot) {
+          currentReplies[key] = [];
+
+          snapshot.forEach(function(doc) {
+            currentReplies[key].push({
+              id: doc.id,
+              data: doc.data()
+            });
+          });
+
+          renderPosts();
+        }, function(error) {
+          alert(error.message);
+        });
+    }
+
     function watchComments(postId) {
       db.collection("posts")
         .doc(postId)
@@ -555,6 +669,12 @@
               id: doc.id,
               data: doc.data()
             });
+
+            const key = replyKey(postId, doc.id);
+            if (!currentReplies[key]) {
+              currentReplies[key] = [];
+              watchReplies(postId, doc.id);
+            }
           });
 
           renderPosts();
@@ -569,7 +689,7 @@
       let html = "";
 
       if (currentPosts.length === 0) {
-        postsDiv.innerHTML = "<div class='card empty'>لا توجد منشورات بعد</div>";
+        postsDiv.innerHTML = "<div class='empty'>لا توجد منشورات بعد</div>";
         return;
       }
 
@@ -587,8 +707,8 @@
         if (isOwner) {
           actions =
             "<div class='post-actions'>" +
-              "<button class='btn-warning' onclick=\"startEdit('" + postId + "')\">تعديل</button>" +
-              "<button class='btn-danger' onclick=\"deletePost('" + postId + "')\">حذف</button>" +
+              "<button class='edit-btn' onclick=\"startEdit('" + postId + "')\">تعديل</button>" +
+              "<button class='delete-btn' onclick=\"deletePost('" + postId + "')\">حذف</button>" +
             "</div>";
         }
 
@@ -599,15 +719,15 @@
             "<div class='edit-area'>" +
               "<textarea id='editText-" + postId + "'>" + escapeHtml(data.text || "") + "</textarea>" +
               "<div class='row'>" +
-                "<button class='btn-success' onclick=\"saveEdit('" + postId + "')\">حفظ</button>" +
-                "<button class='btn-gray' onclick='cancelEdit()'>إلغاء</button>" +
+                "<button class='save-btn' onclick=\"saveEdit('" + postId + "')\">حفظ</button>" +
+                "<button class='cancel-btn' onclick='cancelEdit()'>إلغاء</button>" +
               "</div>" +
             "</div>";
         } else {
           content = "<div class='post-text'>" + escapeHtml(data.text || "") + "</div>";
         }
 
-        let likeButtonClass = liked ? "btn-liked" : "btn-light";
+        let likeButtonClass = liked ? "liked-btn" : "like-btn";
         let likeButtonText = liked ? "إلغاء اللايك" : "لايك";
 
         let commentsHtml = "";
@@ -619,12 +739,45 @@
             const commentId = commentItem.id;
             const commentData = commentItem.data || {};
             const isCommentOwner = user && commentData.uid === user.uid;
+            const key = replyKey(postId, commentId);
+            const replies = Array.isArray(currentReplies[key]) ? currentReplies[key] : [];
 
             let commentDeleteButton = "";
 
             if (isCommentOwner) {
               commentDeleteButton =
                 "<button class='comment-delete-btn' onclick=\"deleteComment('" + postId + "','" + commentId + "')\">حذف التعليق</button>";
+            }
+
+            let repliesHtml = "";
+
+            if (replies.length === 0) {
+              repliesHtml = "<div class='empty'>لا توجد ردود</div>";
+            } else {
+              replies.forEach(function(replyItem) {
+                const replyId = replyItem.id;
+                const replyData = replyItem.data || {};
+                const isReplyOwner = user && replyData.uid === user.uid;
+
+                let replyDeleteButton = "";
+
+                if (isReplyOwner) {
+                  replyDeleteButton =
+                    "<button class='reply-delete-btn' onclick=\"deleteReply('" + postId + "','" + commentId + "','" + replyId + "')\">حذف الرد</button>";
+                }
+
+                repliesHtml +=
+                  "<div class='reply'>" +
+                    "<div class='reply-top'>" +
+                      "<div>" +
+                        "<div class='reply-name'>" + escapeHtml(replyData.name || "مستخدم") + "</div>" +
+                        "<div class='reply-time'>" + formatTime(replyData.time) + "</div>" +
+                      "</div>" +
+                      replyDeleteButton +
+                    "</div>" +
+                    "<div class='reply-text'>" + escapeHtml(replyData.text || "") + "</div>" +
+                  "</div>";
+              });
             }
 
             commentsHtml +=
@@ -637,15 +790,22 @@
                   commentDeleteButton +
                 "</div>" +
                 "<div class='comment-text'>" + escapeHtml(commentData.text || "") + "</div>" +
+                "<div class='reply-input-box'>" +
+                  "<input id='replyText-" + commentId + "' placeholder='اكتب رداً'>" +
+                  "<button class='reply-btn' onclick=\"addReply('" + postId + "','" + commentId + "')\">إرسال الرد</button>" +
+                "</div>" +
+                "<div class='replies-box'>" +
+                  repliesHtml +
+                "</div>" +
               "</div>";
           });
         }
 
         html +=
-          "<div class='card post'>" +
+          "<div class='post'>" +
             "<div class='post-top'>" +
               "<div>" +
-                "<div class='post-author'>" + escapeHtml(data.name || "مستخدم") + "</div>" +
+                "<strong>" + escapeHtml(data.name || "مستخدم") + "</strong>" +
                 "<div class='post-time'>" + postTime + "</div>" +
               "</div>" +
               actions +
@@ -658,7 +818,7 @@
             "<div class='comments-box'>" +
               "<div class='comment-input-box'>" +
                 "<input id='commentText-" + postId + "' placeholder='اكتب تعليقاً'>" +
-                "<button class='btn-primary' onclick=\"addComment('" + postId + "')\">إرسال التعليق</button>" +
+                "<button class='comment-btn' onclick=\"addComment('" + postId + "')\">إرسال التعليق</button>" +
               "</div>" +
               commentsHtml +
             "</div>" +
