@@ -59,6 +59,14 @@
       background: #1d4ed8;
     }
 
+    .delete-btn {
+      background: #dc2626;
+    }
+
+    .delete-btn:hover {
+      background: #b91c1c;
+    }
+
     .muted {
       color: #666;
       font-size: 14px;
@@ -70,6 +78,21 @@
       padding: 12px;
       margin-bottom: 10px;
       border-radius: 8px;
+    }
+
+    .post-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .post-time {
+      color: #666;
+      font-size: 12px;
+      margin-top: 6px;
     }
 
     #authBox {
@@ -109,10 +132,10 @@
 
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyA_pNFhFcOArArEmKLIiQ-pAlIVXdOM1T8",
+      apiKey: "AIzaSyA_pNFhFcOArArEmKlIiQ-pAlIVXdOM1T8",
       authDomain: "baynna-9884f.firebaseapp.com",
       projectId: "baynna-9884f",
-      storageBucket: "baynna-9884f.appspot.com",
+      storageBucket: "baynna-9884f.firebasestorage.app",
       messagingSenderId: "377002437252",
       appId: "1:377002437252:web:dc7f507818e8abace970d1",
       measurementId: "G-BLH1DN1XEL"
@@ -122,6 +145,8 @@
 
     const auth = firebase.auth();
     const db = firebase.firestore();
+
+    let currentPosts = [];
 
     function register() {
       const email = document.getElementById("email").value.trim();
@@ -159,6 +184,9 @@
     function logout() {
       auth.signOut().then(function() {
         document.getElementById("user").innerText = "غير مسجل";
+        renderPosts();
+      }).catch(function(error) {
+        alert(error.message);
       });
     }
 
@@ -168,6 +196,8 @@
       } else {
         document.getElementById("user").innerText = "غير مسجل";
       }
+
+      renderPosts();
     });
 
     function sendPost() {
@@ -193,21 +223,75 @@
       });
     }
 
+    function deletePost(postId) {
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("سجل الدخول أولاً");
+        return;
+      }
+
+      const ok = confirm("هل تريد حذف هذا المنشور؟");
+
+      if (!ok) return;
+
+      db.collection("posts").doc(postId).delete()
+        .catch(function(error) {
+          alert(error.message);
+        });
+    }
+
+    function formatTime(time) {
+      if (!time) return "";
+
+      const date = new Date(time);
+      return date.toLocaleString();
+    }
+
+    function renderPosts() {
+      let html = "";
+      const user = auth.currentUser;
+
+      currentPosts.forEach(function(item) {
+        const postId = item.id;
+        const data = item.data;
+        const postTime = formatTime(data.time);
+
+        let deleteButton = "";
+
+        if (user && data.uid === user.uid) {
+          deleteButton = "<button class='delete-btn' onclick=\"deletePost('" + postId + "')\">حذف</button>";
+        }
+
+        html +=
+          "<div class='post'>" +
+            "<div class='post-top'>" +
+              "<strong>" + (data.name || "مستخدم") + "</strong>" +
+              deleteButton +
+            "</div>" +
+            "<div>" + (data.text || "") + "</div>" +
+            "<div class='post-time'>" + postTime + "</div>" +
+          "</div>";
+      });
+
+      document.getElementById("posts").innerHTML = html;
+    }
+
     db.collection("posts")
       .orderBy("time", "desc")
       .onSnapshot(function(snapshot) {
-        var html = "";
+        currentPosts = [];
 
         snapshot.forEach(function(doc) {
-          var data = doc.data();
-          html += "<div class='post'><strong>" +
-            (data.name || "مستخدم") +
-            "</strong><br>" +
-            (data.text || "") +
-            "</div>";
+          currentPosts.push({
+            id: doc.id,
+            data: doc.data()
+          });
         });
 
-        document.getElementById("posts").innerHTML = html;
+        renderPosts();
+      }, function(error) {
+        alert(error.message);
       });
   </script>
 
