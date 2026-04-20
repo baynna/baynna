@@ -30,6 +30,10 @@
       margin: 0 0 15px 0;
     }
 
+    h3 {
+      margin: 0 0 10px 0;
+    }
+
     .row {
       display: flex;
       gap: 10px;
@@ -164,6 +168,20 @@
 
     .active-filter:hover {
       background: #1d4ed8;
+    }
+
+    .profile-card {
+      background: #f8fafc;
+      border: 1px solid #dbeafe;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+
+    .profile-line {
+      margin-bottom: 6px;
+      color: #111827;
+      line-height: 1.7;
     }
 
     .muted {
@@ -315,6 +333,10 @@
       font-size: 13px;
       margin-top: 8px;
     }
+
+    .hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -335,6 +357,26 @@
       </div>
 
       <p id="user" class="muted">غير مسجل</p>
+    </div>
+
+    <div id="profileSection" class="profile-card hidden">
+      <h3>حسابي</h3>
+
+      <div class="profile-line"><strong>اسم المستخدم:</strong> <span id="profileUsername">-</span></div>
+      <div class="profile-line"><strong>النبذة:</strong> <span id="profileBio">-</span></div>
+      <div class="profile-line"><strong>البريد:</strong> <span id="profileEmail">-</span></div>
+
+      <div class="row">
+        <input id="usernameInput" placeholder="اسم المستخدم">
+      </div>
+
+      <div class="row">
+        <textarea id="bioInput" placeholder="اكتب نبذة قصيرة عنك"></textarea>
+      </div>
+
+      <div class="row">
+        <button onclick="saveProfile()">حفظ بيانات الحساب</button>
+      </div>
     </div>
 
     <div class="row">
@@ -376,6 +418,21 @@
     let currentReplies = {};
     let editingPostId = null;
     let currentFilter = "all";
+    let usersMap = {};
+    let currentUserProfile = null;
+
+    db.collection("users").onSnapshot(function(snapshot) {
+      usersMap = {};
+
+      snapshot.forEach(function(doc) {
+        usersMap[doc.id] = doc.data();
+      });
+
+      updateProfileBox();
+      renderPosts();
+    }, function(error) {
+      console.log(error.message);
+    });
 
     function register() {
       const email = document.getElementById("email").value.trim();
@@ -387,6 +444,15 @@
       }
 
       auth.createUserWithEmailAndPassword(email, password)
+        .then(function(result) {
+          return db.collection("users").doc(result.user.uid).set({
+            uid: result.user.uid,
+            email: result.user.email,
+            username: "",
+            bio: "",
+            createdAt: Date.now()
+          });
+        })
         .then(function() {
           alert("تم إنشاء الحساب");
         })
@@ -416,7 +482,9 @@
           document.getElementById("user").innerText = "غير مسجل";
           editingPostId = null;
           currentFilter = "all";
+          currentUserProfile = null;
           updateFilterButtons();
+          updateProfileBox();
           renderPosts();
         })
         .catch(function(error) {
@@ -426,9 +494,11 @@
 
     auth.onAuthStateChanged(function(user) {
       if (user) {
-        document.getElementById("user").innerText = "مسجل: " + user.email;
+        document.getElementById("user").innerText = "مسجل";
+        ensureUserProfile(user);
       } else {
         document.getElementById("user").innerText = "غير مسجل";
+        currentUserProfile = null;
       }
 
       if (!user && currentFilter === "mine") {
@@ -436,8 +506,95 @@
       }
 
       updateFilterButtons();
+      updateProfileBox();
       renderPosts();
     });
+
+    function ensureUserProfile(user) {
+      db.collection("users").doc(user.uid).get()
+        .then(function(doc) {
+          if (!doc.exists) {
+            return db.collection("users").doc(user.uid).set({
+              uid: user.uid,
+              email: user.email || "",
+              username: "",
+              bio: "",
+              createdAt: Date.now()
+            });
+          }
+        })
+        .then(function() {
+          currentUserProfile = usersMap[user.uid] || null;
+          updateProfileBox();
+          renderPosts();
+        })
+        .catch(function(error) {
+          alert(error.message);
+        });
+    }
+
+    function updateProfileBox() {
+      const user = auth.currentUser;
+      const profileSection = document.getElementById("profileSection");
+
+      if (!user) {
+        profileSection.classList.add("hidden");
+        return;
+      }
+
+      currentUserProfile = usersMap[user.uid] || null;
+      profileSection.classList.remove("hidden");
+
+      const username = currentUserProfile && currentUserProfile.username ? currentUserProfile.username : "";
+      const bio = currentUserProfile && currentUserProfile.bio ? currentUserProfile.bio : "";
+      const email = currentUserProfile && currentUserProfile.email ? currentUserProfile.email : (user.email || "");
+
+      document.getElementById("profileUsername").innerText = username || "بدون اسم مستخدم";
+      document.getElementById("profileBio").innerText = bio || "لا توجد نبذة";
+      document.getElementById("profileEmail").innerText = email || "-";
+
+      document.getElementById("usernameInput").value = username;
+      document.getElementById("bioInput").value = bio;
+    }
+
+    function saveProfile() {
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("سجل الدخول أولاً");
+        return;
+      }
+
+      const username = document.getElementById("usernameInput").value.trim();
+      const bio = document.getElementById("bioInput").value.trim();
+
+      if (!username) {
+        alert("اكتب اسم المستخدم");
+        return;
+      }
+
+      db.collection("users").doc(user.uid).set({
+        uid: user.uid,
+        email: user.email || "",
+        username: username,
+        bio: bio,
+        createdAt: currentUserProfile && currentUserProfile.createdAt ? currentUserProfile.createdAt : Date.now()
+      }).then(function() {
+        alert("تم حفظ بيانات الحساب");
+      }).catch(function(error) {
+        alert(error.message);
+      });
+    }
+
+    function getDisplayName(uid, fallbackName) {
+      const profile = usersMap[uid];
+
+      if (profile && profile.username && profile.username.trim() !== "") {
+        return profile.username;
+      }
+
+      return fallbackName || "مستخدم";
+    }
 
     function setFilter(filterType) {
       if (filterType === "mine" && !auth.currentUser) {
@@ -864,7 +1021,7 @@
                   "<div class='reply'>" +
                     "<div class='reply-top'>" +
                       "<div>" +
-                        "<div class='reply-name'>" + escapeHtml(replyData.name || "مستخدم") + "</div>" +
+                        "<div class='reply-name'>" + escapeHtml(getDisplayName(replyData.uid, replyData.name)) + "</div>" +
                         "<div class='reply-time'>" + formatTime(replyData.time) + "</div>" +
                       "</div>" +
                       replyDeleteButton +
@@ -878,7 +1035,7 @@
               "<div class='comment'>" +
                 "<div class='comment-top'>" +
                   "<div>" +
-                    "<div class='comment-name'>" + escapeHtml(commentData.name || "مستخدم") + "</div>" +
+                    "<div class='comment-name'>" + escapeHtml(getDisplayName(commentData.uid, commentData.name)) + "</div>" +
                     "<div class='comment-time'>" + formatTime(commentData.time) + "</div>" +
                   "</div>" +
                   commentDeleteButton +
@@ -907,7 +1064,7 @@
           "<div class='post'>" +
             "<div class='post-top'>" +
               "<div>" +
-                "<strong>" + escapeHtml(data.name || "مستخدم") + "</strong>" +
+                "<strong>" + escapeHtml(getDisplayName(data.uid, data.name)) + "</strong>" +
                 "<div class='post-time'>" + postTime + "</div>" +
               "</div>" +
               actions +
