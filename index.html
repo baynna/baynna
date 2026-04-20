@@ -170,6 +170,26 @@
       background: #1d4ed8;
     }
 
+    .follow-btn {
+      background: #2563eb;
+      font-size: 13px;
+      padding: 8px 12px;
+    }
+
+    .follow-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .following-btn {
+      background: #6b7280;
+      font-size: 13px;
+      padding: 8px 12px;
+    }
+
+    .following-btn:hover {
+      background: #4b5563;
+    }
+
     .profile-card {
       background: #f8fafc;
       border: 1px solid #dbeafe;
@@ -213,6 +233,13 @@
       gap: 10px;
       flex-wrap: wrap;
       margin-bottom: 8px;
+    }
+
+    .post-top-right {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: flex-start;
     }
 
     .post-time {
@@ -365,6 +392,8 @@
       <div class="profile-line"><strong>اسم المستخدم:</strong> <span id="profileUsername">-</span></div>
       <div class="profile-line"><strong>النبذة:</strong> <span id="profileBio">-</span></div>
       <div class="profile-line"><strong>البريد:</strong> <span id="profileEmail">-</span></div>
+      <div class="profile-line"><strong>المتابعون:</strong> <span id="profileFollowers">0</span></div>
+      <div class="profile-line"><strong>أتابع:</strong> <span id="profileFollowing">0</span></div>
 
       <div class="row">
         <input id="usernameInput" placeholder="اسم المستخدم">
@@ -420,12 +449,21 @@
     let currentFilter = "all";
     let usersMap = {};
     let currentUserProfile = null;
+    let followersCountMap = {};
+    let followingCountMap = {};
+    let currentFollowingMap = {};
+    let watchedUserCounts = {};
+    let currentFollowingUnsubscribe = null;
 
     db.collection("users").onSnapshot(function(snapshot) {
       usersMap = {};
 
       snapshot.forEach(function(doc) {
         usersMap[doc.id] = doc.data();
+
+        if (!watchedUserCounts[doc.id]) {
+          watchUserCounts(doc.id);
+        }
       });
 
       updateProfileBox();
@@ -483,6 +521,11 @@
           editingPostId = null;
           currentFilter = "all";
           currentUserProfile = null;
+          currentFollowingMap = {};
+          if (currentFollowingUnsubscribe) {
+            currentFollowingUnsubscribe();
+            currentFollowingUnsubscribe = null;
+          }
           updateFilterButtons();
           updateProfileBox();
           renderPosts();
@@ -496,9 +539,15 @@
       if (user) {
         document.getElementById("user").innerText = "مسجل";
         ensureUserProfile(user);
+        watchCurrentUserFollowing(user.uid);
       } else {
         document.getElementById("user").innerText = "غير مسجل";
         currentUserProfile = null;
+        currentFollowingMap = {};
+        if (currentFollowingUnsubscribe) {
+          currentFollowingUnsubscribe();
+          currentFollowingUnsubscribe = null;
+        }
       }
 
       if (!user && currentFilter === "mine") {
@@ -509,6 +558,52 @@
       updateProfileBox();
       renderPosts();
     });
+
+    function watchCurrentUserFollowing(uid) {
+      if (currentFollowingUnsubscribe) {
+        currentFollowingUnsubscribe();
+      }
+
+      currentFollowingUnsubscribe = db.collection("users")
+        .doc(uid)
+        .collection("following")
+        .onSnapshot(function(snapshot) {
+          currentFollowingMap = {};
+          snapshot.forEach(function(doc) {
+            currentFollowingMap[doc.id] = true;
+          });
+          updateProfileBox();
+          renderPosts();
+        }, function(error) {
+          console.log(error.message);
+        });
+    }
+
+    function watchUserCounts(userId) {
+      watchedUserCounts[userId] = true;
+
+      db.collection("users")
+        .doc(userId)
+        .collection("followers")
+        .onSnapshot(function(snapshot) {
+          followersCountMap[userId] = snapshot.size;
+          updateProfileBox();
+          renderPosts();
+        }, function(error) {
+          console.log(error.message);
+        });
+
+      db.collection("users")
+        .doc(userId)
+        .collection("following")
+        .onSnapshot(function(snapshot) {
+          followingCountMap[userId] = snapshot.size;
+          updateProfileBox();
+          renderPosts();
+        }, function(error) {
+          console.log(error.message);
+        });
+    }
 
     function ensureUserProfile(user) {
       db.collection("users").doc(user.uid).get()
@@ -548,10 +643,14 @@
       const username = currentUserProfile && currentUserProfile.username ? currentUserProfile.username : "";
       const bio = currentUserProfile && currentUserProfile.bio ? currentUserProfile.bio : "";
       const email = currentUserProfile && currentUserProfile.email ? currentUserProfile.email : (user.email || "");
+      const followersCount = followersCountMap[user.uid] || 0;
+      const followingCount = followingCountMap[user.uid] || 0;
 
       document.getElementById("profileUsername").innerText = username || "بدون اسم مستخدم";
       document.getElementById("profileBio").innerText = bio || "لا توجد نبذة";
       document.getElementById("profileEmail").innerText = email || "-";
+      document.getElementById("profileFollowers").innerText = followersCount;
+      document.getElementById("profileFollowing").innerText = followingCount;
 
       document.getElementById("usernameInput").value = username;
       document.getElementById("bioInput").value = bio;
@@ -582,6 +681,77 @@
       }).then(function() {
         alert("تم حفظ بيانات الحساب");
       }).catch(function(error) {
+        alert(error.message);
+      });
+    }
+
+    function followUser(targetUid) {
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("سجل الدخول أولاً");
+        return;
+      }
+
+      if (user.uid === targetUid) {
+        return;
+      }
+
+      const batch = db.batch();
+
+      const myFollowingRef = db.collection("users")
+        .doc(user.uid)
+        .collection("following")
+        .doc(targetUid);
+
+      const targetFollowersRef = db.collection("users")
+        .doc(targetUid)
+        .collection("followers")
+        .doc(user.uid);
+
+      batch.set(myFollowingRef, {
+        uid: targetUid,
+        time: Date.now()
+      });
+
+      batch.set(targetFollowersRef, {
+        uid: user.uid,
+        time: Date.now()
+      });
+
+      batch.commit().catch(function(error) {
+        alert(error.message);
+      });
+    }
+
+    function unfollowUser(targetUid) {
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("سجل الدخول أولاً");
+        return;
+      }
+
+      if (user.uid === targetUid) {
+        return;
+      }
+
+      const batch = db.batch();
+
+      const myFollowingRef = db.collection("users")
+        .doc(user.uid)
+        .collection("following")
+        .doc(targetUid);
+
+      const targetFollowersRef = db.collection("users")
+        .doc(targetUid)
+        .collection("followers")
+        .doc(user.uid);
+
+      batch.delete(myFollowingRef);
+      batch.delete(targetFollowersRef);
+
+      batch.commit().catch(function(error) {
         alert(error.message);
       });
     }
@@ -941,6 +1111,7 @@
         const likes = Array.isArray(data.likes) ? data.likes : [];
         const liked = user ? likes.includes(user.uid) : false;
         const comments = Array.isArray(currentComments[postId]) ? currentComments[postId] : [];
+        const isFollowing = user ? !!currentFollowingMap[data.uid] : false;
 
         let actions = "";
 
@@ -950,6 +1121,16 @@
               "<button class='edit-btn' onclick=\"startEdit('" + postId + "')\">تعديل</button>" +
               "<button class='delete-btn' onclick=\"deletePost('" + postId + "')\">حذف</button>" +
             "</div>";
+        }
+
+        let followButton = "";
+
+        if (user && !isOwner && data.uid) {
+          if (isFollowing) {
+            followButton = "<button class='following-btn' onclick=\"unfollowUser('" + data.uid + "')\">إلغاء المتابعة</button>";
+          } else {
+            followButton = "<button class='follow-btn' onclick=\"followUser('" + data.uid + "')\">متابعة</button>";
+          }
         }
 
         let content = "";
@@ -1067,7 +1248,10 @@
                 "<strong>" + escapeHtml(getDisplayName(data.uid, data.name)) + "</strong>" +
                 "<div class='post-time'>" + postTime + "</div>" +
               "</div>" +
-              actions +
+              "<div class='post-top-right'>" +
+                followButton +
+                actions +
+              "</div>" +
             "</div>" +
             content +
             "<div class='post-bottom'>" +
