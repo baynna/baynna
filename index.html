@@ -148,10 +148,37 @@
       background: #047857;
     }
 
+    .filter-btn {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .filter-btn:hover {
+      background: #bfdbfe;
+    }
+
+    .active-filter {
+      background: #2563eb;
+      color: white;
+    }
+
+    .active-filter:hover {
+      background: #1d4ed8;
+    }
+
     .muted {
       color: #666;
       font-size: 14px;
       margin-bottom: 15px;
+    }
+
+    .post-count {
+      background: #f3f4f6;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      color: #111827;
+      font-size: 14px;
     }
 
     .post {
@@ -318,6 +345,13 @@
       <button onclick="sendPost()">نشر</button>
     </div>
 
+    <div class="row">
+      <button id="allPostsBtn" class="filter-btn active-filter" onclick="setFilter('all')">كل المنشورات</button>
+      <button id="myPostsBtn" class="filter-btn" onclick="setFilter('mine')">منشوراتي</button>
+    </div>
+
+    <div id="postCount" class="post-count">عدد المنشورات: 0</div>
+
     <div id="posts"></div>
   </div>
 
@@ -341,6 +375,7 @@
     let currentComments = {};
     let currentReplies = {};
     let editingPostId = null;
+    let currentFilter = "all";
 
     function register() {
       const email = document.getElementById("email").value.trim();
@@ -380,6 +415,8 @@
         .then(function() {
           document.getElementById("user").innerText = "غير مسجل";
           editingPostId = null;
+          currentFilter = "all";
+          updateFilterButtons();
           renderPosts();
         })
         .catch(function(error) {
@@ -394,8 +431,32 @@
         document.getElementById("user").innerText = "غير مسجل";
       }
 
+      if (!user && currentFilter === "mine") {
+        currentFilter = "all";
+      }
+
+      updateFilterButtons();
       renderPosts();
     });
+
+    function setFilter(filterType) {
+      if (filterType === "mine" && !auth.currentUser) {
+        alert("سجل الدخول أولاً");
+        return;
+      }
+
+      currentFilter = filterType;
+      updateFilterButtons();
+      renderPosts();
+    }
+
+    function updateFilterButtons() {
+      const allBtn = document.getElementById("allPostsBtn");
+      const mineBtn = document.getElementById("myPostsBtn");
+
+      allBtn.className = currentFilter === "all" ? "filter-btn active-filter" : "filter-btn";
+      mineBtn.className = currentFilter === "mine" ? "filter-btn active-filter" : "filter-btn";
+    }
 
     function sendPost() {
       const text = document.getElementById("text").value.trim();
@@ -689,17 +750,33 @@
         });
     }
 
+    function getFilteredPosts() {
+      const user = auth.currentUser;
+
+      if (currentFilter === "mine" && user) {
+        return currentPosts.filter(function(item) {
+          return item.data && item.data.uid === user.uid;
+        });
+      }
+
+      return currentPosts;
+    }
+
     function renderPosts() {
       const postsDiv = document.getElementById("posts");
+      const postCountDiv = document.getElementById("postCount");
       const user = auth.currentUser;
+      const filteredPosts = getFilteredPosts();
       let html = "";
 
-      if (currentPosts.length === 0) {
-        postsDiv.innerHTML = "<div class='empty'>لا توجد منشورات بعد</div>";
+      postCountDiv.innerText = "عدد المنشورات: " + filteredPosts.length;
+
+      if (filteredPosts.length === 0) {
+        postsDiv.innerHTML = "<div class='empty'>لا توجد منشورات</div>";
         return;
       }
 
-      currentPosts.forEach(function(item) {
+      filteredPosts.forEach(function(item) {
         const postId = item.id;
         const data = item.data || {};
         const postTime = formatTime(data.time);
