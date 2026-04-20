@@ -282,6 +282,12 @@
       color: #777;
       padding: 12px 0;
     }
+
+    .auth-note {
+      color: #666;
+      font-size: 13px;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
@@ -548,7 +554,7 @@
         return;
       }
 
-      const input = document.getElementById("replyText-" + commentId);
+      const input = document.getElementById("replyText-" + postId + "-" + commentId);
       const text = input.value.trim();
 
       if (text === "") {
@@ -749,6 +755,17 @@
                 "<button class='comment-delete-btn' onclick=\"deleteComment('" + postId + "','" + commentId + "')\">حذف التعليق</button>";
             }
 
+            let replyInputHtml = "";
+            if (user) {
+              replyInputHtml =
+                "<div class='reply-input-box'>" +
+                  "<input id='replyText-" + postId + "-" + commentId + "' placeholder='اكتب رداً'>" +
+                  "<button class='reply-btn' onclick=\"addReply('" + postId + "','" + commentId + "')\">إرسال الرد</button>" +
+                "</div>";
+            } else {
+              replyInputHtml = "<div class='auth-note'>سجل الدخول لإضافة رد</div>";
+            }
+
             let repliesHtml = "";
 
             if (replies.length === 0) {
@@ -790,15 +807,23 @@
                   commentDeleteButton +
                 "</div>" +
                 "<div class='comment-text'>" + escapeHtml(commentData.text || "") + "</div>" +
-                "<div class='reply-input-box'>" +
-                  "<input id='replyText-" + commentId + "' placeholder='اكتب رداً'>" +
-                  "<button class='reply-btn' onclick=\"addReply('" + postId + "','" + commentId + "')\">إرسال الرد</button>" +
-                "</div>" +
+                replyInputHtml +
                 "<div class='replies-box'>" +
                   repliesHtml +
                 "</div>" +
               "</div>";
           });
+        }
+
+        let commentInputHtml = "";
+        if (user) {
+          commentInputHtml =
+            "<div class='comment-input-box'>" +
+              "<input id='commentText-" + postId + "' placeholder='اكتب تعليقاً'>" +
+              "<button class='comment-btn' onclick=\"addComment('" + postId + "')\">إرسال التعليق</button>" +
+            "</div>";
+        } else {
+          commentInputHtml = "<div class='auth-note'>سجل الدخول لإضافة تعليق</div>";
         }
 
         html +=
@@ -816,10 +841,7 @@
               "<div class='likes-count'>عدد اللايكات: " + likes.length + "</div>" +
             "</div>" +
             "<div class='comments-box'>" +
-              "<div class='comment-input-box'>" +
-                "<input id='commentText-" + postId + "' placeholder='اكتب تعليقاً'>" +
-                "<button class='comment-btn' onclick=\"addComment('" + postId + "')\">إرسال التعليق</button>" +
-              "</div>" +
+              commentInputHtml +
               commentsHtml +
             "</div>" +
           "</div>";
