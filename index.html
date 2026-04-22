@@ -121,7 +121,8 @@
       align-items: center;
     }
 
-    .nav-pill {
+    .nav-pill,
+    .icon-nav-btn {
       border: none;
       border-radius: 999px;
       padding: 10px 15px;
@@ -131,16 +132,37 @@
       cursor: pointer;
       border: 1px solid rgba(99, 102, 241, 0.10);
       box-shadow: none;
+      position: relative;
     }
 
-    .nav-pill:hover {
+    .nav-pill:hover,
+    .icon-nav-btn:hover {
       transform: translateY(-1px);
     }
 
-    .nav-pill.active-nav {
+    .nav-pill.active-nav,
+    .icon-nav-btn.active-nav {
       background: var(--primary);
       color: #fff;
       box-shadow: 0 10px 24px rgba(91, 33, 182, 0.16);
+    }
+
+    .notif-badge {
+      position: absolute;
+      top: -6px;
+      left: -4px;
+      min-width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: #dc2626;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 0 6px;
+      border: 2px solid #fff;
     }
 
     .page-grid {
@@ -1107,6 +1129,38 @@
       margin-top: 8px;
     }
 
+    .notifications-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .notification-item {
+      background: rgba(255,255,255,0.88);
+      border: 1px solid rgba(99,102,241,0.10);
+      border-radius: 16px;
+      padding: 14px;
+      line-height: 1.8;
+    }
+
+    .notification-item.unread {
+      background: #eef2ff;
+      border-color: rgba(67,56,202,0.20);
+    }
+
+    .notification-time {
+      color: var(--text-soft);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .notification-text {
+      color: #1b214d;
+      font-size: 14px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
     @media (max-width: 980px) {
       .page-grid {
         grid-template-columns: 1fr;
@@ -1184,6 +1238,10 @@
 
       <div class="nav-pills">
         <button id="homeNavBtn" class="nav-pill active-nav" onclick="goToFeed()">الرئيسية</button>
+        <button id="notificationsNavBtn" class="icon-nav-btn" onclick="openNotifications()">
+          🔔
+          <span id="notifBadge" class="notif-badge hidden">0</span>
+        </button>
         <button id="exploreNavBtn" class="nav-pill" type="button">الاستكشاف لاحقًا</button>
         <button id="settingsNavBtn" class="nav-pill" onclick="openSettings()">الإعدادات</button>
         <button id="messagesNavBtn" class="nav-pill" type="button">الرسائل لاحقًا</button>
@@ -1391,6 +1449,18 @@
           </div>
         </div>
 
+        <div id="notificationsSection" class="panel hidden">
+          <div class="toolbar">
+            <button class="back-btn" onclick="goToFeed()">الرجوع للرئيسية</button>
+          </div>
+
+          <div class="section-kicker">الإشعارات</div>
+          <h3 class="panel-title">كل ما فاتك</h3>
+          <p class="helper-text">هنا تظهر إشعارات اللايكات والتعليقات والردود والمتابعة.</p>
+
+          <div id="notificationsList" class="notifications-list"></div>
+        </div>
+
         <div id="publicProfileSection" class="panel public-profile-card hidden">
           <div class="toolbar">
             <button class="back-btn" onclick="goToFeed()">الرجوع للرئيسية</button>
@@ -1536,6 +1606,8 @@
     let currentPosts = [];
     let currentComments = {};
     let currentReplies = {};
+    let currentNotifications = [];
+    let currentNotificationsUnsubscribe = null;
     let editingPostId = null;
     let currentFilter = "all";
     let currentAdvancedFilter = "latest";
@@ -1695,6 +1767,7 @@
           currentAdvancedFilter = "latest";
           currentUserProfile = null;
           currentFollowingMap = {};
+          currentNotifications = [];
           currentView = "feed";
           selectedProfileUid = null;
           searchText = "";
@@ -1705,10 +1778,16 @@
           clearMoodSelection();
           removeSelectedImage();
           updateSearchStatus();
+          updateNotificationBadge();
 
           if (currentFollowingUnsubscribe) {
             currentFollowingUnsubscribe();
             currentFollowingUnsubscribe = null;
+          }
+
+          if (currentNotificationsUnsubscribe) {
+            currentNotificationsUnsubscribe();
+            currentNotificationsUnsubscribe = null;
           }
 
           updateAdvancedFilterButtons();
@@ -1728,14 +1807,21 @@
         document.getElementById("user").innerText = "مسجل";
         ensureUserProfile(user);
         watchCurrentUserFollowing(user.uid);
+        watchNotifications(user.uid);
       } else {
         document.getElementById("user").innerText = "غير مسجل";
         currentUserProfile = null;
         currentFollowingMap = {};
+        currentNotifications = [];
 
         if (currentFollowingUnsubscribe) {
           currentFollowingUnsubscribe();
           currentFollowingUnsubscribe = null;
+        }
+
+        if (currentNotificationsUnsubscribe) {
+          currentNotificationsUnsubscribe();
+          currentNotificationsUnsubscribe = null;
         }
       }
 
@@ -1748,6 +1834,7 @@
       updatePublicProfileBox();
       updateUserStatusBadge();
       updateNavButtons();
+      updateNotificationBadge();
       renderPosts();
     });
 
@@ -1769,9 +1856,11 @@
     function updateNavButtons() {
       const homeBtn = document.getElementById("homeNavBtn");
       const settingsBtn = document.getElementById("settingsNavBtn");
+      const notifBtn = document.getElementById("notificationsNavBtn");
 
       homeBtn.className = currentView === "feed" || currentView === "profile" ? "nav-pill active-nav" : "nav-pill";
       settingsBtn.className = currentView === "settings" ? "nav-pill active-nav" : "nav-pill";
+      notifBtn.className = currentView === "notifications" ? "icon-nav-btn active-nav" : "icon-nav-btn";
     }
 
     function watchCurrentUserFollowing(uid) {
@@ -1794,6 +1883,118 @@
         }, function(error) {
           console.log(error.message);
         });
+    }
+
+    function watchNotifications(uid) {
+      if (currentNotificationsUnsubscribe) {
+        currentNotificationsUnsubscribe();
+      }
+
+      currentNotificationsUnsubscribe = db.collection("users")
+        .doc(uid)
+        .collection("notifications")
+        .orderBy("time", "desc")
+        .onSnapshot(function(snapshot) {
+          currentNotifications = [];
+          snapshot.forEach(function(doc) {
+            currentNotifications.push({
+              id: doc.id,
+              data: doc.data()
+            });
+          });
+          updateNotificationBadge();
+          if (currentView === "notifications") {
+            renderNotifications();
+          }
+        }, function(error) {
+          console.log(error.message);
+        });
+    }
+
+    function updateNotificationBadge() {
+      const badge = document.getElementById("notifBadge");
+      if (!badge) return;
+
+      const unreadCount = currentNotifications.filter(function(item) {
+        return !(item.data && item.data.read);
+      }).length;
+
+      if (unreadCount > 0) {
+        badge.innerText = unreadCount > 99 ? "99+" : unreadCount;
+        badge.classList.remove("hidden");
+      } else {
+        badge.innerText = "0";
+        badge.classList.add("hidden");
+      }
+    }
+
+    function createNotification(targetUid, payload) {
+      if (!targetUid) return;
+      db.collection("users")
+        .doc(targetUid)
+        .collection("notifications")
+        .add(payload)
+        .catch(function(error) {
+          console.log(error.message);
+        });
+    }
+
+    function markNotificationsRead() {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const unreadItems = currentNotifications.filter(function(item) {
+        return !(item.data && item.data.read);
+      });
+
+      unreadItems.forEach(function(item) {
+        db.collection("users")
+          .doc(user.uid)
+          .collection("notifications")
+          .doc(item.id)
+          .update({ read: true })
+          .catch(function(error) {
+            console.log(error.message);
+          });
+      });
+    }
+
+    function openNotifications() {
+      const user = auth.currentUser;
+      if (!user) {
+        alert("سجل الدخول أولاً");
+        return;
+      }
+
+      currentView = "notifications";
+      selectedProfileUid = null;
+      updateNavButtons();
+      renderNotifications();
+      renderPosts();
+      markNotificationsRead();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function renderNotifications() {
+      const list = document.getElementById("notificationsList");
+      if (!list) return;
+
+      if (!currentNotifications.length) {
+        list.innerHTML = "<div class='empty'>لا توجد إشعارات</div>";
+        return;
+      }
+
+      let html = "";
+      currentNotifications.forEach(function(item) {
+        const data = item.data || {};
+        html +=
+          "<div class='notification-item " + (data.read ? "" : "unread") + "'>" +
+            "<div class='notification-text'>" + escapeHtml(data.text || "إشعار جديد") + "</div>" +
+            "<div class='notification-time'>" + formatTime(data.time) + "</div>" +
+          "</div>";
+      });
+
+      list.innerHTML = html;
     }
 
     function watchUserCounts(userId) {
@@ -2193,9 +2394,21 @@
         time: Date.now()
       });
 
-      batch.commit().catch(function(error) {
-        alert(error.message);
-      });
+      batch.commit()
+        .then(function() {
+          const fromName = getDisplayName(user.uid, user.email || "مستخدم");
+          createNotification(targetUid, {
+            type: "follow",
+            fromUid: user.uid,
+            fromName: fromName,
+            text: fromName + " بدأ متابعتك",
+            time: Date.now(),
+            read: false
+          });
+        })
+        .catch(function(error) {
+          alert(error.message);
+        });
     }
 
     function unfollowUser(targetUid) {
@@ -2404,6 +2617,14 @@
       }
 
       const ref = db.collection("posts").doc(postId);
+      const postItem = currentPosts.find(function(item) {
+        return item.id === postId;
+      });
+
+      if (!postItem || !postItem.data) {
+        alert("تعذر العثور على المنشور");
+        return;
+      }
 
       if (liked) {
         ref.update({
@@ -2414,6 +2635,19 @@
       } else {
         ref.update({
           likes: firebase.firestore.FieldValue.arrayUnion(user.uid)
+        }).then(function() {
+          if (postItem.data.uid !== user.uid) {
+            const fromName = getDisplayName(user.uid, user.email || "مستخدم");
+            createNotification(postItem.data.uid, {
+              type: "like",
+              fromUid: user.uid,
+              fromName: fromName,
+              postId: postId,
+              text: fromName + " أعجب بمنشورك",
+              time: Date.now(),
+              read: false
+            });
+          }
         }).catch(function(error) {
           alert(error.message);
         });
@@ -2494,6 +2728,19 @@
         time: Date.now()
       }).then(function() {
         input.value = "";
+
+        if (postItem.data.uid !== user.uid) {
+          const fromName = getDisplayName(user.uid, user.email || "مستخدم");
+          createNotification(postItem.data.uid, {
+            type: "comment",
+            fromUid: user.uid,
+            fromName: fromName,
+            postId: postId,
+            text: fromName + " علّق على منشورك",
+            time: Date.now(),
+            read: false
+          });
+        }
       }).catch(function(error) {
         alert(error.message);
       });
@@ -2543,6 +2790,11 @@
         return;
       }
 
+      const commentList = currentComments[postId] || [];
+      const commentItem = commentList.find(function(item) {
+        return item.id === commentId;
+      });
+
       const input = document.getElementById("replyText-" + postId + "-" + commentId);
       const text = input.value.trim();
 
@@ -2563,6 +2815,31 @@
           time: Date.now()
         }).then(function() {
           input.value = "";
+          const fromName = getDisplayName(user.uid, user.email || "مستخدم");
+
+          if (commentItem && commentItem.data && commentItem.data.uid && commentItem.data.uid !== user.uid) {
+            createNotification(commentItem.data.uid, {
+              type: "reply",
+              fromUid: user.uid,
+              fromName: fromName,
+              postId: postId,
+              text: fromName + " رد على تعليقك",
+              time: Date.now(),
+              read: false
+            });
+          }
+
+          if (postItem.data.uid !== user.uid && (!commentItem || !commentItem.data || commentItem.data.uid !== postItem.data.uid)) {
+            createNotification(postItem.data.uid, {
+              type: "reply",
+              fromUid: user.uid,
+              fromName: fromName,
+              postId: postId,
+              text: fromName + " أضاف ردًا داخل منشورك",
+              time: Date.now(),
+              read: false
+            });
+          }
         }).catch(function(error) {
           alert(error.message);
         });
@@ -2614,7 +2891,7 @@
     function escapeHtml(text) {
       if (!text) return "";
 
-      return text
+      return String(text)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
@@ -2776,6 +3053,7 @@
       const searchSection = document.getElementById("searchSection");
       const postsTitle = document.getElementById("postsTitle");
       const settingsSection = document.getElementById("settingsSection");
+      const notificationsSection = document.getElementById("notificationsSection");
       const heroPanel = document.getElementById("heroPanel");
       const pulseBox = document.getElementById("pulseBox");
       const user = auth.currentUser;
@@ -2783,6 +3061,7 @@
       let html = "";
 
       settingsSection.classList.add("hidden");
+      notificationsSection.classList.add("hidden");
       heroPanel.classList.remove("hidden");
 
       if (currentView === "profile" && selectedProfileUid) {
@@ -2800,6 +3079,14 @@
         settingsSection.classList.remove("hidden");
         heroPanel.classList.add("hidden");
         postsTitle.innerText = "الخلاصة";
+      } else if (currentView === "notifications") {
+        composerSection.classList.add("hidden");
+        feedFiltersSection.classList.add("hidden");
+        searchSection.classList.add("hidden");
+        pulseBox.classList.add("hidden");
+        notificationsSection.classList.remove("hidden");
+        heroPanel.classList.add("hidden");
+        postsTitle.innerText = "الخلاصة";
       } else {
         composerSection.classList.remove("hidden");
         feedFiltersSection.classList.remove("hidden");
@@ -2813,7 +3100,7 @@
       updateAdvancedFilterButtons();
       postCountDiv.innerText = "عدد المنشورات: " + filteredPosts.length;
 
-      if (currentView === "settings") {
+      if (currentView === "settings" || currentView === "notifications") {
         postsDiv.innerHTML = "";
         return;
       }
@@ -3046,6 +3333,7 @@
     updateNavButtons();
     updateAdvancedFilterButtons();
     updateImagePreview();
+    updateNotificationBadge();
   </script>
 
 </body>
