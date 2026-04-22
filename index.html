@@ -18,9 +18,7 @@
       --text-soft: #5b6385;
       --primary: linear-gradient(135deg, #312e81 0%, #5b21b6 55%, #7c3aed 100%);
       --primary-solid: #4338ca;
-      --primary-hover: #312e81;
       --accent: #14b8a6;
-      --accent-soft: #dffaf6;
       --danger: #dc2626;
       --danger-hover: #b91c1c;
       --warning: #d97706;
@@ -128,8 +126,19 @@
       background: rgba(255, 255, 255, 0.8);
       color: #2b3170;
       font-size: 14px;
-      cursor: default;
+      cursor: pointer;
       border: 1px solid rgba(99, 102, 241, 0.10);
+      box-shadow: none;
+    }
+
+    .nav-pill:hover {
+      transform: translateY(-1px);
+    }
+
+    .nav-pill.active-nav {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(91, 33, 182, 0.16);
     }
 
     .page-grid {
@@ -315,8 +324,58 @@
       margin-bottom: 12px;
     }
 
+    .field-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .setting-box {
+      background: rgba(255,255,255,0.84);
+      border: 1px solid rgba(99,102,241,0.10);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .setting-box h4 {
+      margin: 0 0 6px;
+      font-size: 17px;
+      color: #1d2450;
+    }
+
+    .setting-box p {
+      margin: 0 0 12px;
+      color: var(--text-soft);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .radio-group {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .radio-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f8faff;
+      border: 1px solid rgba(99,102,241,0.08);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .radio-item input[type="radio"],
+    .radio-item input[type="checkbox"] {
+      width: auto;
+      min-width: auto;
+      margin: 0;
+      box-shadow: none;
+    }
+
     input,
-    textarea {
+    textarea,
+    select {
       width: 100%;
       border: 1px solid rgba(99, 102, 241, 0.16);
       border-radius: 16px;
@@ -331,7 +390,8 @@
     }
 
     input:focus,
-    textarea:focus {
+    textarea:focus,
+    select:focus {
       border-color: rgba(67, 56, 202, 0.45);
       box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.08);
     }
@@ -765,6 +825,20 @@
       margin-top: 10px;
     }
 
+    .settings-summary {
+      display: grid;
+      gap: 10px;
+    }
+
+    .summary-line {
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(99,102,241,0.08);
+      color: #1d2450;
+      line-height: 1.8;
+    }
+
     @media (max-width: 980px) {
       .page-grid {
         grid-template-columns: 1fr;
@@ -809,10 +883,7 @@
         padding: 14px;
       }
 
-      .post-author-wrap {
-        width: 100%;
-      }
-
+      .post-author-wrap,
       .post-top-right {
         width: 100%;
       }
@@ -843,37 +914,37 @@
       </div>
 
       <div class="nav-pills">
-        <button class="nav-pill">الرئيسية</button>
-        <button class="nav-pill">الاستكشاف لاحقًا</button>
-        <button class="nav-pill">الإعدادات لاحقًا</button>
-        <button class="nav-pill">الرسائل لاحقًا</button>
+        <button id="homeNavBtn" class="nav-pill active-nav" onclick="goToFeed()">الرئيسية</button>
+        <button id="exploreNavBtn" class="nav-pill" type="button">الاستكشاف لاحقًا</button>
+        <button id="settingsNavBtn" class="nav-pill" onclick="openSettings()">الإعدادات</button>
+        <button id="messagesNavBtn" class="nav-pill" type="button">الرسائل لاحقًا</button>
       </div>
     </div>
   </header>
 
   <div class="app-shell">
-    <div class="panel hero-panel">
+    <div class="panel hero-panel" id="heroPanel">
       <div class="hero-grid">
         <div>
-          <div class="section-kicker">هوية بيننا الجديدة</div>
-          <h2 class="hero-title">ليس مجرد موقع اجتماعي… بل مساحة يشعر فيها الإنسان أن صوته له مكان.</h2>
+          <div class="section-kicker">إعدادات وخصوصية</div>
+          <h2 class="hero-title">هوية جميلة لا تكفي وحدها… بيننا يحتاج أيضًا إلى تحكم وخصوصية وثقة.</h2>
           <p class="hero-text">
-            هذه النسخة تؤسس شخصية بصرية حقيقية لمشروع بيننا: هادئة، راقية، عربية الروح، وقابلة للنمو لاحقًا إلى صفحات المستخدم، الإعدادات، الاستكشاف، الرسائل، والإشعارات.
+            في هذه الصفقة أضفنا صفحة إعدادات أساسية ليشعر المستخدم أن حسابه ومساحته تحت سيطرته، وهذا أساس مهم قبل التوسع لاحقًا نحو الرسائل والإشعارات والاستكشاف المتقدم.
           </p>
         </div>
 
         <div class="hero-boxes">
           <div class="mini-stat">
-            <strong>واجهة احترافية</strong>
-            <span>بطاقات واضحة، توازن بصري، وأساس مناسب للتوسع.</span>
+            <strong>إعدادات فعلية</strong>
+            <span>صفحة مستقلة تفتح من الشريط العلوي.</span>
           </div>
           <div class="mini-stat">
-            <strong>هوية مختلفة</strong>
-            <span>لون عميق ولمسات حديثة تمنح بيننا شخصية مستقلة.</span>
+            <strong>خصوصية أولية</strong>
+            <span>إخفاء البريد والتحكم في التعليقات.</span>
           </div>
           <div class="mini-stat">
-            <strong>بنية مستقبلية</strong>
-            <span>جاهزة لإضافة الإعدادات والملفات الشخصية والصفحات القادمة.</span>
+            <strong>أساس أقوى</strong>
+            <span>هذه الخطوة ترفع جدية المشروع وتزيد الثقة.</span>
           </div>
         </div>
       </div>
@@ -932,15 +1003,9 @@
             <span id="profileBio">-</span>
           </div>
 
-          <div class="row">
-            <input id="usernameInput" placeholder="اسم المستخدم">
+          <div class="toolbar">
+            <button class="full-btn" onclick="openSettings()">فتح الإعدادات</button>
           </div>
-
-          <div class="row">
-            <textarea id="bioInput" placeholder="اكتب نبذة قصيرة تعبّر عنك"></textarea>
-          </div>
-
-          <button class="full-btn" onclick="saveProfile()">حفظ بيانات الحساب</button>
         </div>
 
         <div class="panel">
@@ -967,8 +1032,8 @@
             <div class="feature-item">
               <div class="feature-dot"></div>
               <div>
-                <strong>جاهزية للتوسع</strong>
-                <span>إعدادات، صفحات مستخدمين، استكشاف، رسائل، وإشعارات لاحقًا.</span>
+                <strong>خصوصية وثقة</strong>
+                <span>التحكم في الحساب جزء أساسي من نمو المنصة.</span>
               </div>
             </div>
           </div>
@@ -976,6 +1041,80 @@
       </aside>
 
       <main class="content">
+        <div id="settingsSection" class="panel hidden">
+          <div class="toolbar">
+            <button class="back-btn" onclick="goToFeed()">الرجوع للرئيسية</button>
+          </div>
+
+          <div class="section-kicker">الإعدادات الأساسية</div>
+          <h3 class="panel-title">إعدادات الحساب والخصوصية</h3>
+          <p class="helper-text">من هنا يتحكم المستخدم في معلوماته الأساسية وبعض إعدادات الخصوصية الأولية داخل بيننا.</p>
+
+          <div class="field-grid" style="margin-top: 14px;">
+            <div class="setting-box">
+              <h4>بيانات الحساب</h4>
+              <p>عدّل الاسم الظاهر والنبذة التي تعبر عنك داخل المنصة.</p>
+
+              <div class="row">
+                <input id="settingsUsernameInput" placeholder="اسم المستخدم">
+              </div>
+
+              <div class="row">
+                <textarea id="settingsBioInput" placeholder="اكتب نبذة قصيرة عنك"></textarea>
+              </div>
+            </div>
+
+            <div class="setting-box">
+              <h4>إظهار البريد في الملف الشخصي العام</h4>
+              <p>يمكنك اختيار ما إذا كنت تريد أن يظهر بريدك داخل الملف الشخصي العام أم لا.</p>
+
+              <div class="radio-group">
+                <label class="radio-item">
+                  <input type="radio" name="showEmailPublic" id="showEmailYes" value="yes">
+                  <span>نعم، أظهر البريد في الملف الشخصي العام</span>
+                </label>
+
+                <label class="radio-item">
+                  <input type="radio" name="showEmailPublic" id="showEmailNo" value="no">
+                  <span>لا، أخفِ البريد من الملف الشخصي العام</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-box">
+              <h4>من يستطيع التعليق على منشوراتي؟</h4>
+              <p>هذا الإعداد يطبق فعليًا على صندوق التعليقات في المنشورات.</p>
+
+              <div class="radio-group">
+                <label class="radio-item">
+                  <input type="radio" name="allowComments" id="allowCommentsAll" value="all">
+                  <span>الجميع يستطيع التعليق</span>
+                </label>
+
+                <label class="radio-item">
+                  <input type="radio" name="allowComments" id="allowCommentsFollowers" value="followers">
+                  <span>المتابعون فقط يستطيعون التعليق</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-box">
+              <h4>ملخص الإعدادات الحالية</h4>
+              <p>عرض سريع لما هو مفعّل الآن في حسابك.</p>
+
+              <div class="settings-summary">
+                <div class="summary-line"><strong>البريد العام:</strong> <span id="settingsSummaryEmail">-</span></div>
+                <div class="summary-line"><strong>التعليقات:</strong> <span id="settingsSummaryComments">-</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="toolbar" style="margin-top: 14px;">
+            <button class="save-btn" onclick="saveSettings()">حفظ الإعدادات</button>
+            <button class="cancel-btn" onclick="loadSettingsForm()">إعادة تحميل القيم</button>
+          </div>
+        </div>
+
         <div id="publicProfileSection" class="panel public-profile-card hidden">
           <div class="toolbar">
             <button class="back-btn" onclick="goToFeed()">الرجوع للرئيسية</button>
@@ -985,6 +1124,7 @@
           <h3 class="panel-title" id="publicProfileName">-</h3>
 
           <div class="profile-line"><strong>النبذة:</strong> <span id="publicProfileBio">-</span></div>
+          <div class="profile-line" id="publicProfileEmailLine"><strong>البريد:</strong> <span id="publicProfileEmail">-</span></div>
           <div class="profile-line"><strong>المتابعون:</strong> <span id="publicProfileFollowers">0</span></div>
           <div class="profile-line"><strong>أتابع:</strong> <span id="publicProfileFollowing">0</span></div>
           <div class="profile-line"><strong>عدد المنشورات:</strong> <span id="publicProfilePostsCount">0</span></div>
@@ -1079,7 +1219,10 @@
       usersMap = {};
 
       snapshot.forEach(function(doc) {
-        usersMap[doc.id] = doc.data();
+        const data = doc.data() || {};
+        if (typeof data.showEmailPublic === "undefined") data.showEmailPublic = false;
+        if (!data.allowComments) data.allowComments = "all";
+        usersMap[doc.id] = data;
 
         if (!watchedUserCounts[doc.id]) {
           watchUserCounts(doc.id);
@@ -1088,6 +1231,7 @@
 
       updateProfileBox();
       updatePublicProfileBox();
+      loadSettingsForm();
       renderPosts();
     }, function(error) {
       console.log(error.message);
@@ -1109,7 +1253,9 @@
             email: result.user.email,
             username: "",
             bio: "",
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            showEmailPublic: false,
+            allowComments: "all"
           });
         })
         .then(function() {
@@ -1158,6 +1304,7 @@
           updateProfileBox();
           updatePublicProfileBox();
           updateUserStatusBadge();
+          updateNavButtons();
           renderPosts();
         })
         .catch(function(error) {
@@ -1189,6 +1336,7 @@
       updateProfileBox();
       updatePublicProfileBox();
       updateUserStatusBadge();
+      updateNavButtons();
       renderPosts();
     });
 
@@ -1207,6 +1355,14 @@
       }
     }
 
+    function updateNavButtons() {
+      const homeBtn = document.getElementById("homeNavBtn");
+      const settingsBtn = document.getElementById("settingsNavBtn");
+
+      homeBtn.className = currentView === "feed" || currentView === "profile" ? "nav-pill active-nav" : "nav-pill";
+      settingsBtn.className = currentView === "settings" ? "nav-pill active-nav" : "nav-pill";
+    }
+
     function watchCurrentUserFollowing(uid) {
       if (currentFollowingUnsubscribe) {
         currentFollowingUnsubscribe();
@@ -1222,6 +1378,7 @@
           });
           updateProfileBox();
           updatePublicProfileBox();
+          loadSettingsForm();
           renderPosts();
         }, function(error) {
           console.log(error.message);
@@ -1265,14 +1422,32 @@
               email: user.email || "",
               username: "",
               bio: "",
-              createdAt: Date.now()
+              createdAt: Date.now(),
+              showEmailPublic: false,
+              allowComments: "all"
             });
+          }
+
+          const data = doc.data() || {};
+          const updates = {};
+
+          if (typeof data.showEmailPublic === "undefined") {
+            updates.showEmailPublic = false;
+          }
+
+          if (!data.allowComments) {
+            updates.allowComments = "all";
+          }
+
+          if (Object.keys(updates).length > 0) {
+            return db.collection("users").doc(user.uid).update(updates);
           }
         })
         .then(function() {
           currentUserProfile = usersMap[user.uid] || null;
           updateProfileBox();
           updatePublicProfileBox();
+          loadSettingsForm();
           renderPosts();
         })
         .catch(function(error) {
@@ -1312,14 +1487,12 @@
       document.getElementById("profileFollowers").innerText = followersCount;
       document.getElementById("profileFollowing").innerText = followingCount;
       document.getElementById("profileAvatar").innerText = getInitialLetter(displayName);
-
-      document.getElementById("usernameInput").value = username;
-      document.getElementById("bioInput").value = bio;
     }
 
     function updatePublicProfileBox() {
       const section = document.getElementById("publicProfileSection");
       const actionsDiv = document.getElementById("publicProfileActions");
+      const emailLine = document.getElementById("publicProfileEmailLine");
 
       if (currentView !== "profile" || !selectedProfileUid) {
         section.classList.add("hidden");
@@ -1344,6 +1517,15 @@
       document.getElementById("publicProfileFollowing").innerText = followingCount;
       document.getElementById("publicProfilePostsCount").innerText = postsCount;
 
+      const canShowEmail = !!profile.showEmailPublic;
+      if (canShowEmail && profile.email) {
+        emailLine.classList.remove("hidden");
+        document.getElementById("publicProfileEmail").innerText = profile.email;
+      } else {
+        emailLine.classList.add("hidden");
+        document.getElementById("publicProfileEmail").innerText = "-";
+      }
+
       if (user && user.uid === selectedProfileUid) {
         document.getElementById("publicProfileBadge").innerText = "هذا حسابك";
         actionsDiv.innerHTML = "";
@@ -1366,7 +1548,30 @@
       }
     }
 
-    function saveProfile() {
+    function loadSettingsForm() {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const profile = usersMap[user.uid] || {};
+      const username = profile.username || "";
+      const bio = profile.bio || "";
+      const showEmailPublic = !!profile.showEmailPublic;
+      const allowComments = profile.allowComments || "all";
+
+      document.getElementById("settingsUsernameInput").value = username;
+      document.getElementById("settingsBioInput").value = bio;
+
+      document.getElementById("showEmailYes").checked = showEmailPublic;
+      document.getElementById("showEmailNo").checked = !showEmailPublic;
+
+      document.getElementById("allowCommentsAll").checked = allowComments === "all";
+      document.getElementById("allowCommentsFollowers").checked = allowComments === "followers";
+
+      document.getElementById("settingsSummaryEmail").innerText = showEmailPublic ? "ظاهر في الملف الشخصي العام" : "مخفي عن الملف الشخصي العام";
+      document.getElementById("settingsSummaryComments").innerText = allowComments === "followers" ? "المتابعون فقط" : "الجميع";
+    }
+
+    function openSettings() {
       const user = auth.currentUser;
 
       if (!user) {
@@ -1374,22 +1579,45 @@
         return;
       }
 
-      const username = document.getElementById("usernameInput").value.trim();
-      const bio = document.getElementById("bioInput").value.trim();
+      currentView = "settings";
+      selectedProfileUid = null;
+      loadSettingsForm();
+      updateNavButtons();
+      renderPosts();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function saveSettings() {
+      const user = auth.currentUser;
+
+      if (!user) {
+        alert("سجل الدخول أولاً");
+        return;
+      }
+
+      const username = document.getElementById("settingsUsernameInput").value.trim();
+      const bio = document.getElementById("settingsBioInput").value.trim();
+      const showEmailPublic = document.getElementById("showEmailYes").checked;
+      const allowComments = document.getElementById("allowCommentsFollowers").checked ? "followers" : "all";
 
       if (!username) {
         alert("اكتب اسم المستخدم");
         return;
       }
 
+      const oldProfile = usersMap[user.uid] || {};
+
       db.collection("users").doc(user.uid).set({
         uid: user.uid,
         email: user.email || "",
         username: username,
         bio: bio,
-        createdAt: currentUserProfile && currentUserProfile.createdAt ? currentUserProfile.createdAt : Date.now()
+        createdAt: oldProfile.createdAt || Date.now(),
+        showEmailPublic: showEmailPublic,
+        allowComments: allowComments
       }).then(function() {
-        alert("تم حفظ بيانات الحساب");
+        loadSettingsForm();
+        alert("تم حفظ الإعدادات");
       }).catch(function(error) {
         alert(error.message);
       });
@@ -1409,15 +1637,8 @@
 
       const batch = db.batch();
 
-      const myFollowingRef = db.collection("users")
-        .doc(user.uid)
-        .collection("following")
-        .doc(targetUid);
-
-      const targetFollowersRef = db.collection("users")
-        .doc(targetUid)
-        .collection("followers")
-        .doc(user.uid);
+      const myFollowingRef = db.collection("users").doc(user.uid).collection("following").doc(targetUid);
+      const targetFollowersRef = db.collection("users").doc(targetUid).collection("followers").doc(user.uid);
 
       batch.set(myFollowingRef, {
         uid: targetUid,
@@ -1448,15 +1669,8 @@
 
       const batch = db.batch();
 
-      const myFollowingRef = db.collection("users")
-        .doc(user.uid)
-        .collection("following")
-        .doc(targetUid);
-
-      const targetFollowersRef = db.collection("users")
-        .doc(targetUid)
-        .collection("followers")
-        .doc(user.uid);
+      const myFollowingRef = db.collection("users").doc(user.uid).collection("following").doc(targetUid);
+      const targetFollowersRef = db.collection("users").doc(targetUid).collection("followers").doc(user.uid);
 
       batch.delete(myFollowingRef);
       batch.delete(targetFollowersRef);
@@ -1483,6 +1697,7 @@
       currentView = "profile";
       editingPostId = null;
       updatePublicProfileBox();
+      updateNavButtons();
       renderPosts();
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -1491,6 +1706,7 @@
       currentView = "feed";
       selectedProfileUid = null;
       updatePublicProfileBox();
+      updateNavButtons();
       renderPosts();
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -1506,6 +1722,7 @@
       currentFilter = filterType;
       updateFilterButtons();
       updatePublicProfileBox();
+      updateNavButtons();
       renderPosts();
     }
 
@@ -1529,6 +1746,7 @@
       currentView = "feed";
       selectedProfileUid = null;
       updatePublicProfileBox();
+      updateNavButtons();
       updateSearchStatus();
       renderPosts();
     }
@@ -1657,11 +1875,57 @@
       }
     }
 
+    function canCurrentUserCommentOnPost(postOwnerUid) {
+      const user = auth.currentUser;
+
+      if (!user) {
+        return false;
+      }
+
+      if (user.uid === postOwnerUid) {
+        return true;
+      }
+
+      const ownerProfile = usersMap[postOwnerUid] || {};
+      const allowComments = ownerProfile.allowComments || "all";
+
+      if (allowComments === "all") {
+        return true;
+      }
+
+      return !!currentFollowingMap[postOwnerUid];
+    }
+
+    function getCommentRestrictionMessage(postOwnerUid) {
+      const ownerProfile = usersMap[postOwnerUid] || {};
+      const allowComments = ownerProfile.allowComments || "all";
+
+      if (allowComments === "followers") {
+        return "التعليق متاح للمتابعين فقط";
+      }
+
+      return "سجل الدخول لإضافة تعليق";
+    }
+
     function addComment(postId) {
       const user = auth.currentUser;
 
       if (!user) {
         alert("سجل الدخول أولاً");
+        return;
+      }
+
+      const postItem = currentPosts.find(function(item) {
+        return item.id === postId;
+      });
+
+      if (!postItem || !postItem.data) {
+        alert("تعذر العثور على المنشور");
+        return;
+      }
+
+      if (!canCurrentUserCommentOnPost(postItem.data.uid)) {
+        alert("هذا المستخدم يسمح بالتعليقات من المتابعين فقط");
         return;
       }
 
@@ -1707,6 +1971,20 @@
 
       if (!user) {
         alert("سجل الدخول أولاً");
+        return;
+      }
+
+      const postItem = currentPosts.find(function(item) {
+        return item.id === postId;
+      });
+
+      if (!postItem || !postItem.data) {
+        alert("تعذر العثور على المنشور");
+        return;
+      }
+
+      if (!canCurrentUserCommentOnPost(postItem.data.uid)) {
+        alert("هذا المستخدم يسمح بالتعليقات من المتابعين فقط");
         return;
       }
 
@@ -1878,9 +2156,14 @@
       const feedFiltersSection = document.getElementById("feedFiltersSection");
       const searchSection = document.getElementById("searchSection");
       const postsTitle = document.getElementById("postsTitle");
+      const settingsSection = document.getElementById("settingsSection");
+      const heroPanel = document.getElementById("heroPanel");
       const user = auth.currentUser;
       const filteredPosts = getFilteredPosts();
       let html = "";
+
+      settingsSection.classList.add("hidden");
+      heroPanel.classList.remove("hidden");
 
       if (currentView === "profile" && selectedProfileUid) {
         composerSection.classList.add("hidden");
@@ -1888,6 +2171,13 @@
         searchSection.classList.add("hidden");
         const selectedName = getDisplayName(selectedProfileUid, "مستخدم");
         postsTitle.innerText = "منشورات " + selectedName;
+      } else if (currentView === "settings") {
+        composerSection.classList.add("hidden");
+        feedFiltersSection.classList.add("hidden");
+        searchSection.classList.add("hidden");
+        settingsSection.classList.remove("hidden");
+        heroPanel.classList.add("hidden");
+        postsTitle.innerText = "الخلاصة";
       } else {
         composerSection.classList.remove("hidden");
         feedFiltersSection.classList.remove("hidden");
@@ -1898,6 +2188,11 @@
       updatePublicProfileBox();
       updateSearchStatus();
       postCountDiv.innerText = "عدد المنشورات: " + filteredPosts.length;
+
+      if (currentView === "settings") {
+        postsDiv.innerHTML = "";
+        return;
+      }
 
       if (filteredPosts.length === 0) {
         postsDiv.innerHTML = "<div class='empty'>لا توجد منشورات</div>";
@@ -1915,6 +2210,7 @@
         const isFollowing = user ? !!currentFollowingMap[data.uid] : false;
         const displayName = getDisplayName(data.uid, data.name);
         const avatarLetter = getInitialLetter(displayName);
+        const canComment = canCurrentUserCommentOnPost(data.uid);
 
         let actions = "";
 
@@ -1978,14 +2274,14 @@
             }
 
             let replyInputHtml = "";
-            if (user) {
+            if (user && canComment) {
               replyInputHtml =
                 "<div class='reply-input-box'>" +
                   "<input id='replyText-" + postId + "-" + commentId + "' placeholder='اكتب رداً'>" +
                   "<button class='reply-btn' onclick=\"addReply('" + postId + "','" + commentId + "')\">إرسال الرد</button>" +
                 "</div>";
             } else {
-              replyInputHtml = "<div class='helper-text'>سجل الدخول لإضافة رد</div>";
+              replyInputHtml = "<div class='helper-text'>" + getCommentRestrictionMessage(data.uid) + "</div>";
             }
 
             let repliesHtml = "";
@@ -2038,14 +2334,14 @@
         }
 
         let commentInputHtml = "";
-        if (user) {
+        if (user && canComment) {
           commentInputHtml =
             "<div class='comment-input-box'>" +
               "<input id='commentText-" + postId + "' placeholder='اكتب تعليقاً'>" +
               "<button class='comment-btn' onclick=\"addComment('" + postId + "')\">إرسال التعليق</button>" +
             "</div>";
         } else {
-          commentInputHtml = "<div class='helper-text'>سجل الدخول لإضافة تعليق</div>";
+          commentInputHtml = "<div class='helper-text'>" + getCommentRestrictionMessage(data.uid) + "</div>";
         }
 
         html +=
@@ -2103,6 +2399,7 @@
       });
 
     updateUserStatusBadge();
+    updateNavButtons();
   </script>
 
 </body>
