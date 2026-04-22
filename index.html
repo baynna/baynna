@@ -190,7 +190,27 @@
       background: #4b5563;
     }
 
-    .profile-card {
+    .profile-view-btn {
+      background: #eef2ff;
+      color: #3730a3;
+      font-size: 13px;
+      padding: 8px 12px;
+    }
+
+    .profile-view-btn:hover {
+      background: #e0e7ff;
+    }
+
+    .back-btn {
+      background: #6b7280;
+    }
+
+    .back-btn:hover {
+      background: #4b5563;
+    }
+
+    .profile-card,
+    .public-profile-card {
       background: #f8fafc;
       border: 1px solid #dbeafe;
       border-radius: 10px;
@@ -246,6 +266,15 @@
       color: #666;
       font-size: 12px;
       margin-top: 6px;
+    }
+
+    .post-author {
+      cursor: pointer;
+      color: #111827;
+    }
+
+    .post-author:hover {
+      text-decoration: underline;
     }
 
     .post-text {
@@ -313,6 +342,13 @@
     .reply-name {
       font-weight: bold;
       font-size: 14px;
+      cursor: pointer;
+      color: #111827;
+    }
+
+    .comment-name:hover,
+    .reply-name:hover {
+      text-decoration: underline;
     }
 
     .comment-time,
@@ -364,6 +400,22 @@
     .hidden {
       display: none;
     }
+
+    .section-title {
+      font-size: 18px;
+      margin-bottom: 12px;
+      color: #111827;
+    }
+
+    .profile-badge {
+      display: inline-block;
+      background: #e0f2fe;
+      color: #0369a1;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
@@ -408,18 +460,38 @@
       </div>
     </div>
 
-    <div class="row">
-      <textarea id="text" placeholder="اكتب منشور"></textarea>
+    <div id="publicProfileSection" class="public-profile-card hidden">
+      <div class="row">
+        <button class="back-btn" onclick="goToFeed()">الرجوع للرئيسية</button>
+      </div>
+
+      <div class="profile-badge" id="publicProfileBadge">الملف الشخصي</div>
+      <h3 id="publicProfileName">-</h3>
+
+      <div class="profile-line"><strong>النبذة:</strong> <span id="publicProfileBio">-</span></div>
+      <div class="profile-line"><strong>المتابعون:</strong> <span id="publicProfileFollowers">0</span></div>
+      <div class="profile-line"><strong>أتابع:</strong> <span id="publicProfileFollowing">0</span></div>
+      <div class="profile-line"><strong>عدد المنشورات:</strong> <span id="publicProfilePostsCount">0</span></div>
+
+      <div class="row" id="publicProfileActions"></div>
     </div>
 
-    <div class="row">
-      <button onclick="sendPost()">نشر</button>
+    <div id="composerSection">
+      <div class="row">
+        <textarea id="text" placeholder="اكتب منشور"></textarea>
+      </div>
+
+      <div class="row">
+        <button onclick="sendPost()">نشر</button>
+      </div>
     </div>
 
-    <div class="row">
+    <div id="feedFiltersSection" class="row">
       <button id="allPostsBtn" class="filter-btn active-filter" onclick="setFilter('all')">كل المنشورات</button>
       <button id="myPostsBtn" class="filter-btn" onclick="setFilter('mine')">منشوراتي</button>
     </div>
+
+    <div id="postsTitle" class="section-title">المنشورات</div>
 
     <div id="postCount" class="post-count">عدد المنشورات: 0</div>
 
@@ -454,6 +526,8 @@
     let currentFollowingMap = {};
     let watchedUserCounts = {};
     let currentFollowingUnsubscribe = null;
+    let currentView = "feed";
+    let selectedProfileUid = null;
 
     db.collection("users").onSnapshot(function(snapshot) {
       usersMap = {};
@@ -467,6 +541,7 @@
       });
 
       updateProfileBox();
+      updatePublicProfileBox();
       renderPosts();
     }, function(error) {
       console.log(error.message);
@@ -522,12 +597,17 @@
           currentFilter = "all";
           currentUserProfile = null;
           currentFollowingMap = {};
+          currentView = "feed";
+          selectedProfileUid = null;
+
           if (currentFollowingUnsubscribe) {
             currentFollowingUnsubscribe();
             currentFollowingUnsubscribe = null;
           }
+
           updateFilterButtons();
           updateProfileBox();
+          updatePublicProfileBox();
           renderPosts();
         })
         .catch(function(error) {
@@ -544,6 +624,7 @@
         document.getElementById("user").innerText = "غير مسجل";
         currentUserProfile = null;
         currentFollowingMap = {};
+
         if (currentFollowingUnsubscribe) {
           currentFollowingUnsubscribe();
           currentFollowingUnsubscribe = null;
@@ -556,6 +637,7 @@
 
       updateFilterButtons();
       updateProfileBox();
+      updatePublicProfileBox();
       renderPosts();
     });
 
@@ -573,6 +655,7 @@
             currentFollowingMap[doc.id] = true;
           });
           updateProfileBox();
+          updatePublicProfileBox();
           renderPosts();
         }, function(error) {
           console.log(error.message);
@@ -588,6 +671,7 @@
         .onSnapshot(function(snapshot) {
           followersCountMap[userId] = snapshot.size;
           updateProfileBox();
+          updatePublicProfileBox();
           renderPosts();
         }, function(error) {
           console.log(error.message);
@@ -599,6 +683,7 @@
         .onSnapshot(function(snapshot) {
           followingCountMap[userId] = snapshot.size;
           updateProfileBox();
+          updatePublicProfileBox();
           renderPosts();
         }, function(error) {
           console.log(error.message);
@@ -621,6 +706,7 @@
         .then(function() {
           currentUserProfile = usersMap[user.uid] || null;
           updateProfileBox();
+          updatePublicProfileBox();
           renderPosts();
         })
         .catch(function(error) {
@@ -654,6 +740,55 @@
 
       document.getElementById("usernameInput").value = username;
       document.getElementById("bioInput").value = bio;
+    }
+
+    function updatePublicProfileBox() {
+      const section = document.getElementById("publicProfileSection");
+      const actionsDiv = document.getElementById("publicProfileActions");
+
+      if (currentView !== "profile" || !selectedProfileUid) {
+        section.classList.add("hidden");
+        return;
+      }
+
+      section.classList.remove("hidden");
+
+      const user = auth.currentUser;
+      const profile = usersMap[selectedProfileUid] || {};
+      const displayName = getDisplayName(selectedProfileUid, profile.email || "مستخدم");
+      const bio = profile.bio ? profile.bio : "لا توجد نبذة";
+      const followersCount = followersCountMap[selectedProfileUid] || 0;
+      const followingCount = followingCountMap[selectedProfileUid] || 0;
+      const postsCount = currentPosts.filter(function(item) {
+        return item.data && item.data.uid === selectedProfileUid;
+      }).length;
+
+      document.getElementById("publicProfileName").innerText = displayName;
+      document.getElementById("publicProfileBio").innerText = bio;
+      document.getElementById("publicProfileFollowers").innerText = followersCount;
+      document.getElementById("publicProfileFollowing").innerText = followingCount;
+      document.getElementById("publicProfilePostsCount").innerText = postsCount;
+
+      if (user && user.uid === selectedProfileUid) {
+        document.getElementById("publicProfileBadge").innerText = "هذا حسابك";
+        actionsDiv.innerHTML = "";
+        return;
+      }
+
+      document.getElementById("publicProfileBadge").innerText = "الملف الشخصي";
+
+      if (!user) {
+        actionsDiv.innerHTML = "<div class='auth-note'>سجل الدخول للمتابعة</div>";
+        return;
+      }
+
+      const isFollowing = !!currentFollowingMap[selectedProfileUid];
+
+      if (isFollowing) {
+        actionsDiv.innerHTML = "<button class='following-btn' onclick=\"unfollowUser('" + selectedProfileUid + "')\">إلغاء المتابعة</button>";
+      } else {
+        actionsDiv.innerHTML = "<button class='follow-btn' onclick=\"followUser('" + selectedProfileUid + "')\">متابعة</button>";
+      }
     }
 
     function saveProfile() {
@@ -766,14 +901,36 @@
       return fallbackName || "مستخدم";
     }
 
+    function openProfile(uid) {
+      if (!uid) return;
+
+      selectedProfileUid = uid;
+      currentView = "profile";
+      editingPostId = null;
+      updatePublicProfileBox();
+      renderPosts();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function goToFeed() {
+      currentView = "feed";
+      selectedProfileUid = null;
+      updatePublicProfileBox();
+      renderPosts();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
     function setFilter(filterType) {
       if (filterType === "mine" && !auth.currentUser) {
         alert("سجل الدخول أولاً");
         return;
       }
 
+      currentView = "feed";
+      selectedProfileUid = null;
       currentFilter = filterType;
       updateFilterButtons();
+      updatePublicProfileBox();
       renderPosts();
     }
 
@@ -1080,6 +1237,12 @@
     function getFilteredPosts() {
       const user = auth.currentUser;
 
+      if (currentView === "profile" && selectedProfileUid) {
+        return currentPosts.filter(function(item) {
+          return item.data && item.data.uid === selectedProfileUid;
+        });
+      }
+
       if (currentFilter === "mine" && user) {
         return currentPosts.filter(function(item) {
           return item.data && item.data.uid === user.uid;
@@ -1092,10 +1255,25 @@
     function renderPosts() {
       const postsDiv = document.getElementById("posts");
       const postCountDiv = document.getElementById("postCount");
+      const composerSection = document.getElementById("composerSection");
+      const feedFiltersSection = document.getElementById("feedFiltersSection");
+      const postsTitle = document.getElementById("postsTitle");
       const user = auth.currentUser;
       const filteredPosts = getFilteredPosts();
       let html = "";
 
+      if (currentView === "profile" && selectedProfileUid) {
+        composerSection.classList.add("hidden");
+        feedFiltersSection.classList.add("hidden");
+        const selectedName = getDisplayName(selectedProfileUid, "مستخدم");
+        postsTitle.innerText = "منشورات " + selectedName;
+      } else {
+        composerSection.classList.remove("hidden");
+        feedFiltersSection.classList.remove("hidden");
+        postsTitle.innerText = "المنشورات";
+      }
+
+      updatePublicProfileBox();
       postCountDiv.innerText = "عدد المنشورات: " + filteredPosts.length;
 
       if (filteredPosts.length === 0) {
@@ -1124,13 +1302,17 @@
         }
 
         let followButton = "";
-
         if (user && !isOwner && data.uid) {
           if (isFollowing) {
             followButton = "<button class='following-btn' onclick=\"unfollowUser('" + data.uid + "')\">إلغاء المتابعة</button>";
           } else {
             followButton = "<button class='follow-btn' onclick=\"followUser('" + data.uid + "')\">متابعة</button>";
           }
+        }
+
+        let profileButton = "";
+        if (data.uid) {
+          profileButton = "<button class='profile-view-btn' onclick=\"openProfile('" + data.uid + "')\">عرض الملف الشخصي</button>";
         }
 
         let content = "";
@@ -1202,7 +1384,7 @@
                   "<div class='reply'>" +
                     "<div class='reply-top'>" +
                       "<div>" +
-                        "<div class='reply-name'>" + escapeHtml(getDisplayName(replyData.uid, replyData.name)) + "</div>" +
+                        "<div class='reply-name' onclick=\"openProfile('" + replyData.uid + "')\">" + escapeHtml(getDisplayName(replyData.uid, replyData.name)) + "</div>" +
                         "<div class='reply-time'>" + formatTime(replyData.time) + "</div>" +
                       "</div>" +
                       replyDeleteButton +
@@ -1216,7 +1398,7 @@
               "<div class='comment'>" +
                 "<div class='comment-top'>" +
                   "<div>" +
-                    "<div class='comment-name'>" + escapeHtml(getDisplayName(commentData.uid, commentData.name)) + "</div>" +
+                    "<div class='comment-name' onclick=\"openProfile('" + commentData.uid + "')\">" + escapeHtml(getDisplayName(commentData.uid, commentData.name)) + "</div>" +
                     "<div class='comment-time'>" + formatTime(commentData.time) + "</div>" +
                   "</div>" +
                   commentDeleteButton +
@@ -1245,10 +1427,11 @@
           "<div class='post'>" +
             "<div class='post-top'>" +
               "<div>" +
-                "<strong>" + escapeHtml(getDisplayName(data.uid, data.name)) + "</strong>" +
+                "<strong class='post-author' onclick=\"openProfile('" + data.uid + "')\">" + escapeHtml(getDisplayName(data.uid, data.name)) + "</strong>" +
                 "<div class='post-time'>" + postTime + "</div>" +
               "</div>" +
               "<div class='post-top-right'>" +
+                profileButton +
                 followButton +
                 actions +
               "</div>" +
@@ -1285,6 +1468,7 @@
           }
         });
 
+        updatePublicProfileBox();
         renderPosts();
       }, function(error) {
         alert(error.message);
