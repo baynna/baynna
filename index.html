@@ -11,12 +11,16 @@
 
   <style>
     :root {
-      --bg-main: linear-gradient(135deg, #f7f8ff 0%, #eef2ff 45%, #f8fbff 100%);
-      --card-bg: rgba(255, 255, 255, 0.9);
-      --card-border: rgba(99, 102, 241, 0.14);
+      --bg-main:
+        radial-gradient(circle at 15% 20%, rgba(59,130,246,0.18), transparent 25%),
+        radial-gradient(circle at 85% 10%, rgba(139,92,246,0.16), transparent 28%),
+        radial-gradient(circle at 75% 70%, rgba(20,184,166,0.10), transparent 24%),
+        linear-gradient(135deg, #f8f9ff 0%, #eef2ff 45%, #f6fbff 100%);
+      --card-bg: rgba(255, 255, 255, 0.90);
+      --card-border: rgba(99, 102, 241, 0.12);
       --text-main: #131a33;
       --text-soft: #5b6385;
-      --primary: linear-gradient(135deg, #312e81 0%, #5b21b6 55%, #7c3aed 100%);
+      --primary: linear-gradient(135deg, #1e1b4b 0%, #4338ca 45%, #7c3aed 100%);
       --primary-solid: #4338ca;
       --accent: #14b8a6;
       --danger: #dc2626;
@@ -30,12 +34,13 @@
       --light-btn: #eef2ff;
       --light-btn-text: #4338ca;
       --light-btn-hover: #e0e7ff;
-      --shadow-lg: 0 24px 60px rgba(49, 46, 129, 0.10);
-      --shadow-md: 0 12px 32px rgba(49, 46, 129, 0.08);
-      --radius-xl: 24px;
-      --radius-lg: 18px;
-      --radius-md: 14px;
-      --radius-sm: 10px;
+      --shadow-lg: 0 24px 70px rgba(49, 46, 129, 0.12);
+      --shadow-md: 0 12px 34px rgba(49, 46, 129, 0.08);
+      --shadow-sm: 0 8px 20px rgba(49, 46, 129, 0.06);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
     }
 
     * {
@@ -51,25 +56,25 @@
     }
 
     .app-shell {
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 0 auto;
-      padding: 24px 16px 40px;
+      padding: 24px 16px 50px;
     }
 
     .topbar {
       position: sticky;
       top: 0;
       z-index: 100;
-      backdrop-filter: blur(14px);
-      background: rgba(245, 247, 255, 0.72);
-      border: 1px solid rgba(99, 102, 241, 0.10);
+      backdrop-filter: blur(18px);
+      background: rgba(248, 249, 255, 0.76);
+      border: 1px solid rgba(99, 102, 241, 0.08);
       box-shadow: var(--shadow-md);
-      border-radius: 0 0 24px 24px;
+      border-radius: 0 0 28px 28px;
       margin-bottom: 24px;
     }
 
     .topbar-inner {
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 0 auto;
       padding: 16px;
       display: flex;
@@ -86,22 +91,23 @@
     }
 
     .brand-badge {
-      width: 52px;
-      height: 52px;
-      border-radius: 18px;
+      width: 56px;
+      height: 56px;
+      border-radius: 20px;
       background: var(--primary);
       color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 22px;
+      font-size: 24px;
       font-weight: bold;
-      box-shadow: 0 10px 24px rgba(91, 33, 182, 0.24);
+      box-shadow: 0 12px 28px rgba(67, 56, 202, 0.26);
+      flex-shrink: 0;
     }
 
     .brand-text h1 {
       margin: 0;
-      font-size: 28px;
+      font-size: 30px;
       line-height: 1.1;
       color: #1f2452;
     }
@@ -110,6 +116,7 @@
       margin: 4px 0 0;
       color: var(--text-soft);
       font-size: 13px;
+      line-height: 1.6;
     }
 
     .nav-pills {
@@ -122,8 +129,8 @@
     .nav-pill {
       border: none;
       border-radius: 999px;
-      padding: 10px 14px;
-      background: rgba(255, 255, 255, 0.8);
+      padding: 10px 15px;
+      background: rgba(255, 255, 255, 0.86);
       color: #2b3170;
       font-size: 14px;
       cursor: pointer;
@@ -158,22 +165,68 @@
       border: 1px solid var(--card-border);
       border-radius: var(--radius-xl);
       box-shadow: var(--shadow-lg);
-      padding: 20px;
+      padding: 22px;
       margin-bottom: 18px;
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(99,102,241,0.18), transparent);
     }
 
     .panel.hero-panel {
       background:
-        radial-gradient(circle at top right, rgba(20, 184, 166, 0.10), transparent 28%),
-        radial-gradient(circle at top left, rgba(124, 58, 237, 0.14), transparent 32%),
-        rgba(255,255,255,0.88);
+        radial-gradient(circle at top right, rgba(20, 184, 166, 0.14), transparent 28%),
+        radial-gradient(circle at top left, rgba(124, 58, 237, 0.16), transparent 32%),
+        radial-gradient(circle at center right, rgba(59,130,246,0.10), transparent 25%),
+        rgba(255,255,255,0.90);
+      padding: 28px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 22px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-spot {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      filter: blur(40px);
+      opacity: 0.22;
+      pointer-events: none;
+    }
+
+    .hero-spot.one {
+      top: -40px;
+      left: -20px;
+      background: #8b5cf6;
+    }
+
+    .hero-spot.two {
+      bottom: -40px;
+      right: 40px;
+      background: #14b8a6;
     }
 
     .panel-title {
       margin: 0 0 14px;
       font-size: 21px;
       color: #1c2250;
+      position: relative;
+      z-index: 1;
     }
 
     .section-kicker {
@@ -187,52 +240,69 @@
       font-size: 12px;
       margin-bottom: 12px;
       border: 1px solid rgba(67, 56, 202, 0.10);
-    }
-
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 18px;
-      align-items: center;
+      position: relative;
+      z-index: 1;
     }
 
     .hero-title {
-      font-size: 30px;
-      margin: 0 0 10px;
-      line-height: 1.35;
-      color: #191f46;
+      font-size: 38px;
+      margin: 0 0 12px;
+      line-height: 1.28;
+      color: #171d47;
+      position: relative;
+      z-index: 1;
     }
 
     .hero-text {
-      margin: 0;
+      margin: 0 0 16px;
       color: var(--text-soft);
-      line-height: 1.9;
+      line-height: 2;
       font-size: 15px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-callout {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      background: rgba(255,255,255,0.84);
+      color: #312e81;
+      border: 1px solid rgba(99,102,241,0.10);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      z-index: 1;
     }
 
     .hero-boxes {
       display: grid;
       gap: 12px;
+      position: relative;
+      z-index: 1;
     }
 
     .mini-stat {
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.92);
       border: 1px solid rgba(99, 102, 241, 0.12);
-      border-radius: 18px;
-      padding: 14px;
+      border-radius: 20px;
+      padding: 16px;
       box-shadow: 0 10px 24px rgba(99, 102, 241, 0.08);
     }
 
     .mini-stat strong {
       display: block;
       font-size: 18px;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
       color: #1f2452;
     }
 
     .mini-stat span {
       color: var(--text-soft);
       font-size: 13px;
+      line-height: 1.8;
     }
 
     .stats-grid {
@@ -244,8 +314,8 @@
     .profile-stat-card {
       background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(245,247,255,0.96));
       border: 1px solid rgba(99, 102, 241, 0.10);
-      border-radius: 16px;
-      padding: 12px;
+      border-radius: 18px;
+      padding: 14px;
       text-align: center;
     }
 
@@ -264,7 +334,7 @@
     .profile-identity {
       background: linear-gradient(135deg, rgba(67,56,202,0.06), rgba(20,184,166,0.06));
       border: 1px solid rgba(99, 102, 241, 0.10);
-      border-radius: 20px;
+      border-radius: 22px;
       padding: 18px;
       margin-bottom: 14px;
     }
@@ -378,7 +448,7 @@
     select {
       width: 100%;
       border: 1px solid rgba(99, 102, 241, 0.16);
-      border-radius: 16px;
+      border-radius: 18px;
       padding: 14px 16px;
       font-size: 15px;
       font-family: inherit;
@@ -399,7 +469,7 @@
     textarea {
       resize: vertical;
       min-height: 110px;
-      line-height: 1.8;
+      line-height: 1.9;
     }
 
     button {
@@ -479,7 +549,7 @@
     .filter-btn,
     .like-btn,
     .mood-btn {
-      background: var(--light-btn);
+      background: rgba(255,255,255,0.88);
       color: var(--light-btn-text);
       box-shadow: none;
       border: 1px solid rgba(67, 56, 202, 0.10);
@@ -497,6 +567,7 @@
     .active-mood {
       background: var(--primary);
       color: #fff;
+      box-shadow: 0 10px 24px rgba(67,56,202,0.18);
     }
 
     .comment-delete-btn,
@@ -541,9 +612,18 @@
       border: 1px solid rgba(109, 40, 217, 0.10);
     }
 
+    .composer-panel {
+      background:
+        radial-gradient(circle at 100% 0%, rgba(67,56,202,0.10), transparent 25%),
+        radial-gradient(circle at 0% 100%, rgba(20,184,166,0.08), transparent 25%),
+        rgba(255,255,255,0.92);
+      padding: 24px;
+    }
+
     .composer-panel textarea {
-      min-height: 130px;
+      min-height: 160px;
       transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      font-size: 16px;
     }
 
     .helper-text {
@@ -577,7 +657,7 @@
     }
 
     .section-title {
-      font-size: 24px;
+      font-size: 28px;
       margin: 0;
       color: #1b214d;
     }
@@ -593,12 +673,27 @@
     }
 
     .post {
-      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(247,248,255,0.94));
-      border: 1px solid rgba(99, 102, 241, 0.12);
-      border-radius: 22px;
-      padding: 18px;
-      margin-bottom: 16px;
-      box-shadow: 0 14px 34px rgba(99, 102, 241, 0.08);
+      background:
+        radial-gradient(circle at top left, rgba(124,58,237,0.06), transparent 22%),
+        linear-gradient(180deg, rgba(255,255,255,0.97), rgba(247,248,255,0.95));
+      border: 1px solid rgba(99, 102, 241, 0.10);
+      border-radius: 26px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 16px 36px rgba(99, 102, 241, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .post::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 140px;
+      height: 140px;
+      background: radial-gradient(circle, rgba(99,102,241,0.08), transparent 65%);
+      pointer-events: none;
     }
 
     .post-top {
@@ -607,7 +702,9 @@
       align-items: flex-start;
       gap: 14px;
       flex-wrap: wrap;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 1;
     }
 
     .post-top-right {
@@ -624,24 +721,24 @@
     }
 
     .post-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 16px;
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
       background: var(--primary);
       color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      font-size: 19px;
       font-weight: bold;
       flex-shrink: 0;
-      box-shadow: 0 8px 20px rgba(91, 33, 182, 0.18);
+      box-shadow: 0 10px 22px rgba(91, 33, 182, 0.20);
     }
 
     .post-author {
       cursor: pointer;
       color: #1e2553;
-      font-size: 16px;
+      font-size: 17px;
       font-weight: bold;
       line-height: 1.5;
     }
@@ -660,25 +757,30 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 10px;
+      padding: 7px 12px;
       border-radius: 999px;
       font-size: 13px;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       border: 1px solid rgba(99, 102, 241, 0.10);
-      background: #f8faff;
+      background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(239,246,255,0.96));
       color: #1f2452;
+      position: relative;
+      z-index: 1;
+      box-shadow: var(--shadow-sm);
     }
 
     .post-text {
       white-space: pre-wrap;
       word-break: break-word;
-      line-height: 2;
+      line-height: 2.05;
       color: #1b214d;
-      font-size: 15px;
-      background: rgba(255,255,255,0.7);
+      font-size: 16px;
+      background: rgba(255,255,255,0.82);
       border: 1px solid rgba(99,102,241,0.08);
-      border-radius: 18px;
-      padding: 14px;
+      border-radius: 20px;
+      padding: 16px;
+      position: relative;
+      z-index: 1;
     }
 
     .post-actions {
@@ -697,6 +799,8 @@
       gap: 10px;
       flex-wrap: wrap;
       margin-top: 14px;
+      position: relative;
+      z-index: 1;
     }
 
     .likes-count {
@@ -712,6 +816,8 @@
       margin-top: 16px;
       padding-top: 16px;
       border-top: 1px dashed rgba(99, 102, 241, 0.18);
+      position: relative;
+      z-index: 1;
     }
 
     .comment-input-box,
@@ -729,11 +835,12 @@
     }
 
     .comment {
-      background: rgba(255,255,255,0.82);
+      background: rgba(255,255,255,0.86);
       border: 1px solid rgba(99,102,241,0.10);
       border-radius: 18px;
       padding: 14px;
       margin-bottom: 12px;
+      box-shadow: var(--shadow-sm);
     }
 
     .comment-top,
@@ -860,32 +967,68 @@
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
-      margin: 14px 0 10px;
+      margin: 16px 0 12px;
+    }
+
+    .mood-btn {
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      position: relative;
+      overflow: hidden;
     }
 
     .mood-happy {
       background: #fff7ed !important;
       border-color: #fdba74 !important;
+      box-shadow: 0 0 0 4px rgba(251,146,60,0.08);
     }
 
     .mood-sad {
       background: #fef2f2 !important;
       border-color: #fca5a5 !important;
+      box-shadow: 0 0 0 4px rgba(248,113,113,0.08);
     }
 
     .mood-thinking {
       background: #eff6ff !important;
       border-color: #93c5fd !important;
+      box-shadow: 0 0 0 4px rgba(59,130,246,0.08);
     }
 
     .mood-angry {
       background: #fee2e2 !important;
       border-color: #f87171 !important;
+      box-shadow: 0 0 0 4px rgba(239,68,68,0.08);
     }
 
     .mood-calm {
       background: #ecfdf5 !important;
       border-color: #86efac !important;
+      box-shadow: 0 0 0 4px rgba(34,197,94,0.08);
+    }
+
+    .main-flow-glow {
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      filter: blur(55px);
+      opacity: 0.14;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .main-flow-glow.one {
+      top: 120px;
+      left: -60px;
+      background: #8b5cf6;
+    }
+
+    .main-flow-glow.two {
+      top: 480px;
+      right: -40px;
+      background: #14b8a6;
     }
 
     @media (max-width: 980px) {
@@ -916,7 +1059,7 @@
       }
 
       .hero-title {
-        font-size: 24px;
+        font-size: 28px;
       }
 
       .section-title {
@@ -973,27 +1116,31 @@
 
   <div class="app-shell">
     <div class="panel hero-panel" id="heroPanel">
+      <div class="hero-spot one"></div>
+      <div class="hero-spot two"></div>
+
       <div class="hero-grid">
         <div>
-          <div class="section-kicker">الحالة الشعورية</div>
-          <h2 class="hero-title">المنشور في بيننا ليس نصًا فقط… بل شعور أيضًا.</h2>
+          <div class="section-kicker">الصفحة الرئيسية المبهرة</div>
+          <h2 class="hero-title">بيننا… ليس مجرد تدفق منشورات، بل مساحة يشعر فيها الإنسان أن ما بداخله له شكل وصدى ومعنى.</h2>
           <p class="hero-text">
-            في هذه الصفقة أضفنا طبقة جديدة للمحتوى: أن يختار المستخدم حالته قبل النشر، فتظهر داخل المنشور وتمنح الخلاصة روحًا أكثر إنسانية وتميّزًا.
+            هذه الصفحة لم تعد فقط مكانًا للنشر، بل صارت مشهدًا بصريًا يحمل هوية بيننا: عمق، شعور، قرب، وأناقة. هنا يبدأ التعبير، لا كعادة رقمية مكررة، بل كتجربة لها نبرة وروح.
           </p>
+          <div class="hero-callout">✨ هنا لا تكتب فقط… بل تترك أثرًا</div>
         </div>
 
         <div class="hero-boxes">
           <div class="mini-stat">
-            <strong>مشاعر مرئية</strong>
-            <span>كل منشور يمكن أن يحمل حالة تعبّر عن صاحبه.</span>
+            <strong>افتتاحية أقوى</strong>
+            <span>الصفحة صارت تستقبل المستخدم بإحساس وهوية بدل شكل تقليدي.</span>
           </div>
           <div class="mini-stat">
-            <strong>نشر أعمق</strong>
-            <span>صندوق الكتابة يتغير لونه بحسب الحالة المختارة.</span>
+            <strong>صندوق نشر حيّ</strong>
+            <span>الحالة الشعورية صارت جزءًا من المشهد، لا مجرد أزرار عادية.</span>
           </div>
           <div class="mini-stat">
-            <strong>خطوة لهوية فريدة</strong>
-            <span>هذه من أولى الميزات التي تميز بيننا عن الشكل التقليدي.</span>
+            <strong>منشورات أكثر حضورًا</strong>
+            <span>بطاقات أنعم، أوضح، وأكثر قدرة على إبراز النص والشعور معًا.</span>
           </div>
         </div>
       </div>
@@ -1066,7 +1213,7 @@
               <div class="feature-dot"></div>
               <div>
                 <strong>هوية عربية معاصرة</strong>
-                <span>واجهة راقية ليست نسخة من المنصات الأخرى.</span>
+                <span>واجهة لا تشبه النسخ المكررة، بل تحمل روحًا وشخصية واضحة.</span>
               </div>
             </div>
 
@@ -1074,7 +1221,7 @@
               <div class="feature-dot"></div>
               <div>
                 <strong>مساحة إنسانية</strong>
-                <span>العلاقة والمحتوى والصوت الشخصي أهم من الضجيج.</span>
+                <span>العلاقة والمحتوى والشعور أهم من الضجيج والسرعة الفارغة.</span>
               </div>
             </div>
 
@@ -1082,14 +1229,17 @@
               <div class="feature-dot"></div>
               <div>
                 <strong>خصوصية وثقة</strong>
-                <span>التحكم في الحساب جزء أساسي من نمو المنصة.</span>
+                <span>التحكم في الحساب والتفاعل جزء أساسي من بنية المنصة.</span>
               </div>
             </div>
           </div>
         </div>
       </aside>
 
-      <main class="content">
+      <main class="content" style="position: relative;">
+        <div class="main-flow-glow one"></div>
+        <div class="main-flow-glow two"></div>
+
         <div id="settingsSection" class="panel hidden">
           <div class="toolbar">
             <button class="back-btn" onclick="goToFeed()">الرجوع للرئيسية</button>
@@ -1182,9 +1332,9 @@
         </div>
 
         <div id="composerSection" class="panel composer-panel">
-          <div class="section-kicker">اكتب ما تريد قوله</div>
-          <h3 class="panel-title">منشور جديد</h3>
-          <p class="helper-text">هنا تبدأ الفكرة، الرأي، اليوميات، أو أي شيء تريد أن تشاركه مع الآخرين.</p>
+          <div class="section-kicker">مساحة اليوم</div>
+          <h3 class="panel-title" style="font-size: 28px; margin-bottom: 8px;">منشور جديد</h3>
+          <p class="helper-text" style="font-size:14px;">هنا تبدأ الفكرة، الرأي، اليوميات، أو ذلك الشيء الذي لا تريد أن يضيع وسط الضجيج.</p>
 
           <div class="mood-box">
             <button type="button" class="mood-btn" onclick="setMood('happy', this)">🔥 حماسي</button>
@@ -1198,7 +1348,9 @@
             <textarea id="text" placeholder="ما الشيء الذي تريد أن يقرأه العالم منك اليوم؟"></textarea>
           </div>
 
-          <button onclick="sendPost()">نشر</button>
+          <div class="toolbar">
+            <button onclick="sendPost()">نشر</button>
+          </div>
         </div>
 
         <div id="searchSection" class="panel">
