@@ -477,7 +477,8 @@
 
     .profile-view-btn,
     .filter-btn,
-    .like-btn {
+    .like-btn,
+    .mood-btn {
       background: var(--light-btn);
       color: var(--light-btn-text);
       box-shadow: none;
@@ -486,12 +487,14 @@
 
     .profile-view-btn:hover,
     .filter-btn:hover,
-    .like-btn:hover {
+    .like-btn:hover,
+    .mood-btn:hover {
       background: var(--light-btn-hover);
     }
 
     .liked-btn,
-    .active-filter {
+    .active-filter,
+    .active-mood {
       background: var(--primary);
       color: #fff;
     }
@@ -540,6 +543,7 @@
 
     .composer-panel textarea {
       min-height: 130px;
+      transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .helper-text {
@@ -650,6 +654,19 @@
       color: var(--text-soft);
       font-size: 12px;
       margin-top: 6px;
+    }
+
+    .post-mood {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      margin-bottom: 10px;
+      border: 1px solid rgba(99, 102, 241, 0.10);
+      background: #f8faff;
+      color: #1f2452;
     }
 
     .post-text {
@@ -839,6 +856,38 @@
       line-height: 1.8;
     }
 
+    .mood-box {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 14px 0 10px;
+    }
+
+    .mood-happy {
+      background: #fff7ed !important;
+      border-color: #fdba74 !important;
+    }
+
+    .mood-sad {
+      background: #fef2f2 !important;
+      border-color: #fca5a5 !important;
+    }
+
+    .mood-thinking {
+      background: #eff6ff !important;
+      border-color: #93c5fd !important;
+    }
+
+    .mood-angry {
+      background: #fee2e2 !important;
+      border-color: #f87171 !important;
+    }
+
+    .mood-calm {
+      background: #ecfdf5 !important;
+      border-color: #86efac !important;
+    }
+
     @media (max-width: 980px) {
       .page-grid {
         grid-template-columns: 1fr;
@@ -926,25 +975,25 @@
     <div class="panel hero-panel" id="heroPanel">
       <div class="hero-grid">
         <div>
-          <div class="section-kicker">إعدادات وخصوصية</div>
-          <h2 class="hero-title">هوية جميلة لا تكفي وحدها… بيننا يحتاج أيضًا إلى تحكم وخصوصية وثقة.</h2>
+          <div class="section-kicker">الحالة الشعورية</div>
+          <h2 class="hero-title">المنشور في بيننا ليس نصًا فقط… بل شعور أيضًا.</h2>
           <p class="hero-text">
-            في هذه الصفقة أضفنا صفحة إعدادات أساسية ليشعر المستخدم أن حسابه ومساحته تحت سيطرته، وهذا أساس مهم قبل التوسع لاحقًا نحو الرسائل والإشعارات والاستكشاف المتقدم.
+            في هذه الصفقة أضفنا طبقة جديدة للمحتوى: أن يختار المستخدم حالته قبل النشر، فتظهر داخل المنشور وتمنح الخلاصة روحًا أكثر إنسانية وتميّزًا.
           </p>
         </div>
 
         <div class="hero-boxes">
           <div class="mini-stat">
-            <strong>إعدادات فعلية</strong>
-            <span>صفحة مستقلة تفتح من الشريط العلوي.</span>
+            <strong>مشاعر مرئية</strong>
+            <span>كل منشور يمكن أن يحمل حالة تعبّر عن صاحبه.</span>
           </div>
           <div class="mini-stat">
-            <strong>خصوصية أولية</strong>
-            <span>إخفاء البريد والتحكم في التعليقات.</span>
+            <strong>نشر أعمق</strong>
+            <span>صندوق الكتابة يتغير لونه بحسب الحالة المختارة.</span>
           </div>
           <div class="mini-stat">
-            <strong>أساس أقوى</strong>
-            <span>هذه الخطوة ترفع جدية المشروع وتزيد الثقة.</span>
+            <strong>خطوة لهوية فريدة</strong>
+            <span>هذه من أولى الميزات التي تميز بيننا عن الشكل التقليدي.</span>
           </div>
         </div>
       </div>
@@ -1137,8 +1186,16 @@
           <h3 class="panel-title">منشور جديد</h3>
           <p class="helper-text">هنا تبدأ الفكرة، الرأي، اليوميات، أو أي شيء تريد أن تشاركه مع الآخرين.</p>
 
+          <div class="mood-box">
+            <button type="button" class="mood-btn" onclick="setMood('happy', this)">🔥 حماسي</button>
+            <button type="button" class="mood-btn" onclick="setMood('sad', this)">💔 حزين</button>
+            <button type="button" class="mood-btn" onclick="setMood('thinking', this)">💭 أفكر</button>
+            <button type="button" class="mood-btn" onclick="setMood('angry', this)">😡 غاضب</button>
+            <button type="button" class="mood-btn" onclick="setMood('calm', this)">😌 هادئ</button>
+          </div>
+
           <div class="row" style="margin-top: 12px;">
-            <textarea id="text" placeholder="اكتب منشورك هنا..."></textarea>
+            <textarea id="text" placeholder="ما الشيء الذي تريد أن يقرأه العالم منك اليوم؟"></textarea>
           </div>
 
           <button onclick="sendPost()">نشر</button>
@@ -1214,6 +1271,7 @@
     let currentView = "feed";
     let selectedProfileUid = null;
     let searchText = "";
+    let currentMood = "";
 
     db.collection("users").onSnapshot(function(snapshot) {
       usersMap = {};
@@ -1292,7 +1350,10 @@
           currentView = "feed";
           selectedProfileUid = null;
           searchText = "";
+          currentMood = "";
           document.getElementById("searchInput").value = "";
+          document.getElementById("text").value = "";
+          clearMoodSelection();
           updateSearchStatus();
 
           if (currentFollowingUnsubscribe) {
@@ -1460,6 +1521,62 @@
       const cleaned = String(name).trim();
       if (!cleaned) return "ب";
       return cleaned.charAt(0).toUpperCase();
+    }
+
+    function getMoodIcon(mood) {
+      switch (mood) {
+        case "happy": return "🔥";
+        case "sad": return "💔";
+        case "thinking": return "💭";
+        case "angry": return "😡";
+        case "calm": return "😌";
+        default: return "";
+      }
+    }
+
+    function getMoodLabel(mood) {
+      switch (mood) {
+        case "happy": return "حماسي";
+        case "sad": return "حزين";
+        case "thinking": return "أفكر";
+        case "angry": return "غاضب";
+        case "calm": return "هادئ";
+        default: return "";
+      }
+    }
+
+    function clearMoodClasses() {
+      const textarea = document.getElementById("text");
+      textarea.classList.remove("mood-happy", "mood-sad", "mood-thinking", "mood-angry", "mood-calm");
+    }
+
+    function clearMoodSelection() {
+      currentMood = "";
+      document.querySelectorAll(".mood-btn").forEach(function(btn) {
+        btn.classList.remove("active-mood");
+      });
+      clearMoodClasses();
+    }
+
+    function setMood(mood, btn) {
+      if (currentMood === mood && btn.classList.contains("active-mood")) {
+        clearMoodSelection();
+        return;
+      }
+
+      currentMood = mood;
+
+      document.querySelectorAll(".mood-btn").forEach(function(item) {
+        item.classList.remove("active-mood");
+      });
+
+      btn.classList.add("active-mood");
+      clearMoodClasses();
+
+      const textarea = document.getElementById("text");
+      if (mood) {
+        textarea.classList.add("mood-" + mood);
+      }
     }
 
     function updateProfileBox() {
@@ -1787,12 +1904,14 @@
 
       db.collection("posts").add({
         text: text,
+        mood: currentMood,
         name: user.email,
         uid: user.uid,
         time: Date.now(),
         likes: []
       }).then(function() {
         document.getElementById("text").value = "";
+        clearMoodSelection();
       }).catch(function(error) {
         alert(error.message);
       });
@@ -2251,6 +2370,11 @@
           content = "<div class='post-text'>" + escapeHtml(data.text || "") + "</div>";
         }
 
+        let moodHtml = "";
+        if (data.mood) {
+          moodHtml = "<div class='post-mood'>" + escapeHtml(getMoodIcon(data.mood)) + " " + escapeHtml(getMoodLabel(data.mood)) + "</div>";
+        }
+
         let likeButtonClass = liked ? "liked-btn" : "like-btn";
         let likeButtonText = liked ? "إلغاء اللايك" : "لايك";
 
@@ -2360,6 +2484,7 @@
                 actions +
               "</div>" +
             "</div>" +
+            moodHtml +
             content +
             "<div class='post-bottom'>" +
               "<button class='" + likeButtonClass + "' onclick=\"toggleLike('" + postId + "', " + liked + ")\">" + likeButtonText + "</button>" +
