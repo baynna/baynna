@@ -753,20 +753,29 @@
       margin-top: 6px;
     }
 
-    .post-mood {
+    .post-mood,
+    .post-visibility {
       display: inline-flex;
       align-items: center;
       gap: 8px;
       padding: 7px 12px;
       border-radius: 999px;
       font-size: 13px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
+      margin-left: 6px;
       border: 1px solid rgba(99, 102, 241, 0.10);
       background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(239,246,255,0.96));
       color: #1f2452;
       position: relative;
       z-index: 1;
       box-shadow: var(--shadow-sm);
+    }
+
+    .post-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
     }
 
     .post-text {
@@ -1326,7 +1335,7 @@
           <div class="profile-line" id="publicProfileEmailLine"><strong>البريد:</strong> <span id="publicProfileEmail">-</span></div>
           <div class="profile-line"><strong>المتابعون:</strong> <span id="publicProfileFollowers">0</span></div>
           <div class="profile-line"><strong>أتابع:</strong> <span id="publicProfileFollowing">0</span></div>
-          <div class="profile-line"><strong>عدد المنشورات:</strong> <span id="publicProfilePostsCount">0</span></div>
+          <div class="profile-line"><strong>عدد المنشورات المرئية:</strong> <span id="publicProfilePostsCount">0</span></div>
 
           <div class="toolbar" id="publicProfileActions"></div>
         </div>
@@ -1342,6 +1351,19 @@
             <button type="button" class="mood-btn" onclick="setMood('thinking', this)">💭 أفكر</button>
             <button type="button" class="mood-btn" onclick="setMood('angry', this)">😡 غاضب</button>
             <button type="button" class="mood-btn" onclick="setMood('calm', this)">😌 هادئ</button>
+          </div>
+
+          <div class="row">
+            <select id="postVisibility">
+              <option value="public">الجميع</option>
+              <option value="followers">المتابعون</option>
+              <option value="followers_followers">متابعو المتابعين</option>
+              <option value="only_me">أنا فقط</option>
+            </select>
+          </div>
+
+          <div class="helper-text" style="margin-bottom: 12px;">
+            اختر من يستطيع رؤية هذا المنشور. كمالك المنصة، يمكنك رؤية كل المنشورات.
           </div>
 
           <div class="row" style="margin-top: 12px;">
@@ -1388,7 +1410,7 @@
           <div class="stats-grid">
             <div class="profile-stat-card">
               <strong id="pulsePosts">0</strong>
-              <span>عدد المنشورات</span>
+              <span>المنشورات المرئية</span>
             </div>
 
             <div class="profile-stat-card">
@@ -1426,6 +1448,8 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    const ADMIN_EMAILS = ["khayder266@gmail.com"];
+
     let currentPosts = [];
     let currentComments = {};
     let currentReplies = {};
@@ -1437,6 +1461,8 @@
     let followersCountMap = {};
     let followingCountMap = {};
     let currentFollowingMap = {};
+    let followerUserMap = {};
+    let followingUserMap = {};
     let watchedUserCounts = {};
     let currentFollowingUnsubscribe = null;
     let currentView = "feed";
@@ -1465,6 +1491,11 @@
     }, function(error) {
       console.log(error.message);
     });
+
+    function isAdminUser(user) {
+      if (!user || !user.email) return false;
+      return ADMIN_EMAILS.includes(String(user.email).toLowerCase());
+    }
 
     function register() {
       const email = document.getElementById("email").value.trim();
@@ -1525,6 +1556,7 @@
           currentMood = "";
           document.getElementById("searchInput").value = "";
           document.getElementById("text").value = "";
+          document.getElementById("postVisibility").value = "public";
           clearMoodSelection();
           updateSearchStatus();
 
@@ -1533,7 +1565,6 @@
             currentFollowingUnsubscribe = null;
           }
 
-          updateFilterButtons();
           updateAdvancedFilterButtons();
           updateProfileBox();
           updatePublicProfileBox();
@@ -1566,7 +1597,6 @@
         currentFilter = "all";
       }
 
-      updateFilterButtons();
       updateAdvancedFilterButtons();
       updateProfileBox();
       updatePublicProfileBox();
@@ -1628,6 +1658,10 @@
         .collection("followers")
         .onSnapshot(function(snapshot) {
           followersCountMap[userId] = snapshot.size;
+          followerUserMap[userId] = {};
+          snapshot.forEach(function(doc) {
+            followerUserMap[userId][doc.id] = true;
+          });
           updateProfileBox();
           updatePublicProfileBox();
           renderPosts();
@@ -1640,6 +1674,10 @@
         .collection("following")
         .onSnapshot(function(snapshot) {
           followingCountMap[userId] = snapshot.size;
+          followingUserMap[userId] = {};
+          snapshot.forEach(function(doc) {
+            followingUserMap[userId][doc.id] = true;
+          });
           updateProfileBox();
           updatePublicProfileBox();
           renderPosts();
@@ -1719,6 +1757,17 @@
       }
     }
 
+    function getVisibilityLabel(visibility) {
+      switch (visibility) {
+        case "only_me": return "أنا فقط";
+        case "followers": return "المتابعون";
+        case "followers_followers": return "متابعو المتابعين";
+        case "public":
+        default:
+          return "الجميع";
+      }
+    }
+
     function clearMoodClasses() {
       const textarea = document.getElementById("text");
       textarea.classList.remove("mood-happy", "mood-sad", "mood-thinking", "mood-angry", "mood-calm");
@@ -1751,6 +1800,63 @@
       if (mood) {
         textarea.classList.add("mood-" + mood);
       }
+    }
+
+    function isFollowerOf(ownerUid, viewerUid) {
+      if (!ownerUid || !viewerUid) return false;
+      return !!(followerUserMap[ownerUid] && followerUserMap[ownerUid][viewerUid]);
+    }
+
+    function isFollowerOfFollower(ownerUid, viewerUid) {
+      if (!ownerUid || !viewerUid) return false;
+
+      const ownerFollowers = followerUserMap[ownerUid] || {};
+      const ownerFollowerIds = Object.keys(ownerFollowers);
+
+      for (let i = 0; i < ownerFollowerIds.length; i++) {
+        const followerId = ownerFollowerIds[i];
+        if (followerUserMap[followerId] && followerUserMap[followerId][viewerUid]) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    function canCurrentUserSeePost(postData) {
+      const user = auth.currentUser;
+      const visibility = postData && postData.visibility ? postData.visibility : "public";
+      const ownerUid = postData && postData.uid ? postData.uid : "";
+
+      if (user && isAdminUser(user)) {
+        return true;
+      }
+
+      if (visibility === "public") {
+        return true;
+      }
+
+      if (!user) {
+        return false;
+      }
+
+      if (user.uid === ownerUid) {
+        return true;
+      }
+
+      if (visibility === "only_me") {
+        return false;
+      }
+
+      if (visibility === "followers") {
+        return isFollowerOf(ownerUid, user.uid);
+      }
+
+      if (visibility === "followers_followers") {
+        return isFollowerOf(ownerUid, user.uid) || isFollowerOfFollower(ownerUid, user.uid);
+      }
+
+      return true;
     }
 
     function updateProfileBox() {
@@ -1799,7 +1905,7 @@
       const followersCount = followersCountMap[selectedProfileUid] || 0;
       const followingCount = followingCountMap[selectedProfileUid] || 0;
       const postsCount = currentPosts.filter(function(item) {
-        return item.data && item.data.uid === selectedProfileUid;
+        return item.data && item.data.uid === selectedProfileUid && canCurrentUserSeePost(item.data);
       }).length;
 
       document.getElementById("publicProfileName").innerText = displayName;
@@ -2002,29 +2108,6 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    function setFilter(filterType) {
-      if (filterType === "mine" && !auth.currentUser) {
-        alert("سجل الدخول أولاً");
-        return;
-      }
-
-      currentView = "feed";
-      selectedProfileUid = null;
-      currentFilter = filterType;
-      updateFilterButtons();
-      updatePublicProfileBox();
-      updateNavButtons();
-      renderPosts();
-    }
-
-    function updateFilterButtons() {}
-
-    function setAdvancedFilter(filterType) {
-      currentAdvancedFilter = filterType;
-      updateAdvancedFilterButtons();
-      renderPosts();
-    }
-
     function updateAdvancedFilterButtons() {
       const latestBtn = document.getElementById("latestBtn");
       const topBtn = document.getElementById("topBtn");
@@ -2035,6 +2118,12 @@
       latestBtn.className = currentAdvancedFilter === "latest" ? "filter-btn active-filter" : "filter-btn";
       topBtn.className = currentAdvancedFilter === "top" ? "filter-btn active-filter" : "filter-btn";
       followingBtn.className = currentAdvancedFilter === "following" ? "filter-btn active-filter" : "filter-btn";
+    }
+
+    function setAdvancedFilter(filterType) {
+      currentAdvancedFilter = filterType;
+      updateAdvancedFilterButtons();
+      renderPosts();
     }
 
     function searchPosts() {
@@ -2077,6 +2166,7 @@
     function sendPost() {
       const text = document.getElementById("text").value.trim();
       const user = auth.currentUser;
+      const visibility = document.getElementById("postVisibility").value || "public";
 
       if (!user) {
         alert("سجل الدخول أولاً");
@@ -2091,12 +2181,14 @@
       db.collection("posts").add({
         text: text,
         mood: currentMood,
+        visibility: visibility,
         name: user.email,
         uid: user.uid,
         time: Date.now(),
         likes: []
       }).then(function() {
         document.getElementById("text").value = "";
+        document.getElementById("postVisibility").value = "public";
         clearMoodSelection();
       }).catch(function(error) {
         alert(error.message);
@@ -2229,6 +2321,11 @@
         return;
       }
 
+      if (!canCurrentUserSeePost(postItem.data)) {
+        alert("لا يمكنك رؤية هذا المنشور");
+        return;
+      }
+
       if (!canCurrentUserCommentOnPost(postItem.data.uid)) {
         alert("هذا المستخدم يسمح بالتعليقات من المتابعين فقط");
         return;
@@ -2285,6 +2382,11 @@
 
       if (!postItem || !postItem.data) {
         alert("تعذر العثور على المنشور");
+        return;
+      }
+
+      if (!canCurrentUserSeePost(postItem.data)) {
+        alert("لا يمكنك رؤية هذا المنشور");
         return;
       }
 
@@ -2430,7 +2532,9 @@
 
     function getFilteredPosts() {
       const user = auth.currentUser;
-      let filtered = [...currentPosts];
+      let filtered = currentPosts.filter(function(item) {
+        return canCurrentUserSeePost(item.data || {});
+      });
 
       if (currentView === "profile" && selectedProfileUid) {
         filtered = filtered.filter(function(item) {
@@ -2488,10 +2592,15 @@
       }
 
       pulseBox.classList.remove("hidden");
-      pulsePosts.innerText = currentPosts.length;
+
+      const visiblePosts = currentPosts.filter(function(item) {
+        return canCurrentUserSeePost(item.data || {});
+      });
+
+      pulsePosts.innerText = visiblePosts.length;
 
       const moodCount = {};
-      currentPosts.forEach(function(item) {
+      visiblePosts.forEach(function(item) {
         const mood = item.data && item.data.mood ? item.data.mood : "";
         if (mood) {
           moodCount[mood] = (moodCount[mood] || 0) + 1;
@@ -2578,6 +2687,7 @@
         const displayName = getDisplayName(data.uid, data.name);
         const avatarLetter = getInitialLetter(displayName);
         const canComment = canCurrentUserCommentOnPost(data.uid);
+        const visibility = data.visibility || "public";
 
         let actions = "";
 
@@ -2618,10 +2728,14 @@
           content = "<div class='post-text'>" + escapeHtml(data.text || "") + "</div>";
         }
 
-        let moodHtml = "";
+        let badgesHtml = "<div class='post-badges'>";
+
         if (data.mood) {
-          moodHtml = "<div class='post-mood'>" + escapeHtml(getMoodIcon(data.mood)) + " " + escapeHtml(getMoodLabel(data.mood)) + "</div>";
+          badgesHtml += "<div class='post-mood'>" + escapeHtml(getMoodIcon(data.mood)) + " " + escapeHtml(getMoodLabel(data.mood)) + "</div>";
         }
+
+        badgesHtml += "<div class='post-visibility'>👁️ " + escapeHtml(getVisibilityLabel(visibility)) + "</div>";
+        badgesHtml += "</div>";
 
         let likeButtonClass = liked ? "liked-btn" : "like-btn";
         let likeButtonText = liked ? "إلغاء اللايك" : "لايك";
@@ -2732,7 +2846,7 @@
                 actions +
               "</div>" +
             "</div>" +
-            moodHtml +
+            badgesHtml +
             content +
             "<div class='post-bottom'>" +
               "<button class='" + likeButtonClass + "' onclick=\"toggleLike('" + postId + "', " + liked + ")\">" + likeButtonText + "</button>" +
