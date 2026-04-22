@@ -416,6 +416,12 @@
       font-size: 12px;
       margin-bottom: 10px;
     }
+
+    .search-note {
+      color: #666;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
   </style>
 </head>
 <body>
@@ -486,6 +492,19 @@
       </div>
     </div>
 
+    <div id="searchSection">
+      <div class="row">
+        <input id="searchInput" placeholder="ابحث باسم المستخدم أو محتوى المنشور">
+      </div>
+
+      <div class="row">
+        <button onclick="searchPosts()">بحث</button>
+        <button class="cancel-btn" onclick="clearSearch()">إلغاء البحث</button>
+      </div>
+
+      <div id="searchStatus" class="search-note hidden"></div>
+    </div>
+
     <div id="feedFiltersSection" class="row">
       <button id="allPostsBtn" class="filter-btn active-filter" onclick="setFilter('all')">كل المنشورات</button>
       <button id="myPostsBtn" class="filter-btn" onclick="setFilter('mine')">منشوراتي</button>
@@ -528,6 +547,7 @@
     let currentFollowingUnsubscribe = null;
     let currentView = "feed";
     let selectedProfileUid = null;
+    let searchText = "";
 
     db.collection("users").onSnapshot(function(snapshot) {
       usersMap = {};
@@ -599,6 +619,9 @@
           currentFollowingMap = {};
           currentView = "feed";
           selectedProfileUid = null;
+          searchText = "";
+          document.getElementById("searchInput").value = "";
+          updateSearchStatus();
 
           if (currentFollowingUnsubscribe) {
             currentFollowingUnsubscribe();
@@ -942,6 +965,42 @@
       mineBtn.className = currentFilter === "mine" ? "filter-btn active-filter" : "filter-btn";
     }
 
+    function searchPosts() {
+      const input = document.getElementById("searchInput").value.trim().toLowerCase();
+
+      if (!input) {
+        alert("اكتب كلمة للبحث");
+        return;
+      }
+
+      searchText = input;
+      currentView = "feed";
+      selectedProfileUid = null;
+      updatePublicProfileBox();
+      updateSearchStatus();
+      renderPosts();
+    }
+
+    function clearSearch() {
+      searchText = "";
+      document.getElementById("searchInput").value = "";
+      updateSearchStatus();
+      renderPosts();
+    }
+
+    function updateSearchStatus() {
+      const searchStatus = document.getElementById("searchStatus");
+
+      if (!searchText) {
+        searchStatus.innerText = "";
+        searchStatus.classList.add("hidden");
+        return;
+      }
+
+      searchStatus.innerText = "نتائج البحث عن: " + searchText;
+      searchStatus.classList.remove("hidden");
+    }
+
     function sendPost() {
       const text = document.getElementById("text").value.trim();
       const user = auth.currentUser;
@@ -1236,20 +1295,28 @@
 
     function getFilteredPosts() {
       const user = auth.currentUser;
+      let filtered = currentPosts;
 
       if (currentView === "profile" && selectedProfileUid) {
-        return currentPosts.filter(function(item) {
+        filtered = filtered.filter(function(item) {
           return item.data && item.data.uid === selectedProfileUid;
         });
-      }
-
-      if (currentFilter === "mine" && user) {
-        return currentPosts.filter(function(item) {
+      } else if (currentFilter === "mine" && user) {
+        filtered = filtered.filter(function(item) {
           return item.data && item.data.uid === user.uid;
         });
       }
 
-      return currentPosts;
+      if (searchText) {
+        filtered = filtered.filter(function(item) {
+          const data = item.data || {};
+          const postText = (data.text || "").toLowerCase();
+          const postUserName = getDisplayName(data.uid, data.name || "").toLowerCase();
+          return postText.includes(searchText) || postUserName.includes(searchText);
+        });
+      }
+
+      return filtered;
     }
 
     function renderPosts() {
@@ -1257,6 +1324,7 @@
       const postCountDiv = document.getElementById("postCount");
       const composerSection = document.getElementById("composerSection");
       const feedFiltersSection = document.getElementById("feedFiltersSection");
+      const searchSection = document.getElementById("searchSection");
       const postsTitle = document.getElementById("postsTitle");
       const user = auth.currentUser;
       const filteredPosts = getFilteredPosts();
@@ -1265,15 +1333,18 @@
       if (currentView === "profile" && selectedProfileUid) {
         composerSection.classList.add("hidden");
         feedFiltersSection.classList.add("hidden");
+        searchSection.classList.add("hidden");
         const selectedName = getDisplayName(selectedProfileUid, "مستخدم");
         postsTitle.innerText = "منشورات " + selectedName;
       } else {
         composerSection.classList.remove("hidden");
         feedFiltersSection.classList.remove("hidden");
-        postsTitle.innerText = "المنشورات";
+        searchSection.classList.remove("hidden");
+        postsTitle.innerText = searchText ? "نتائج البحث" : "المنشورات";
       }
 
       updatePublicProfileBox();
+      updateSearchStatus();
       postCountDiv.innerText = "عدد المنشورات: " + filteredPosts.length;
 
       if (filteredPosts.length === 0) {
