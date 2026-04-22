@@ -1372,11 +1372,29 @@
 
         <div id="feedFiltersSection" class="panel">
           <div class="section-kicker">عرض المحتوى</div>
-          <h3 class="panel-title">الفلاتر</h3>
+          <h3 class="panel-title">الفلاتر الذكية</h3>
 
           <div class="toolbar">
-            <button id="allPostsBtn" class="filter-btn active-filter" onclick="setFilter('all')">كل المنشورات</button>
-            <button id="myPostsBtn" class="filter-btn" onclick="setFilter('mine')">منشوراتي</button>
+            <button id="latestBtn" class="filter-btn active-filter" onclick="setAdvancedFilter('latest')">الأحدث</button>
+            <button id="topBtn" class="filter-btn" onclick="setAdvancedFilter('top')">الأكثر تفاعلًا</button>
+            <button id="followingBtn" class="filter-btn" onclick="setAdvancedFilter('following')">أتابعهم</button>
+          </div>
+        </div>
+
+        <div id="pulseBox" class="panel">
+          <div class="section-kicker">نبض بيننا</div>
+          <h3 class="panel-title">إحصائيات مباشرة</h3>
+
+          <div class="stats-grid">
+            <div class="profile-stat-card">
+              <strong id="pulsePosts">0</strong>
+              <span>عدد المنشورات</span>
+            </div>
+
+            <div class="profile-stat-card">
+              <strong id="pulseMood">-</strong>
+              <span>أكثر شعور</span>
+            </div>
           </div>
         </div>
 
@@ -1413,6 +1431,7 @@
     let currentReplies = {};
     let editingPostId = null;
     let currentFilter = "all";
+    let currentAdvancedFilter = "latest";
     let usersMap = {};
     let currentUserProfile = null;
     let followersCountMap = {};
@@ -1497,6 +1516,7 @@
           document.getElementById("user").innerText = "غير مسجل";
           editingPostId = null;
           currentFilter = "all";
+          currentAdvancedFilter = "latest";
           currentUserProfile = null;
           currentFollowingMap = {};
           currentView = "feed";
@@ -1514,6 +1534,7 @@
           }
 
           updateFilterButtons();
+          updateAdvancedFilterButtons();
           updateProfileBox();
           updatePublicProfileBox();
           updateUserStatusBadge();
@@ -1546,6 +1567,7 @@
       }
 
       updateFilterButtons();
+      updateAdvancedFilterButtons();
       updateProfileBox();
       updatePublicProfileBox();
       updateUserStatusBadge();
@@ -1995,12 +2017,24 @@
       renderPosts();
     }
 
-    function updateFilterButtons() {
-      const allBtn = document.getElementById("allPostsBtn");
-      const mineBtn = document.getElementById("myPostsBtn");
+    function updateFilterButtons() {}
 
-      allBtn.className = currentFilter === "all" ? "filter-btn active-filter" : "filter-btn";
-      mineBtn.className = currentFilter === "mine" ? "filter-btn active-filter" : "filter-btn";
+    function setAdvancedFilter(filterType) {
+      currentAdvancedFilter = filterType;
+      updateAdvancedFilterButtons();
+      renderPosts();
+    }
+
+    function updateAdvancedFilterButtons() {
+      const latestBtn = document.getElementById("latestBtn");
+      const topBtn = document.getElementById("topBtn");
+      const followingBtn = document.getElementById("followingBtn");
+
+      if (!latestBtn || !topBtn || !followingBtn) return;
+
+      latestBtn.className = currentAdvancedFilter === "latest" ? "filter-btn active-filter" : "filter-btn";
+      topBtn.className = currentAdvancedFilter === "top" ? "filter-btn active-filter" : "filter-btn";
+      followingBtn.className = currentAdvancedFilter === "following" ? "filter-btn active-filter" : "filter-btn";
     }
 
     function searchPosts() {
@@ -2396,7 +2430,7 @@
 
     function getFilteredPosts() {
       const user = auth.currentUser;
-      let filtered = currentPosts;
+      let filtered = [...currentPosts];
 
       if (currentView === "profile" && selectedProfileUid) {
         filtered = filtered.filter(function(item) {
@@ -2417,7 +2451,64 @@
         });
       }
 
+      if (currentView === "feed" && !selectedProfileUid && !searchText) {
+        if (currentAdvancedFilter === "latest") {
+          filtered.sort(function(a, b) {
+            return (b.data.time || 0) - (a.data.time || 0);
+          });
+        } else if (currentAdvancedFilter === "top") {
+          filtered.sort(function(a, b) {
+            const aLikes = Array.isArray(a.data.likes) ? a.data.likes.length : 0;
+            const bLikes = Array.isArray(b.data.likes) ? b.data.likes.length : 0;
+            return bLikes - aLikes;
+          });
+        } else if (currentAdvancedFilter === "following") {
+          filtered = filtered.filter(function(item) {
+            return !!currentFollowingMap[item.data.uid];
+          });
+          filtered.sort(function(a, b) {
+            return (b.data.time || 0) - (a.data.time || 0);
+          });
+        }
+      }
+
       return filtered;
+    }
+
+    function updatePulseBox() {
+      const pulsePosts = document.getElementById("pulsePosts");
+      const pulseMood = document.getElementById("pulseMood");
+      const pulseBox = document.getElementById("pulseBox");
+
+      if (!pulsePosts || !pulseMood || !pulseBox) return;
+
+      if (currentView !== "feed") {
+        pulseBox.classList.add("hidden");
+        return;
+      }
+
+      pulseBox.classList.remove("hidden");
+      pulsePosts.innerText = currentPosts.length;
+
+      const moodCount = {};
+      currentPosts.forEach(function(item) {
+        const mood = item.data && item.data.mood ? item.data.mood : "";
+        if (mood) {
+          moodCount[mood] = (moodCount[mood] || 0) + 1;
+        }
+      });
+
+      let topMood = "";
+      let topCount = 0;
+
+      Object.keys(moodCount).forEach(function(moodKey) {
+        if (moodCount[moodKey] > topCount) {
+          topCount = moodCount[moodKey];
+          topMood = moodKey;
+        }
+      });
+
+      pulseMood.innerText = topMood ? getMoodLabel(topMood) : "-";
     }
 
     function renderPosts() {
@@ -2429,6 +2520,7 @@
       const postsTitle = document.getElementById("postsTitle");
       const settingsSection = document.getElementById("settingsSection");
       const heroPanel = document.getElementById("heroPanel");
+      const pulseBox = document.getElementById("pulseBox");
       const user = auth.currentUser;
       const filteredPosts = getFilteredPosts();
       let html = "";
@@ -2440,12 +2532,14 @@
         composerSection.classList.add("hidden");
         feedFiltersSection.classList.add("hidden");
         searchSection.classList.add("hidden");
+        pulseBox.classList.add("hidden");
         const selectedName = getDisplayName(selectedProfileUid, "مستخدم");
         postsTitle.innerText = "منشورات " + selectedName;
       } else if (currentView === "settings") {
         composerSection.classList.add("hidden");
         feedFiltersSection.classList.add("hidden");
         searchSection.classList.add("hidden");
+        pulseBox.classList.add("hidden");
         settingsSection.classList.remove("hidden");
         heroPanel.classList.add("hidden");
         postsTitle.innerText = "الخلاصة";
@@ -2458,6 +2552,8 @@
 
       updatePublicProfileBox();
       updateSearchStatus();
+      updatePulseBox();
+      updateAdvancedFilterButtons();
       postCountDiv.innerText = "عدد المنشورات: " + filteredPosts.length;
 
       if (currentView === "settings") {
@@ -2677,6 +2773,7 @@
 
     updateUserStatusBadge();
     updateNavButtons();
+    updateAdvancedFilterButtons();
   </script>
 
 </body>
