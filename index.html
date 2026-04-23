@@ -788,6 +788,17 @@
       margin-bottom: 6px;
     }
 
+    .post-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #151b47;
+      margin: 8px 0 12px;
+      line-height: 1.6;
+      position: relative;
+      z-index: 1;
+      word-break: break-word;
+    }
+
     .post-text {
       white-space: pre-wrap;
       word-break: break-word;
@@ -1221,6 +1232,10 @@
       .stats-grid {
         grid-template-columns: 1fr 1fr;
       }
+
+      .post-title {
+        font-size: 20px;
+      }
     }
   </style>
 </head>
@@ -1275,7 +1290,7 @@
           </div>
           <div class="mini-stat">
             <strong>منشورات أكثر حضورًا</strong>
-            <span>بطاقات أنعم، أوضح، وأكثر قدرة على إبراز النص والصورة والشعور معًا.</span>
+            <span>بطاقات أنعم، أوضح، وأكثر قدرة على إبراز العنوان والنص والصورة والشعور معًا.</span>
           </div>
         </div>
       </div>
@@ -1481,7 +1496,11 @@
         <div id="composerSection" class="panel composer-panel">
           <div class="section-kicker">مساحة اليوم</div>
           <h3 class="panel-title" style="font-size: 28px; margin-bottom: 8px;">منشور جديد</h3>
-          <p class="helper-text" style="font-size:14px;">هنا تبدأ الفكرة، الرأي، اليوميات، أو ذلك الشيء الذي لا تريد أن يضيع وسط الضجيج.</p>
+          <p class="helper-text" style="font-size:14px;">أضف عنوانًا واضحًا ثم اكتب الفكرة أو القصة أو الرأي الذي تريد نشره.</p>
+
+          <div class="row">
+            <input id="postTitleInput" placeholder="عنوان المنشور">
+          </div>
 
           <div class="mood-box">
             <button type="button" class="mood-btn" onclick="setMood('happy', this)">🔥 حماسي</button>
@@ -1520,7 +1539,7 @@
           </div>
 
           <div class="row" style="margin-top: 12px;">
-            <textarea id="text" placeholder="ما الشيء الذي تريد أن يقرأه العالم منك اليوم؟"></textarea>
+            <textarea id="text" placeholder="اكتب تفاصيل منشورك هنا"></textarea>
           </div>
 
           <div class="toolbar">
@@ -1531,10 +1550,10 @@
         <div id="searchSection" class="panel">
           <div class="section-kicker">الاكتشاف الأولي</div>
           <h3 class="panel-title">البحث</h3>
-          <p class="helper-text">ابحث باسم المستخدم أو بكلمة داخل المنشورات.</p>
+          <p class="helper-text">ابحث باسم المستخدم أو بعنوان المنشور أو بمحتوى المنشور.</p>
 
           <div class="row" style="margin-top: 12px;">
-            <input id="searchInput" placeholder="ابحث باسم المستخدم أو محتوى المنشور">
+            <input id="searchInput" placeholder="ابحث باسم المستخدم أو عنوان أو محتوى المنشور">
           </div>
 
           <div class="toolbar">
@@ -1774,6 +1793,7 @@
           currentMood = "";
           document.getElementById("searchInput").value = "";
           document.getElementById("text").value = "";
+          document.getElementById("postTitleInput").value = "";
           document.getElementById("postVisibility").value = "public";
           clearMoodSelection();
           removeSelectedImage();
@@ -2523,6 +2543,7 @@
     }
 
     function sendPost() {
+      const title = document.getElementById("postTitleInput").value.trim();
       const text = document.getElementById("text").value.trim();
       const user = auth.currentUser;
       const visibility = document.getElementById("postVisibility").value || "public";
@@ -2532,12 +2553,13 @@
         return;
       }
 
-      if (text === "" && !selectedImageBase64) {
-        alert("اكتب منشوراً أو أضف صورة أولاً");
+      if (title === "" && text === "" && !selectedImageBase64) {
+        alert("اكتب عنوانًا أو نصًا أو أضف صورة أولاً");
         return;
       }
 
       db.collection("posts").add({
+        title: title,
         text: text,
         image: selectedImageBase64 || "",
         mood: currentMood,
@@ -2547,6 +2569,7 @@
         time: Date.now(),
         likes: []
       }).then(function() {
+        document.getElementById("postTitleInput").value = "";
         document.getElementById("text").value = "";
         document.getElementById("postVisibility").value = "public";
         clearMoodSelection();
@@ -2591,15 +2614,24 @@
         return;
       }
 
-      const input = document.getElementById("editText-" + postId);
-      const newText = input.value.trim();
+      const titleInput = document.getElementById("editTitle-" + postId);
+      const textInput = document.getElementById("editText-" + postId);
 
-      if (newText === "") {
-        alert("النص لا يمكن أن يكون فارغاً");
+      if (!titleInput || !textInput) {
+        alert("تعذر العثور على حقول التعديل");
+        return;
+      }
+
+      const newTitle = titleInput.value.trim();
+      const newText = textInput.value.trim();
+
+      if (newTitle === "" && newText === "") {
+        alert("العنوان والنص لا يمكن أن يكونا فارغين معًا");
         return;
       }
 
       db.collection("posts").doc(postId).update({
+        title: newTitle,
         text: newText
       }).then(function() {
         editingPostId = null;
@@ -2890,7 +2922,6 @@
 
     function escapeHtml(text) {
       if (!text) return "";
-
       return String(text)
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
@@ -2974,9 +3005,10 @@
       if (searchText) {
         filtered = filtered.filter(function(item) {
           const data = item.data || {};
+          const postTitle = (data.title || "").toLowerCase();
           const postText = (data.text || "").toLowerCase();
           const postUserName = getDisplayName(data.uid, data.name || "").toLowerCase();
-          return postText.includes(searchText) || postUserName.includes(searchText);
+          return postTitle.includes(searchText) || postText.includes(searchText) || postUserName.includes(searchText);
         });
       }
 
@@ -3148,11 +3180,17 @@
           profileButton = "<button class='profile-view-btn' onclick=\"openProfile('" + data.uid + "')\">عرض الملف الشخصي</button>";
         }
 
+        let titleHtml = "";
+        if (data.title) {
+          titleHtml = "<div class='post-title'>" + escapeHtml(data.title) + "</div>";
+        }
+
         let content = "";
 
         if (editingPostId === postId && isOwner) {
           content =
             "<div class='edit-area'>" +
+              "<div class='row'><input id='editTitle-" + postId + "' value='" + escapeHtml(data.title || "") + "' placeholder='عنوان المنشور'></div>" +
               "<textarea id='editText-" + postId + "'>" + escapeHtml(data.text || "") + "</textarea>" +
               "<div class='toolbar'>" +
                 "<button class='save-btn' onclick=\"saveEdit('" + postId + "')\">حفظ</button>" +
@@ -3160,7 +3198,7 @@
               "</div>" +
             "</div>";
         } else {
-          content = "<div class='post-text'>" + escapeHtml(data.text || "") + "</div>";
+          content = data.text ? "<div class='post-text'>" + escapeHtml(data.text || "") + "</div>" : "";
         }
 
         let badgesHtml = "<div class='post-badges'>";
@@ -3290,6 +3328,7 @@
               "</div>" +
             "</div>" +
             badgesHtml +
+            titleHtml +
             content +
             imageHtml +
             "<div class='post-bottom'>" +
