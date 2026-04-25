@@ -32,9 +32,19 @@ function loadComments(postId) {
         const c = doc.data();
 
         const div = document.createElement("div");
-        div.style.marginTop = "5px";
 
-        div.innerText = c.text;
+        // 🔥 تنسيق احترافي
+        div.style.background = "#f1f3f5";
+        div.style.padding = "8px 10px";
+        div.style.marginTop = "6px";
+        div.style.borderRadius = "8px";
+        div.style.fontSize = "14px";
+
+        div.innerHTML = `
+          <div style="color:#333;">
+            ${c.text}
+          </div>
+        `;
 
         container.appendChild(div);
       });
