@@ -7,14 +7,16 @@ function addComment(postId) {
     return;
   }
 
-  db.collection("comments").add({
-    postId: postId,
-    text: text,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
-    input.value = "";
-    loadComments(postId);
-  });
+  db.collection("comments")
+    .add({
+      postId: postId,
+      text: text,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    })
+    .then(() => {
+      input.value = "";
+      loadComments(postId);
+    });
 }
 
 function loadComments(postId) {
@@ -25,13 +27,12 @@ function loadComments(postId) {
     .where("postId", "==", postId)
     .orderBy("createdAt", "desc")
     .get()
-    .then(snapshot => {
-      snapshot.forEach(doc => {
+    .then((snapshot) => {
+      snapshot.forEach((doc) => {
         const c = doc.data();
 
         const div = document.createElement("div");
         div.style.marginTop = "5px";
-        div.style.fontSize = "14px";
 
         div.innerText = c.text;
 
