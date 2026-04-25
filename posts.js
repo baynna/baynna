@@ -28,12 +28,22 @@ function renderPosts() {
             👍 إعجاب (${post.likes || 0})
           </button>
 
+          <br><br>
+
+          <input id="comment-${doc.id}" placeholder="اكتب تعليق..." />
+          <button onclick="addComment('${doc.id}')">إرسال</button>
+
+          <div id="comments-${doc.id}" style="margin-top:10px;"></div>
+
           <p style="color:gray; font-size:12px;">
             ${post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleString() : ""}
           </p>
         `;
 
         container.appendChild(div);
+
+        // عرض التعليقات
+        loadComments(doc.id);
       });
     });
 }
@@ -45,4 +55,46 @@ function likePost(postId) {
   }).then(() => {
     renderPosts();
   });
+}
+
+// إضافة تعليق
+function addComment(postId) {
+  const input = document.getElementById(`comment-${postId}`);
+  const text = input.value;
+
+  if (!text) return;
+
+  db.collection("posts")
+    .doc(postId)
+    .collection("comments")
+    .add({
+      text: text,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    })
+    .then(() => {
+      input.value = "";
+      loadComments(postId);
+    });
+}
+
+// عرض التعليقات
+function loadComments(postId) {
+  const container = document.getElementById(`comments-${postId}`);
+  container.innerHTML = "";
+
+  db.collection("posts")
+    .doc(postId)
+    .collection("comments")
+    .orderBy("createdAt", "asc")
+    .get()
+    .then((snapshot) => {
+      snapshot.forEach((doc) => {
+        const comment = doc.data();
+
+        const p = document.createElement("p");
+        p.textContent = "💬 " + comment.text;
+
+        container.appendChild(p);
+      });
+    });
 }
