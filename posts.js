@@ -8,16 +8,29 @@ function renderPosts() {
   db.collection("posts")
     .orderBy("createdAt", "desc")
     .get()
-    .then(snapshot => {
-      snapshot.forEach(doc => {
+    .then((snapshot) => {
+      snapshot.forEach((doc) => {
         const post = doc.data();
 
         const div = document.createElement("div");
-        div.style = "background:#fff;padding:15px;margin:10px 0;border-radius:10px";
+
+        div.style.background = "#fff";
+        div.style.padding = "15px";
+        div.style.margin = "10px 0";
+        div.style.borderRadius = "10px";
+        div.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
 
         div.innerHTML = `
-          <h3>${post.title || "بدون عنوان"}</h3>
+          <h3>${post.username || "مستخدم"}</h3>
           <p>${post.content || ""}</p>
+
+          <button onclick="likePost('${doc.id}')">
+            👍 إعجاب (${post.likes || 0})
+          </button>
+
+          <p style="color:gray; font-size:12px;">
+            ${new Date(post.createdAt?.seconds * 1000).toLocaleString()}
+          </p>
         `;
 
         container.appendChild(div);
@@ -25,7 +38,11 @@ function renderPosts() {
     });
 }
 
-// تشغيل تلقائي
-window.onload = function () {
-  renderPosts();
-};
+// دالة اللايك
+function likePost(postId) {
+  db.collection("posts").doc(postId).update({
+    likes: firebase.firestore.FieldValue.increment(1),
+  }).then(() => {
+    renderPosts(); // تحديث المنشورات
+  });
+}
