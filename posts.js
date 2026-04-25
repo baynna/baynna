@@ -29,10 +29,10 @@ function renderPosts() {
 
           <br><br>
 
-          <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
+          <input id="commentInput_${doc.id}" placeholder="اكتب تعليق">
           <button onclick="addComment('${doc.id}')">إرسال</button>
 
-          <div id="comments-${doc.id}"></div>
+          <div id="comments_${doc.id}"></div>
 
           <p style="color:gray; font-size:12px;">
             ${
