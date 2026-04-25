@@ -29,13 +29,17 @@ function renderPosts() {
 
           <br><br>
 
-          <input id="comment-${doc.id}" placeholder="اكتب تعليق..." />
+          <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
           <button onclick="addComment('${doc.id}')">إرسال</button>
 
           <div id="comments-${doc.id}"></div>
 
           <p style="color:gray; font-size:12px;">
-            ${post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleString() : ""}
+            ${
+              post.createdAt
+                ? new Date(post.createdAt.seconds * 1000).toLocaleString()
+                : ""
+            }
           </p>
         `;
 
