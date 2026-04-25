@@ -29,7 +29,7 @@ function renderPosts() {
           </button>
 
           <p style="color:gray; font-size:12px;">
-            ${new Date(post.createdAt?.seconds * 1000).toLocaleString()}
+            ${post.createdAt ? new Date(post.createdAt.seconds * 1000).toLocaleString() : ""}
           </p>
         `;
 
@@ -38,11 +38,11 @@ function renderPosts() {
     });
 }
 
-// دالة اللايك
+// الإعجاب
 function likePost(postId) {
   db.collection("posts").doc(postId).update({
     likes: firebase.firestore.FieldValue.increment(1),
   }).then(() => {
-    renderPosts(); // تحديث المنشورات
+    renderPosts();
   });
 }
