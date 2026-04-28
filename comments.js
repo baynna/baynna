@@ -39,7 +39,7 @@ function loadComments(postId) {
         div.className = "comment";
 
         div.innerHTML = `
-          <strong>${comment.username || "مستخدم"}</strong>
+          <strong>${comment.username}</strong>
           <p>${comment.text}</p>
         `;
 
