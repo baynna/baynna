@@ -35,15 +35,15 @@ function loadComments(postId) {
       snapshot.forEach((doc) => {
         const comment = doc.data();
 
-        const div = document.createElement("div");
-        div.className = "comment";
+        const commentDiv = document.createElement("div");
+        commentDiv.className = "comment";
 
-        div.innerHTML = `
+        commentDiv.innerHTML = `
           <strong>${comment.username}</strong>
           <p>${comment.text}</p>
         `;
 
-        container.appendChild(div);
+        container.appendChild(commentDiv);
       });
     });
 }
