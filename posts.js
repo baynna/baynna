@@ -12,7 +12,7 @@ function renderPosts() {
         const post = doc.data();
 
         const div = document.createElement("div");
-        div.className = "post"; // 🔥 ربط مع التصميم
+        div.className = "post";
 
         div.innerHTML = `
           <h3>${post.username || "مستخدم"}</h3>
@@ -24,10 +24,12 @@ function renderPosts() {
 
           <br><br>
 
-          <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
-          <button onclick="addComment('${doc.id}')">إرسال</button>
+          <div class="comment-box">
+            <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
+            <button onclick="addComment('${doc.id}')">إرسال</button>
+          </div>
 
-          <div id="comments-${doc.id}"></div>
+          <div id="comments-${doc.id}" class="comments"></div>
 
           <p style="color:gray; font-size:12px;">
             ${
@@ -40,7 +42,6 @@ function renderPosts() {
 
         container.appendChild(div);
 
-        // تحميل التعليقات
         if (typeof loadComments === "function") {
           loadComments(doc.id);
         }
@@ -48,5 +49,4 @@ function renderPosts() {
     });
 }
 
-// تشغيل عرض المنشورات عند تحميل الصفحة
 renderPosts();
