@@ -1,47 +1,63 @@
 const db = firebase.firestore();
 
-async function renderPosts() {
+function renderPosts() {
   const container = document.getElementById("postsContainer");
   container.innerHTML = "";
 
-  const snapshot = await db.collection("posts")
+  db.collection("posts")
     .orderBy("createdAt", "desc")
-    .get();
+    .get()
+    .then((snapshot) => {
+      snapshot.forEach((doc) => {
+        const post = doc.data();
 
-  snapshot.forEach((doc) => {
-    const post = doc.data();
+        const div = document.createElement("div");
+        div.className = "post-card";
 
-    const postDiv = document.createElement("div");
-    postDiv.className = "post";
+        div.innerHTML = `
+          <div class="post-header">
+            <div class="avatar">${(post.username || "م")[0]}</div>
+            <div class="user-info">
+              <div class="username">${post.username || "مستخدم"}</div>
+              <div class="date">
+                ${
+                  post.createdAt
+                    ? new Date(post.createdAt.seconds * 1000).toLocaleString()
+                    : ""
+                }
+              </div>
+            </div>
+          </div>
 
-    postDiv.innerHTML = `
-      <h3>${post.username || "مستخدم"}</h3>
-      <p>${post.content || ""}</p>
+          <div class="post-content">
+            ${post.content || ""}
+          </div>
 
-      <button onclick="likePost('${doc.id}')">
-        👍 إعجاب (${post.likes || 0})
-      </button>
+          ${
+            post.imageUrl
+              ? `<img src="${post.imageUrl}" class="post-image" />`
+              : ""
+          }
 
-      <div class="comment-box">
-        <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
-        <button onclick="addComment('${doc.id}')">إرسال</button>
-      </div>
+          <div class="post-actions">
+            <button onclick="likePost('${doc.id}')">
+              👍 ${post.likes || 0}
+            </button>
+          </div>
 
-      <div id="comments-${doc.id}" class="comments"></div>
+          <div class="comments-section">
+            <div class="add-comment">
+              <input id="commentInput-${doc.id}" placeholder="اكتب تعليق..." />
+              <button onclick="addComment('${doc.id}')">إرسال</button>
+            </div>
 
-      <p class="time">
-        ${
-          post.createdAt
-            ? new Date(post.createdAt.seconds * 1000).toLocaleString()
-            : ""
-        }
-      </p>
-    `;
+            <div id="comments-${doc.id}" class="comments-list"></div>
+          </div>
+        `;
 
-    container.appendChild(postDiv);
+        container.appendChild(div);
 
-    loadComments(doc.id);
-  });
+        loadComments(doc.id);
+      });
+    });
 }
-
-renderPosts();
