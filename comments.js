@@ -1,39 +1,35 @@
-const db = firebase.firestore();
-
-function addComment(postId) {
-  const input = document.getElementById("commentInput_" + postId);
-  const text = input.value.trim();
-
-  if (!text) return;
-
-  db.collection("comments").add({
-    postId: postId,
-    text: text,
-    username: firebase.auth().currentUser?.email || "مستخدم",
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  input.value = "";
-}
-
 function loadComments(postId) {
-  const container = document.getElementById("comments_" + postId);
+  const container = document.getElementById(`comments-${postId}`);
+  container.innerHTML = "";
 
-  db.collection("comments")
-    .where("postId", "==", postId)
+  db.collection("posts")
+    .doc(postId)
+    .collection("comments")
     .orderBy("createdAt", "asc")
-    .onSnapshot((snapshot) => {
-      container.innerHTML = "";
-
+    .get()
+    .then((snapshot) => {
       snapshot.forEach((doc) => {
-        const c = doc.data();
+        const comment = doc.data();
 
         const div = document.createElement("div");
-        div.className = "comment";
+
+        div.style.background = "#f9f9f9";
+        div.style.padding = "10px";
+        div.style.marginTop = "8px";
+        div.style.borderRadius = "8px";
+        div.style.border = "1px solid #eee";
 
         div.innerHTML = `
-          <div class="username">${c.username}</div>
-          <div>${c.text}</div>
+          <strong>${comment.username || "مستخدم"}</strong>
+          <p style="margin:5px 0;">${comment.text}</p>
+
+          <small style="color:gray;">
+            ${
+              comment.createdAt
+                ? new Date(comment.createdAt.seconds * 1000).toLocaleString()
+                : ""
+            }
+          </small>
         `;
 
         container.appendChild(div);
