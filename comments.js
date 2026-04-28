@@ -10,18 +10,11 @@ function addComment(postId) {
   db.collection("comments").add({
     postId: postId,
     text: text,
-    likes: 0,
+    username: firebase.auth().currentUser?.email || "مستخدم",
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   });
 
   input.value = "";
-}
-
-// لايك للتعليق
-function likeComment(commentId) {
-  db.collection("comments").doc(commentId).update({
-    likes: firebase.firestore.FieldValue.increment(1)
-  });
 }
 
 // عرض التعليقات (Real-time)
@@ -38,16 +31,17 @@ function loadComments(postId) {
         const c = doc.data();
 
         const div = document.createElement("div");
+
+        // 🔥 تصميم التعليق
+        div.style.background = "#f8f9fa";
+        div.style.padding = "8px 10px";
         div.style.marginTop = "6px";
-        div.style.padding = "6px";
-        div.style.background = "#f1f3f5";
-        div.style.borderRadius = "6px";
+        div.style.borderRadius = "10px";
+        div.style.border = "1px solid #eee";
 
         div.innerHTML = `
+          <strong>${c.username || "مستخدم"}</strong><br>
           <span>${c.text}</span>
-          <button onclick="likeComment('${doc.id}')">
-            👍 (${c.likes || 0})
-          </button>
         `;
 
         container.appendChild(div);
