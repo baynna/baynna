@@ -1,3 +1,27 @@
+const db = firebase.firestore();
+
+// إضافة تعليق
+function addComment(postId) {
+  const input = document.getElementById(`commentInput-${postId}`);
+  const text = input.value.trim();
+
+  if (!text) return;
+
+  db.collection("posts")
+    .doc(postId)
+    .collection("comments")
+    .add({
+      text: text,
+      username: "البطل",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    })
+    .then(() => {
+      input.value = "";
+      loadComments(postId);
+    });
+}
+
+// تحميل التعليقات
 function loadComments(postId) {
   const container = document.getElementById(`comments-${postId}`);
   container.innerHTML = "";
@@ -12,24 +36,11 @@ function loadComments(postId) {
         const comment = doc.data();
 
         const div = document.createElement("div");
-
-        div.style.background = "#f9f9f9";
-        div.style.padding = "10px";
-        div.style.marginTop = "8px";
-        div.style.borderRadius = "8px";
-        div.style.border = "1px solid #eee";
+        div.className = "comment";
 
         div.innerHTML = `
           <strong>${comment.username || "مستخدم"}</strong>
-          <p style="margin:5px 0;">${comment.text}</p>
-
-          <small style="color:gray;">
-            ${
-              comment.createdAt
-                ? new Date(comment.createdAt.seconds * 1000).toLocaleString()
-                : ""
-            }
-          </small>
+          <p>${comment.text}</p>
         `;
 
         container.appendChild(div);
