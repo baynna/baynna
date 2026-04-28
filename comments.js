@@ -21,9 +21,12 @@ function addComment(postId) {
     });
 }
 
-// تحميل التعليقات
+// عرض التعليقات داخل نفس البوست
 function loadComments(postId) {
   const container = document.getElementById(`comments-${postId}`);
+
+  if (!container) return;
+
   container.innerHTML = "";
 
   db.collection("posts")
@@ -35,15 +38,15 @@ function loadComments(postId) {
       snapshot.forEach((doc) => {
         const comment = doc.data();
 
-        const commentDiv = document.createElement("div");
-        commentDiv.className = "comment";
+        const div = document.createElement("div");
+        div.className = "comment";
 
-        commentDiv.innerHTML = `
+        div.innerHTML = `
           <strong>${comment.username}</strong>
           <p>${comment.text}</p>
         `;
 
-        container.appendChild(commentDiv);
+        container.appendChild(div);
       });
     });
 }
