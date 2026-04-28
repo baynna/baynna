@@ -1,6 +1,5 @@
 const db = firebase.firestore();
 
-// إضافة تعليق
 function addComment(postId) {
   const input = document.getElementById("commentInput_" + postId);
   const text = input.value.trim();
@@ -17,7 +16,6 @@ function addComment(postId) {
   input.value = "";
 }
 
-// عرض التعليقات (Real-time)
 function loadComments(postId) {
   const container = document.getElementById("comments_" + postId);
 
@@ -31,17 +29,11 @@ function loadComments(postId) {
         const c = doc.data();
 
         const div = document.createElement("div");
-
-        // 🔥 تصميم التعليق
-        div.style.background = "#f8f9fa";
-        div.style.padding = "8px 10px";
-        div.style.marginTop = "6px";
-        div.style.borderRadius = "10px";
-        div.style.border = "1px solid #eee";
+        div.className = "comment";
 
         div.innerHTML = `
-          <strong>${c.username || "مستخدم"}</strong><br>
-          <span>${c.text}</span>
+          <div class="username">${c.username}</div>
+          <div>${c.text}</div>
         `;
 
         container.appendChild(div);
