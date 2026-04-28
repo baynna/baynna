@@ -2,12 +2,12 @@ const db = firebase.firestore();
 
 function renderPosts() {
   const container = document.getElementById("postsContainer");
-  container.innerHTML = "";
 
   db.collection("posts")
     .orderBy("createdAt", "desc")
-    .get()
-    .then((snapshot) => {
+    .onSnapshot((snapshot) => {
+      container.innerHTML = "";
+
       snapshot.forEach((doc) => {
         const post = doc.data();
 
