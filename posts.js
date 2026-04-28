@@ -13,15 +13,22 @@ function renderPosts() {
 
         const div = document.createElement("div");
 
-        div.style.background = "#fff";
+        // 🔥 تصميم احترافي
+        div.style.background = "#ffffff";
         div.style.padding = "15px";
-        div.style.margin = "10px 0";
-        div.style.borderRadius = "10px";
-        div.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)";
+        div.style.margin = "15px 0";
+        div.style.borderRadius = "12px";
+        div.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
+        div.style.border = "1px solid #eee";
 
         div.innerHTML = `
-          <h3>${post.username || "مستخدم"}</h3>
-          <p>${post.content || ""}</p>
+          <h3 style="margin-bottom:5px;">
+            ${post.username || "مستخدم"}
+          </h3>
+
+          <p style="margin-bottom:10px;">
+            ${post.content || ""}
+          </p>
 
           <button onclick="likePost('${doc.id}')">
             👍 إعجاب (${post.likes || 0})
@@ -29,12 +36,16 @@ function renderPosts() {
 
           <br><br>
 
-          <input id="commentInput_${doc.id}" placeholder="اكتب تعليق">
-          <button onclick="addComment('${doc.id}')">إرسال</button>
+          <input id="commentInput_${doc.id}" placeholder="اكتب تعليق"
+                 style="padding:8px; width:70%; border-radius:8px; border:1px solid #ddd;">
 
-          <div id="comments_${doc.id}"></div>
+          <button onclick="addComment('${doc.id}')">
+            إرسال
+          </button>
 
-          <p style="color:gray; font-size:12px;">
+          <div id="comments_${doc.id}" style="margin-top:10px;"></div>
+
+          <p style="color:gray; font-size:12px; margin-top:10px;">
             ${
               post.createdAt
                 ? new Date(post.createdAt.seconds * 1000).toLocaleString()
