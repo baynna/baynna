@@ -1,52 +1,47 @@
 const db = firebase.firestore();
 
-function renderPosts() {
+async function renderPosts() {
   const container = document.getElementById("postsContainer");
   container.innerHTML = "";
 
-  db.collection("posts")
+  const snapshot = await db.collection("posts")
     .orderBy("createdAt", "desc")
-    .get()
-    .then((snapshot) => {
-      snapshot.forEach((doc) => {
-        const post = doc.data();
+    .get();
 
-        const div = document.createElement("div");
-        div.className = "post";
+  snapshot.forEach((doc) => {
+    const post = doc.data();
 
-        div.innerHTML = `
-          <h3>${post.username || "مستخدم"}</h3>
-          <p>${post.content || ""}</p>
+    const postDiv = document.createElement("div");
+    postDiv.className = "post";
 
-          <button onclick="likePost('${doc.id}')">
-            👍 إعجاب (${post.likes || 0})
-          </button>
+    postDiv.innerHTML = `
+      <h3>${post.username || "مستخدم"}</h3>
+      <p>${post.content || ""}</p>
 
-          <br><br>
+      <button onclick="likePost('${doc.id}')">
+        👍 إعجاب (${post.likes || 0})
+      </button>
 
-          <div class="comment-box">
-            <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
-            <button onclick="addComment('${doc.id}')">إرسال</button>
-          </div>
+      <div class="comment-box">
+        <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
+        <button onclick="addComment('${doc.id}')">إرسال</button>
+      </div>
 
-          <div id="comments-${doc.id}" class="comments"></div>
+      <div id="comments-${doc.id}" class="comments"></div>
 
-          <p style="color:gray; font-size:12px;">
-            ${
-              post.createdAt
-                ? new Date(post.createdAt.seconds * 1000).toLocaleString()
-                : ""
-            }
-          </p>
-        `;
-
-        container.appendChild(div);
-
-        if (typeof loadComments === "function") {
-          loadComments(doc.id);
+      <p class="time">
+        ${
+          post.createdAt
+            ? new Date(post.createdAt.seconds * 1000).toLocaleString()
+            : ""
         }
-      });
-    });
+      </p>
+    `;
+
+    container.appendChild(postDiv);
+
+    loadComments(doc.id);
+  });
 }
 
 renderPosts();
