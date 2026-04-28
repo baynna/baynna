@@ -1,49 +1,53 @@
+const db = firebase.firestore();
+
+// إضافة تعليق
 function addComment(postId) {
-  const input = document.getElementById(`commentInput-${postId}`);
+  const input = document.getElementById("commentInput_" + postId);
   const text = input.value.trim();
 
-  if (!text) {
-    alert("اكتب تعليق");
-    return;
-  }
+  if (!text) return;
 
-  db.collection("comments")
-    .add({
-      postId: postId,
-      text: text,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    })
-    .then(() => {
-      input.value = "";
-      loadComments(postId);
-    });
+  db.collection("comments").add({
+    postId: postId,
+    text: text,
+    likes: 0,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  input.value = "";
 }
 
+// لايك للتعليق
+function likeComment(commentId) {
+  db.collection("comments").doc(commentId).update({
+    likes: firebase.firestore.FieldValue.increment(1)
+  });
+}
+
+// عرض التعليقات (Real-time)
 function loadComments(postId) {
-  const container = document.getElementById(`comments-${postId}`);
-  container.innerHTML = "";
+  const container = document.getElementById("comments_" + postId);
 
   db.collection("comments")
     .where("postId", "==", postId)
-    .orderBy("createdAt", "desc")
-    .get()
-    .then((snapshot) => {
+    .orderBy("createdAt", "asc")
+    .onSnapshot((snapshot) => {
+      container.innerHTML = "";
+
       snapshot.forEach((doc) => {
         const c = doc.data();
 
         const div = document.createElement("div");
-
-        // 🔥 تنسيق احترافي
-        div.style.background = "#f1f3f5";
-        div.style.padding = "8px 10px";
         div.style.marginTop = "6px";
-        div.style.borderRadius = "8px";
-        div.style.fontSize = "14px";
+        div.style.padding = "6px";
+        div.style.background = "#f1f3f5";
+        div.style.borderRadius = "6px";
 
         div.innerHTML = `
-          <div style="color:#333;">
-            ${c.text}
-          </div>
+          <span>${c.text}</span>
+          <button onclick="likeComment('${doc.id}')">
+            👍 (${c.likes || 0})
+          </button>
         `;
 
         container.appendChild(div);
