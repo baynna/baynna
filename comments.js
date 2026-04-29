@@ -2,51 +2,51 @@ const db = firebase.firestore();
 
 // إضافة تعليق
 function addComment(postId) {
-  const input = document.getElementById(`commentInput-${postId}`);
-  const text = input.value.trim();
+const input = document.getElementById(`commentInput-${postId}`);
+const text = input.value.trim();
 
-  if (!text) return;
+if (!text) return;
 
-  db.collection("posts")
-    .doc(postId)
-    .collection("comments")
-    .add({
-      text: text,
-      username: "البطل",
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    })
-    .then(() => {
-      input.value = "";
-      loadComments(postId);
-    });
+db.collection("posts")
+.doc(postId)
+.collection("comments")
+.add({
+text: text,
+username: currentUsername,
+createdAt: firebase.firestore.FieldValue.serverTimestamp()
+})
+.then(() => {
+input.value = "";
+loadComments(postId);
+});
 }
 
-// عرض التعليقات داخل نفس البوست
+// تحميل التعليقات
 function loadComments(postId) {
-  const container = document.getElementById(`comments-${postId}`);
+const container = document.getElementById(`comments-${postId}`);
+container.innerHTML = "";
 
-  if (!container) return;
+db.collection("posts")
+.doc(postId)
+.collection("comments")
+.orderBy("createdAt", "asc")
+.get()
+.then((snapshot) => {
+snapshot.forEach((doc) => {
+const c = doc.data();
 
-  container.innerHTML = "";
+```
+    const div = document.createElement("div");
+    div.className = "comment";
 
-  db.collection("posts")
-    .doc(postId)
-    .collection("comments")
-    .orderBy("createdAt", "asc")
-    .get()
-    .then((snapshot) => {
-      snapshot.forEach((doc) => {
-        const comment = doc.data();
+    div.innerHTML = `
+      <strong>${c.username}</strong>
+      <p>${c.text}</p>
+    `;
 
-        const div = document.createElement("div");
-        div.className = "comment";
+    container.appendChild(div);
+  });
+});
+```
 
-        div.innerHTML = `
-          <strong>${comment.username}</strong>
-          <p>${comment.text}</p>
-        `;
-
-        container.appendChild(div);
-      });
-    });
 }
