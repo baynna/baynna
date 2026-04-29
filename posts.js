@@ -1,63 +1,70 @@
 const db = firebase.firestore();
 
 function renderPosts() {
-  const container = document.getElementById("postsContainer");
-  container.innerHTML = "";
+const container = document.getElementById("postsContainer");
+container.innerHTML = "";
 
-  db.collection("posts")
-    .orderBy("createdAt", "desc")
-    .get()
-    .then((snapshot) => {
-      snapshot.forEach((doc) => {
-        const post = doc.data();
+db.collection("posts")
+.orderBy("createdAt", "desc")
+.get()
+.then((snapshot) => {
+snapshot.forEach((doc) => {
+const post = doc.data();
 
-        const div = document.createElement("div");
-        div.className = "post-card";
+```
+    const div = document.createElement("div");
+    div.className = "post";
 
-        div.innerHTML = `
-          <div class="post-header">
-            <div class="avatar">${(post.username || "م")[0]}</div>
-            <div class="user-info">
-              <div class="username">${post.username || "مستخدم"}</div>
-              <div class="date">
-                ${
-                  post.createdAt
-                    ? new Date(post.createdAt.seconds * 1000).toLocaleString()
-                    : ""
-                }
-              </div>
-            </div>
-          </div>
+    div.innerHTML = `
+      <h3>${post.username}</h3>
+      <p>${post.content || ""}</p>
 
-          <div class="post-content">
-            ${post.content || ""}
-          </div>
+      ${
+        post.imageUrl
+          ? `<img src="${post.imageUrl}" style="width:100%;border-radius:10px;margin-top:10px;">`
+          : ""
+      }
 
-          ${
-            post.imageUrl
-              ? `<img src="${post.imageUrl}" class="post-image" />`
-              : ""
-          }
+      <button onclick="likePost('${doc.id}')">
+        👍 ${post.likes || 0}
+      </button>
 
-          <div class="post-actions">
-            <button onclick="likePost('${doc.id}')">
-              👍 ${post.likes || 0}
-            </button>
-          </div>
+      <br><br>
 
-          <div class="comments-section">
-            <div class="add-comment">
-              <input id="commentInput-${doc.id}" placeholder="اكتب تعليق..." />
-              <button onclick="addComment('${doc.id}')">إرسال</button>
-            </div>
+      <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
+      <button onclick="addComment('${doc.id}')">إرسال</button>
 
-            <div id="comments-${doc.id}" class="comments-list"></div>
-          </div>
-        `;
+      <div id="comments-${doc.id}"></div>
 
-        container.appendChild(div);
+      <p style="color:gray; font-size:12px;">
+        ${
+          post.createdAt
+            ? new Date(post.createdAt.seconds * 1000).toLocaleString()
+            : ""
+        }
+      </p>
+    `;
 
-        loadComments(doc.id);
-      });
-    });
+    container.appendChild(div);
+
+    loadComments(doc.id);
+  });
+});
+```
+
 }
+
+// إضافة منشور
+function addPost(content, imageUrl = "") {
+db.collection("posts").add({
+content: content,
+imageUrl: imageUrl,
+username: currentUsername,
+likes: 0,
+createdAt: firebase.firestore.FieldValue.serverTimestamp()
+}).then(() => {
+renderPosts();
+});
+}
+
+renderPosts();
