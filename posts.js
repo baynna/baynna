@@ -16,7 +16,11 @@ const post = doc.data();
     div.className = "post";
 
     div.innerHTML = `
-      <h3>${post.username}</h3>
+      <h3 style="cursor:pointer;color:#4a6cf7;"
+          onclick="openProfile('${post.userId}')">
+        ${post.username}
+      </h3>
+
       <p>${post.content || ""}</p>
 
       ${
@@ -35,14 +39,6 @@ const post = doc.data();
       <button onclick="addComment('${doc.id}')">إرسال</button>
 
       <div id="comments-${doc.id}"></div>
-
-      <p style="color:gray; font-size:12px;">
-        ${
-          post.createdAt
-            ? new Date(post.createdAt.seconds * 1000).toLocaleString()
-            : ""
-        }
-      </p>
     `;
 
     container.appendChild(div);
@@ -54,17 +50,9 @@ const post = doc.data();
 
 }
 
-// إضافة منشور
-function addPost(content, imageUrl = "") {
-db.collection("posts").add({
-content: content,
-imageUrl: imageUrl,
-username: currentUsername,
-likes: 0,
-createdAt: firebase.firestore.FieldValue.serverTimestamp()
-}).then(() => {
-renderPosts();
-});
+// فتح صفحة البروفايل
+function openProfile(userId) {
+window.location.href = `profile.html?uid=${userId}`;
 }
 
 renderPosts();
