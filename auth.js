@@ -1,20 +1,52 @@
-function login() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
+const db = firebase.firestore();
 
-  if (!email || !password) {
-    alert("اكتب البريد وكلمة المرور");
-    return;
-  }
+// إضافة تعليق
+function addComment(postId) {
+const input = document.getElementById(`commentInput-${postId}`);
+const text = input.value.trim();
 
-  auth.signInWithEmailAndPassword(email, password)
-    .catch(function(error) {
-      alert(error.message);
-    });
+if (!text) return;
+
+db.collection("posts")
+.doc(postId)
+.collection("comments")
+.add({
+text: text,
+username: currentUsername,
+createdAt: firebase.firestore.FieldValue.serverTimestamp()
+})
+.then(() => {
+input.value = "";
+loadComments(postId);
+});
 }
 
-function logout() {
-  auth.signOut().then(function () {
-    location.reload();
+// تحميل التعليقات
+function loadComments(postId) {
+const container = document.getElementById(`comments-${postId}`);
+container.innerHTML = "";
+
+db.collection("posts")
+.doc(postId)
+.collection("comments")
+.orderBy("createdAt", "asc")
+.get()
+.then((snapshot) => {
+snapshot.forEach((doc) => {
+const c = doc.data();
+
+```
+    const div = document.createElement("div");
+    div.className = "comment";
+
+    div.innerHTML = `
+      <strong>${c.username}</strong>
+      <p>${c.text}</p>
+    `;
+
+    container.appendChild(div);
   });
+});
+```
+
 }
