@@ -14,8 +14,27 @@
 <script src="firebaseConfig.js"></script>
 
 <style>
-body { font-family: Tahoma; padding: 20px; }
-#messages { height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
+body {
+  font-family: Tahoma;
+  padding: 20px;
+}
+
+#messages {
+  height: 300px;
+  overflow-y: scroll;
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+input {
+  width: 70%;
+  padding: 8px;
+}
+
+button {
+  padding: 8px;
+}
 </style>
 
 </head>
@@ -25,14 +44,12 @@ body { font-family: Tahoma; padding: 20px; }
 <h2>الدردشة العامة</h2>
 
 <div style="background:#fff3cd;padding:10px;border-radius:8px;">
-⚠️ هذه المحادثة قد تخضع للمراجعة
+⚠️ هذه المحادثة قد تخضع للمراجعة لحماية المجتمع
 </div>
 
 <br>
 
 <div id="messages"></div>
-
-<br>
 
 <input id="msgInput" placeholder="اكتب رسالة">
 <button onclick="sendMessage()">إرسال</button>
@@ -40,19 +57,34 @@ body { font-family: Tahoma; padding: 20px; }
 <script>
 const db = firebase.firestore();
 
+// إرسال رسالة
 function sendMessage() {
   const text = document.getElementById("msgInput").value;
 
   if (!text) return;
 
-  db.collection("chat").add({
-    text: text,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
+  const user = firebase.auth().currentUser;
 
-  document.getElementById("msgInput").value = "";
+  if (!user) {
+    alert("يجب تسجيل الدخول");
+    return;
+  }
+
+  db.collection("users").doc(user.uid).get().then(doc => {
+    const username = doc.exists ? doc.data().username : "مستخدم";
+
+    db.collection("chat").add({
+      text: text,
+      userId: user.uid,
+      username: username,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    document.getElementById("msgInput").value = "";
+  });
 }
 
+// عرض الرسائل
 function loadMessages() {
   db.collection("chat")
     .orderBy("createdAt")
@@ -63,11 +95,19 @@ function loadMessages() {
       snapshot.forEach(doc => {
         const msg = doc.data();
 
-        box.innerHTML += `<p>${msg.text}</p>`;
+        box.innerHTML += `
+          <p>
+            <strong>${msg.username || "مستخدم"}:</strong>
+            ${msg.text}
+          </p>
+        `;
       });
+
+      box.scrollTop = box.scrollHeight;
     });
 }
 
+// تشغيل
 loadMessages();
 </script>
 
