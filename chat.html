@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>الدردشة</title>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<script src="firebaseConfig.js"></script>
+
+<style>
+body { font-family: Tahoma; padding: 20px; }
+#messages { height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
+</style>
+
+</head>
+
+<body>
+
+<h2>الدردشة العامة</h2>
+
+<div style="background:#fff3cd;padding:10px;border-radius:8px;">
+⚠️ هذه المحادثة قد تخضع للمراجعة
+</div>
+
+<br>
+
+<div id="messages"></div>
+
+<br>
+
+<input id="msgInput" placeholder="اكتب رسالة">
+<button onclick="sendMessage()">إرسال</button>
+
+<script>
+const db = firebase.firestore();
+
+function sendMessage() {
+  const text = document.getElementById("msgInput").value;
+
+  if (!text) return;
+
+  db.collection("chat").add({
+    text: text,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  document.getElementById("msgInput").value = "";
+}
+
+function loadMessages() {
+  db.collection("chat")
+    .orderBy("createdAt")
+    .onSnapshot(snapshot => {
+      const box = document.getElementById("messages");
+      box.innerHTML = "";
+
+      snapshot.forEach(doc => {
+        const msg = doc.data();
+
+        box.innerHTML += `<p>${msg.text}</p>`;
+      });
+    });
+}
+
+loadMessages();
+</script>
+
+</body>
+</html>
