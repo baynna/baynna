@@ -4,20 +4,18 @@ let currentUser = null;
 
 // انتظار تسجيل الدخول
 firebase.auth().onAuthStateChanged(function(user) {
-
   if (!user) {
     console.log("بانتظار تسجيل الدخول...");
     return;
   }
-
   currentUser = user;
-
   renderPosts();
-
 });
 
 
+// =====================
 // عرض المنشورات
+// =====================
 function renderPosts() {
 
   const container = document.getElementById("postsContainer");
@@ -26,7 +24,7 @@ function renderPosts() {
   container.innerHTML = "";
 
   db.collection("posts")
-    .orderBy("time", "desc") // حسب بياناتك
+    .orderBy("time", "desc")
     .get()
     .then(function(snapshot) {
 
@@ -59,6 +57,7 @@ function renderPosts() {
 
           <br><br>
 
+          <!-- إضافة تعليق -->
           <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
           <button onclick="addComment('${doc.id}')">إرسال</button>
 
@@ -67,7 +66,7 @@ function renderPosts() {
 
         container.appendChild(div);
 
-        // تحميل التعليقات (المهم)
+        // تحميل التعليقات والردود
         loadComments(doc.id);
 
       });
@@ -76,11 +75,13 @@ function renderPosts() {
     .catch(function(error) {
       console.log("خطأ:", error.message);
     });
-
 }
 
 
-// 🔥 تحميل التعليقات (Collection عام)
+
+// =====================
+// تحميل التعليقات + الردود
+// =====================
 function loadComments(postId) {
 
   const box = document.getElementById("comments-" + postId);
@@ -93,15 +94,46 @@ function loadComments(postId) {
 
       box.innerHTML = "";
 
+      let all = [];
+
       snapshot.forEach(function(doc) {
+        let data = doc.data();
+        data.id = doc.id;
+        all.push(data);
+      });
 
-        const c = doc.data();
+      // تقسيم التعليقات
+      let roots = all.filter(c => !c.parentId);
+      let replies = all.filter(c => c.parentId);
 
-        box.innerHTML += `
-          <div style="margin-top:5px;padding:5px;background:#f0f0f0;border-radius:6px;">
+      roots.forEach(function(c) {
+
+        let html = `
+          <div style="margin-top:8px;padding:8px;background:#eef3ff;border-radius:8px;">
             <b>${c.username || "مستخدم"}:</b> ${c.text || ""}
-          </div>
+            
+            <div style="margin-top:5px;">
+              <input id="replyInput-${c.id}" placeholder="رد...">
+              <button onclick="reply('${postId}','${c.id}')">رد</button>
+            </div>
         `;
+
+        // الردود
+        replies
+          .filter(r => r.parentId === c.id)
+          .forEach(function(r) {
+
+            html += `
+              <div style="margin-top:5px;margin-right:15px;padding:6px;background:#ffffff;border-radius:6px;">
+                <b>${r.username || "مستخدم"}:</b> ${r.text || ""}
+              </div>
+            `;
+
+          });
+
+        html += `</div>`;
+
+        box.innerHTML += html;
 
       });
 
@@ -112,7 +144,10 @@ function loadComments(postId) {
 }
 
 
-// 🔥 إضافة تعليق
+
+// =====================
+// إضافة تعليق
+// =====================
 function addComment(postId) {
 
   const input = document.getElementById("commentInput-" + postId);
@@ -136,6 +171,7 @@ function addComment(postId) {
       text: text,
       userId: currentUser.uid,
       username: username,
+      parentId: null,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
@@ -146,7 +182,48 @@ function addComment(postId) {
 }
 
 
-// 🔥 الحفظ
+
+// =====================
+// الرد على تعليق
+// =====================
+function reply(postId, parentId) {
+
+  const input = document.getElementById("replyInput-" + parentId);
+  if (!input) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  if (!currentUser) return;
+
+  db.collection("users").doc(currentUser.uid).get().then(function(userDoc) {
+
+    let username = "مستخدم";
+
+    if (userDoc.exists && userDoc.data().username) {
+      username = userDoc.data().username;
+    }
+
+    db.collection("comments").add({
+      postId: postId,
+      text: text,
+      userId: currentUser.uid,
+      username: username,
+      parentId: parentId,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    input.value = "";
+
+  });
+
+}
+
+
+
+// =====================
+// الحفظ
+// =====================
 function toggleSave(postId) {
 
   if (!currentUser) return;
