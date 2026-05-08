@@ -70,6 +70,7 @@ function renderPosts() {
 
           <br><br>
 
+          <!-- 🔥 التعليقات -->
           <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
           <button onclick="addComment('${doc.id}')">إرسال</button>
 
@@ -78,6 +79,7 @@ function renderPosts() {
 
         container.appendChild(div);
 
+        // 🔥 إعادة تحميل التعليقات (هذا كان السبب)
         if (typeof loadComments === "function") {
           loadComments(doc.id);
         }
@@ -92,12 +94,10 @@ function renderPosts() {
 }
 
 
-// 🔥 نظام التفاعلات
+// 🔥 Reactions
 function react(postId, type) {
 
-  if (!currentUser) {
-    return;
-  }
+  if (!currentUser) return;
 
   const ref = db.collection("posts")
     .doc(postId)
@@ -107,12 +107,8 @@ function react(postId, type) {
   ref.get().then(function(doc) {
 
     if (doc.exists) {
-      // تغيير التفاعل
-      ref.update({
-        type: type
-      });
+      ref.update({ type: type });
     } else {
-      // إضافة تفاعل
       ref.set({
         type: type,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -127,9 +123,7 @@ function react(postId, type) {
 // 🔥 الحفظ
 function toggleSave(postId) {
 
-  if (!currentUser) {
-    return;
-  }
+  if (!currentUser) return;
 
   const ref = db.collection("users")
     .doc(currentUser.uid)
