@@ -4,7 +4,6 @@ let currentUser = null;
 
 // انتظار تسجيل الدخول
 firebase.auth().onAuthStateChanged(function(user) {
-
   if (!user) {
     console.log("بانتظار تسجيل الدخول...");
     return;
@@ -15,7 +14,6 @@ firebase.auth().onAuthStateChanged(function(user) {
   setTimeout(function() {
     renderPosts();
   }, 300);
-
 });
 
 
@@ -54,15 +52,9 @@ function renderPosts() {
 
           <br><br>
 
-          <!-- 🔥 Reactions -->
-          <div style="margin-top:10px;">
-            <button onclick="react('${doc.id}', 'like')">👍</button>
-            <button onclick="react('${doc.id}', 'love')">❤️</button>
-            <button onclick="react('${doc.id}', 'laugh')">😂</button>
-            <button onclick="react('${doc.id}', 'angry')">😡</button>
-          </div>
-
-          <br>
+          <button onclick="likePost('${doc.id}')">
+            👍 ${post.likes || 0}
+          </button>
 
           <button onclick="toggleSave('${doc.id}')">
             💾 حفظ
@@ -70,7 +62,6 @@ function renderPosts() {
 
           <br><br>
 
-          <!-- 🔥 التعليقات -->
           <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
           <button onclick="addComment('${doc.id}')">إرسال</button>
 
@@ -79,7 +70,7 @@ function renderPosts() {
 
         container.appendChild(div);
 
-        // 🔥 إعادة تحميل التعليقات (هذا كان السبب)
+        // 🔥 هذا أهم سطر — يرجع التعليقات
         if (typeof loadComments === "function") {
           loadComments(doc.id);
         }
@@ -90,37 +81,10 @@ function renderPosts() {
     .catch(function(error) {
       console.log("خطأ:", error.message);
     });
-
 }
 
 
-// 🔥 Reactions
-function react(postId, type) {
-
-  if (!currentUser) return;
-
-  const ref = db.collection("posts")
-    .doc(postId)
-    .collection("reactions")
-    .doc(currentUser.uid);
-
-  ref.get().then(function(doc) {
-
-    if (doc.exists) {
-      ref.update({ type: type });
-    } else {
-      ref.set({
-        type: type,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-
-  });
-
-}
-
-
-// 🔥 الحفظ
+// الحفظ
 function toggleSave(postId) {
 
   if (!currentUser) return;
