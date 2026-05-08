@@ -4,12 +4,16 @@ let currentUser = null;
 
 // انتظار تسجيل الدخول
 firebase.auth().onAuthStateChanged(function(user) {
+
   if (!user) {
     console.log("بانتظار تسجيل الدخول...");
     return;
   }
+
   currentUser = user;
+
   renderPosts();
+
 });
 
 
@@ -22,7 +26,7 @@ function renderPosts() {
   container.innerHTML = "";
 
   db.collection("posts")
-    .orderBy("createdAt", "desc")
+    .orderBy("time", "desc") // حسب بياناتك
     .get()
     .then(function(snapshot) {
 
@@ -34,19 +38,19 @@ function renderPosts() {
         div.className = "post";
 
         div.innerHTML = `
-          <h3>${post.username || "مستخدم"}</h3>
-          <p>${post.content || ""}</p>
+          <h3>${post.name || "مستخدم"}</h3>
+          <p>${post.text || ""}</p>
 
           ${
-            post.imageUrl
-              ? `<img src="${post.imageUrl}" style="width:100%;border-radius:10px;margin-top:10px;">`
+            post.image
+              ? `<img src="${post.image}" style="width:100%;border-radius:10px;margin-top:10px;">`
               : ""
           }
 
           <br><br>
 
           <button onclick="likePost('${doc.id}')">
-            👍 ${post.likes || 0}
+            👍 ${(post.likes || []).length}
           </button>
 
           <button onclick="toggleSave('${doc.id}')">
@@ -63,7 +67,7 @@ function renderPosts() {
 
         container.appendChild(div);
 
-        // 🔥 تحميل التعليقات من داخل البوست (Subcollection)
+        // تحميل التعليقات (المهم)
         loadComments(doc.id);
 
       });
@@ -76,15 +80,14 @@ function renderPosts() {
 }
 
 
-// 🔥 تحميل التعليقات (Subcollection)
+// 🔥 تحميل التعليقات (Collection عام)
 function loadComments(postId) {
 
   const box = document.getElementById("comments-" + postId);
   if (!box) return;
 
-  db.collection("posts")
-    .doc(postId)
-    .collection("comments")
+  db.collection("comments")
+    .where("postId", "==", postId)
     .orderBy("createdAt")
     .onSnapshot(function(snapshot) {
 
@@ -118,9 +121,7 @@ function addComment(postId) {
   const text = input.value.trim();
   if (!text) return;
 
-  if (!currentUser) {
-    return;
-  }
+  if (!currentUser) return;
 
   db.collection("users").doc(currentUser.uid).get().then(function(userDoc) {
 
@@ -130,15 +131,13 @@ function addComment(postId) {
       username = userDoc.data().username;
     }
 
-    db.collection("posts")
-      .doc(postId)
-      .collection("comments")
-      .add({
-        text: text,
-        userId: currentUser.uid,
-        username: username,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+    db.collection("comments").add({
+      postId: postId,
+      text: text,
+      userId: currentUser.uid,
+      username: username,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
 
     input.value = "";
 
@@ -147,7 +146,7 @@ function addComment(postId) {
 }
 
 
-// 🔥 الحفظ (كما هو)
+// 🔥 الحفظ
 function toggleSave(postId) {
 
   if (!currentUser) return;
