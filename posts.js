@@ -8,12 +8,8 @@ firebase.auth().onAuthStateChanged(function(user) {
     console.log("بانتظار تسجيل الدخول...");
     return;
   }
-
   currentUser = user;
-
-  setTimeout(function() {
-    renderPosts();
-  }, 300);
+  renderPosts();
 });
 
 
@@ -35,10 +31,7 @@ function renderPosts() {
         const post = doc.data();
 
         const div = document.createElement("div");
-        div.style.background = "#fff";
-        div.style.padding = "15px";
-        div.style.marginBottom = "10px";
-        div.style.borderRadius = "10px";
+        div.className = "post";
 
         div.innerHTML = `
           <h3>${post.username || "مستخدم"}</h3>
@@ -70,10 +63,8 @@ function renderPosts() {
 
         container.appendChild(div);
 
-        // 🔥 هذا أهم سطر — يرجع التعليقات
-        if (typeof loadComments === "function") {
-          loadComments(doc.id);
-        }
+        // 🔥 تحميل التعليقات من داخل البوست (Subcollection)
+        loadComments(doc.id);
 
       });
 
@@ -81,10 +72,82 @@ function renderPosts() {
     .catch(function(error) {
       console.log("خطأ:", error.message);
     });
+
 }
 
 
-// الحفظ
+// 🔥 تحميل التعليقات (Subcollection)
+function loadComments(postId) {
+
+  const box = document.getElementById("comments-" + postId);
+  if (!box) return;
+
+  db.collection("posts")
+    .doc(postId)
+    .collection("comments")
+    .orderBy("createdAt")
+    .onSnapshot(function(snapshot) {
+
+      box.innerHTML = "";
+
+      snapshot.forEach(function(doc) {
+
+        const c = doc.data();
+
+        box.innerHTML += `
+          <div style="margin-top:5px;padding:5px;background:#f0f0f0;border-radius:6px;">
+            <b>${c.username || "مستخدم"}:</b> ${c.text || ""}
+          </div>
+        `;
+
+      });
+
+    }, function(error) {
+      console.log("Comments error:", error.message);
+    });
+
+}
+
+
+// 🔥 إضافة تعليق
+function addComment(postId) {
+
+  const input = document.getElementById("commentInput-" + postId);
+  if (!input) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  if (!currentUser) {
+    return;
+  }
+
+  db.collection("users").doc(currentUser.uid).get().then(function(userDoc) {
+
+    let username = "مستخدم";
+
+    if (userDoc.exists && userDoc.data().username) {
+      username = userDoc.data().username;
+    }
+
+    db.collection("posts")
+      .doc(postId)
+      .collection("comments")
+      .add({
+        text: text,
+        userId: currentUser.uid,
+        username: username,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+    input.value = "";
+
+  });
+
+}
+
+
+// 🔥 الحفظ (كما هو)
 function toggleSave(postId) {
 
   if (!currentUser) return;
