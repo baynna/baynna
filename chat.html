@@ -73,7 +73,20 @@ function sendMessage() {
   db.collection("users").doc(user.uid).get().then(doc => {
     const username = doc.exists ? doc.data().username : "مستخدم";
 
-    db.collection("chat").add({
+const user = firebase.auth().currentUser;
+
+db.collection("users").doc(user.uid).get().then(doc => {
+
+const username = doc.exists ? doc.data().username : "مستخدم";
+
+db.collection("chat").add({
+text: text,
+userId: user.uid,
+username: username,
+createdAt: firebase.firestore.FieldValue.serverTimestamp()
+});
+
+});
       text: text,
       userId: user.uid,
       username: username,
