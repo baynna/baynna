@@ -1,5 +1,21 @@
-
 const db = firebase.firestore();
+
+let currentUser = null;
+
+// 🔥 ننتظر تسجيل الدخول
+firebase.auth().onAuthStateChanged(function(user) {
+
+  if (!user) {
+    console.log("لم يتم تسجيل الدخول بعد");
+    return;
+  }
+
+  currentUser = user;
+
+  // 🔥 لا نعرض المنشورات إلا بعد التأكد
+  renderPosts();
+});
+
 
 // عرض المنشورات
 function renderPosts() {
@@ -12,9 +28,9 @@ function renderPosts() {
   db.collection("posts")
     .orderBy("createdAt", "desc")
     .get()
-    .then((snapshot) => {
+    .then(function(snapshot) {
 
-      snapshot.forEach((doc) => {
+      snapshot.forEach(function(doc) {
 
         const post = doc.data();
 
@@ -25,10 +41,7 @@ function renderPosts() {
         div.style.borderRadius = "10px";
 
         div.innerHTML = `
-          <h3 style="color:#4a6cf7;">
-            ${post.username || "مستخدم"}
-          </h3>
-
+          <h3>${post.username || "مستخدم"}</h3>
           <p>${post.content || ""}</p>
 
           ${
@@ -63,6 +76,9 @@ function renderPosts() {
 
       });
 
+    })
+    .catch(function(error) {
+      console.error("خطأ:", error);
     });
 }
 
@@ -70,19 +86,17 @@ function renderPosts() {
 // 🔥 دالة الحفظ
 function toggleSave(postId) {
 
-  const user = firebase.auth().currentUser;
-
-  if (!user) {
-    alert("يجب تسجيل الدخول");
+  if (!currentUser) {
+    alert("انتظر لحظة...");
     return;
   }
 
   const ref = db.collection("users")
-    .doc(user.uid)
+    .doc(currentUser.uid)
     .collection("saved")
     .doc(postId);
 
-  ref.get().then((doc) => {
+  ref.get().then(function(doc) {
 
     if (doc.exists) {
       ref.delete();
@@ -97,7 +111,3 @@ function toggleSave(postId) {
   });
 
 }
-
-
-// تشغيل
-renderPosts();
