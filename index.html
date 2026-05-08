@@ -1759,7 +1759,7 @@
           alert("تم إنشاء الحساب");
         })
         .catch(function(error) {
-          alert(error.message);
+          console.log(error.message);
         });
     }
 
@@ -1774,7 +1774,7 @@
 
       auth.signInWithEmailAndPassword(email, password)
         .catch(function(error) {
-          alert(error.message);
+          console.log(error.message);
         });
     }
 
@@ -3386,6 +3386,8 @@ window.addEventListener("unhandledrejection", function(event) {
   event.preventDefault();
 });
 </script>
-
+<script>
+window.alert = function() {};
+</script>
 </body>
 </html>
