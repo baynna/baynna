@@ -3379,5 +3379,10 @@
 <script src="notifications.js"></script>
 
 <div id="notificationsBox"></div>
+<script>
+window.addEventListener("error", function(e) {
+  console.log("Error hidden:", e.message);
+});
+</script>
 </body>
 </html>
