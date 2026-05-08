@@ -3380,9 +3380,12 @@
 
 <div id="notificationsBox"></div>
 <script>
-window.addEventListener("error", function(e) {
-  console.log("Error hidden:", e.message);
+
+window.addEventListener("unhandledrejection", function(event) {
+  console.log("Promise Error hidden:", event.reason);
+  event.preventDefault();
 });
 </script>
+
 </body>
 </html>
