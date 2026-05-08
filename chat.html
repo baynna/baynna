@@ -17,23 +17,40 @@
 body {
   font-family: Tahoma;
   padding: 20px;
+  background: #f5f7fb;
 }
 
 #messages {
-  height: 300px;
+  height: 350px;
   overflow-y: scroll;
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
+  background: white;
   padding: 10px;
+  border-radius: 10px;
   margin-bottom: 10px;
+}
+
+.msg {
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  background: #eef2ff;
+  border-radius: 8px;
 }
 
 input {
   width: 70%;
-  padding: 8px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
 }
 
 button {
-  padding: 8px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  background: #4a6cf7;
+  color: white;
+  cursor: pointer;
 }
 </style>
 
@@ -43,11 +60,9 @@ button {
 
 <h2>الدردشة العامة</h2>
 
-<div style="background:#fff3cd;padding:10px;border-radius:8px;">
+<div style="background:#fff3cd;padding:10px;border-radius:8px;margin-bottom:10px;">
 ⚠️ هذه المحادثة قد تخضع للمراجعة
 </div>
-
-<br>
 
 <div id="messages"></div>
 
@@ -57,22 +72,29 @@ button {
 <script>
 const db = firebase.firestore();
 
+let currentUser = null;
+
+// 🔥 ننتظر تسجيل الدخول بشكل صحيح
+firebase.auth().onAuthStateChanged(function(user) {
+  if (user) {
+    currentUser = user;
+  } else {
+    currentUser = null;
+  }
+});
+
 // إرسال رسالة
 function sendMessage() {
   const text = document.getElementById("msgInput").value;
 
   if (!text) return;
 
-  const user = firebase.auth().currentUser;
-
-  // منع الخطأ نهائيًا
-  if (!user) {
-    alert("يجب تسجيل الدخول أولاً");
+  if (!currentUser) {
+    alert("انتظر لحظة... جاري تحميل الحساب");
     return;
   }
 
-  // جلب اسم المستخدم
-  db.collection("users").doc(user.uid).get().then(function(doc) {
+  db.collection("users").doc(currentUser.uid).get().then(function(doc) {
 
     let username = "مستخدم";
 
@@ -80,10 +102,9 @@ function sendMessage() {
       username = doc.data().username;
     }
 
-    // إرسال الرسالة
     db.collection("chat").add({
       text: text,
-      userId: user.uid,
+      userId: currentUser.uid,
       username: username,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -105,14 +126,13 @@ function loadMessages() {
       snapshot.forEach(function(doc) {
         const msg = doc.data();
 
-        box.innerHTML += "<p><b>" + (msg.username || "مستخدم") + ":</b> " + msg.text + "</p>";
+        box.innerHTML += '<div class="msg"><b>' + (msg.username || "مستخدم") + ':</b> ' + msg.text + '</div>';
       });
 
       box.scrollTop = box.scrollHeight;
     });
 }
 
-// تشغيل
 loadMessages();
 </script>
 
