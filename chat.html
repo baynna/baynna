@@ -44,7 +44,7 @@ button {
 <h2>الدردشة العامة</h2>
 
 <div style="background:#fff3cd;padding:10px;border-radius:8px;">
-⚠️ هذه المحادثة قد تخضع للمراجعة لحماية المجتمع
+⚠️ هذه المحادثة قد تخضع للمراجعة
 </div>
 
 <br>
@@ -55,31 +55,32 @@ button {
 <button onclick="sendMessage()">إرسال</button>
 
 <script>
-
 const db = firebase.firestore();
 
 // إرسال رسالة
 function sendMessage() {
-
   const text = document.getElementById("msgInput").value;
 
   if (!text) return;
 
   const user = firebase.auth().currentUser;
 
+  // منع الخطأ نهائيًا
   if (!user) {
-    alert("يجب تسجيل الدخول");
+    alert("يجب تسجيل الدخول أولاً");
     return;
   }
 
+  // جلب اسم المستخدم
   db.collection("users").doc(user.uid).get().then(function(doc) {
 
-    var username = "مستخدم";
+    let username = "مستخدم";
 
-    if (doc.exists) {
+    if (doc.exists && doc.data().username) {
       username = doc.data().username;
     }
 
+    // إرسال الرسالة
     db.collection("chat").add({
       text: text,
       userId: user.uid,
@@ -87,16 +88,13 @@ function sendMessage() {
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    document.getElementById("msgInput").value = "";
-
   });
 
+  document.getElementById("msgInput").value = "";
 }
-
 
 // عرض الرسائل
 function loadMessages() {
-
   db.collection("chat")
     .orderBy("createdAt")
     .onSnapshot(function(snapshot) {
@@ -105,23 +103,17 @@ function loadMessages() {
       box.innerHTML = "";
 
       snapshot.forEach(function(doc) {
-
         const msg = doc.data();
 
         box.innerHTML += "<p><b>" + (msg.username || "مستخدم") + ":</b> " + msg.text + "</p>";
-
       });
 
       box.scrollTop = box.scrollHeight;
-
     });
-
 }
-
 
 // تشغيل
 loadMessages();
-
 </script>
 
 </body>
