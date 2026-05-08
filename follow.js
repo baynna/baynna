@@ -1,71 +1,41 @@
+
 const db = firebase.firestore();
+
+let currentUser = null;
+
+// انتظار تسجيل الدخول
+firebase.auth().onAuthStateChanged(function(user) {
+  if (!user) return;
+  currentUser = user;
+});
 
 // متابعة
 function followUser(targetUserId) {
 
-const user = firebase.auth().currentUser;
-
-if (!user) {
-alert("سجل دخول أولاً");
-return;
-}
-
-db.collection("follows")
-.doc(user.uid + "_" + targetUserId)
-.set({
-follower: user.uid,
-following: targetUserId
-})
-.then(function() {
-loadFollowButton(targetUserId);
-});
-
-}
-
-// إلغاء متابعة
-function unfollowUser(targetUserId) {
-
-const user = firebase.auth().currentUser;
-
-if (!user) return;
-
-db.collection("follows")
-.doc(user.uid + "_" + targetUserId)
-.delete()
-.then(function() {
-loadFollowButton(targetUserId);
-});
-
-}
-
-// حالة الزر
-function loadFollowButton(targetUserId) {
-
-const user = firebase.auth().currentUser;
-if (!user) return;
-
-const btn = document.getElementById("followBtn");
-if (!btn) return;
-
-db.collection("follows")
-.doc(user.uid + "_" + targetUserId)
-.get()
-.then(function(doc) {
-
-```
-  if (doc.exists) {
-    btn.innerText = "إلغاء المتابعة";
-    btn.onclick = function() {
-      unfollowUser(targetUserId);
-    };
-  } else {
-    btn.innerText = "متابعة";
-    btn.onclick = function() {
-      followUser(targetUserId);
-    };
+  if (!currentUser) {
+    alert("انتظر لحظة...");
+    return;
   }
 
-});
-```
+  // إضافة في following
+  db.collection("users")
+    .doc(currentUser.uid)
+    .collection("following")
+    .doc(targetUserId)
+    .set({});
+
+  // إضافة في followers
+  db.collection("users")
+    .doc(targetUserId)
+    .collection("followers")
+    .doc(currentUser.uid)
+    .set({});
+
+  // 🔥 إرسال إشعار
+  db.collection("notifications").add({
+    toUserId: targetUserId,
+    text: "قام " + (currentUser.email || "مستخدم") + " بمتابعتك",
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
 
 }
