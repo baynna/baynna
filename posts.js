@@ -2,18 +2,21 @@ const db = firebase.firestore();
 
 let currentUser = null;
 
-// 🔥 ننتظر تسجيل الدخول
+// 🔥 نوقف كل شيء حتى يجهز المستخدم
 firebase.auth().onAuthStateChanged(function(user) {
 
   if (!user) {
-    console.log("لم يتم تسجيل الدخول بعد");
+    console.log("بانتظار تسجيل الدخول...");
     return;
   }
 
   currentUser = user;
 
-  // 🔥 لا نعرض المنشورات إلا بعد التأكد
-  renderPosts();
+  // 🔥 تأخير بسيط لضمان الاستقرار
+  setTimeout(function() {
+    renderPosts();
+  }, 500);
+
 });
 
 
@@ -80,10 +83,11 @@ function renderPosts() {
     .catch(function(error) {
       console.error("خطأ:", error);
     });
+
 }
 
 
-// 🔥 دالة الحفظ
+// دالة الحفظ
 function toggleSave(postId) {
 
   if (!currentUser) {
