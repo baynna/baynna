@@ -55,10 +55,12 @@ button {
 <button onclick="sendMessage()">إرسال</button>
 
 <script>
+
 const db = firebase.firestore();
 
 // إرسال رسالة
 function sendMessage() {
+
   const text = document.getElementById("msgInput").value;
 
   if (!text) return;
@@ -70,23 +72,15 @@ function sendMessage() {
     return;
   }
 
-  db.collection("users").doc(user.uid).get().then(doc => {
-    const username = doc.exists ? doc.data().username : "مستخدم";
+  db.collection("users").doc(user.uid).get().then(function(doc) {
 
-const user = firebase.auth().currentUser;
+    var username = "مستخدم";
 
-db.collection("users").doc(user.uid).get().then(doc => {
+    if (doc.exists) {
+      username = doc.data().username;
+    }
 
-const username = doc.exists ? doc.data().username : "مستخدم";
-
-db.collection("chat").add({
-text: text,
-userId: user.uid,
-username: username,
-createdAt: firebase.firestore.FieldValue.serverTimestamp()
-});
-
-});
+    db.collection("chat").add({
       text: text,
       userId: user.uid,
       username: username,
@@ -94,34 +88,40 @@ createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
     document.getElementById("msgInput").value = "";
+
   });
+
 }
+
 
 // عرض الرسائل
 function loadMessages() {
+
   db.collection("chat")
     .orderBy("createdAt")
-    .onSnapshot(snapshot => {
+    .onSnapshot(function(snapshot) {
+
       const box = document.getElementById("messages");
       box.innerHTML = "";
 
-      snapshot.forEach(doc => {
+      snapshot.forEach(function(doc) {
+
         const msg = doc.data();
 
-        box.innerHTML += `
-          <p>
-            <strong>${msg.username || "مستخدم"}:</strong>
-            ${msg.text}
-          </p>
-        `;
+        box.innerHTML += "<p><b>" + (msg.username || "مستخدم") + ":</b> " + msg.text + "</p>";
+
       });
 
       box.scrollTop = box.scrollHeight;
+
     });
+
 }
+
 
 // تشغيل
 loadMessages();
+
 </script>
 
 </body>
