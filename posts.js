@@ -2,7 +2,7 @@ const db = firebase.firestore();
 
 let currentUser = null;
 
-// 🔥 نوقف كل شيء حتى يجهز المستخدم
+// انتظار تسجيل الدخول
 firebase.auth().onAuthStateChanged(function(user) {
 
   if (!user) {
@@ -12,10 +12,9 @@ firebase.auth().onAuthStateChanged(function(user) {
 
   currentUser = user;
 
-  // 🔥 تأخير بسيط لضمان الاستقرار
   setTimeout(function() {
     renderPosts();
-  }, 500);
+  }, 300);
 
 });
 
@@ -55,9 +54,15 @@ function renderPosts() {
 
           <br><br>
 
-          <button onclick="likePost('${doc.id}')">
-            👍 ${post.likes || 0}
-          </button>
+          <!-- 🔥 Reactions -->
+          <div style="margin-top:10px;">
+            <button onclick="react('${doc.id}', 'like')">👍</button>
+            <button onclick="react('${doc.id}', 'love')">❤️</button>
+            <button onclick="react('${doc.id}', 'laugh')">😂</button>
+            <button onclick="react('${doc.id}', 'angry')">😡</button>
+          </div>
+
+          <br>
 
           <button onclick="toggleSave('${doc.id}')">
             💾 حفظ
@@ -81,17 +86,48 @@ function renderPosts() {
 
     })
     .catch(function(error) {
-      console.error("خطأ:", error);
+      console.log("خطأ:", error.message);
     });
 
 }
 
 
-// دالة الحفظ
+// 🔥 نظام التفاعلات
+function react(postId, type) {
+
+  if (!currentUser) {
+    return;
+  }
+
+  const ref = db.collection("posts")
+    .doc(postId)
+    .collection("reactions")
+    .doc(currentUser.uid);
+
+  ref.get().then(function(doc) {
+
+    if (doc.exists) {
+      // تغيير التفاعل
+      ref.update({
+        type: type
+      });
+    } else {
+      // إضافة تفاعل
+      ref.set({
+        type: type,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
+  });
+
+}
+
+
+// 🔥 الحفظ
 function toggleSave(postId) {
 
   if (!currentUser) {
-    alert("انتظر لحظة...");
     return;
   }
 
@@ -104,12 +140,10 @@ function toggleSave(postId) {
 
     if (doc.exists) {
       ref.delete();
-      alert("تم إزالة الحفظ");
     } else {
       ref.set({
         savedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      alert("تم حفظ المنشور");
     }
 
   });
