@@ -1,66 +1,103 @@
+
 const db = firebase.firestore();
 
-// ⚠️ ضع رابط موقعك هنا
-const BASE_URL = window.location.origin;
-
+// عرض المنشورات
 function renderPosts() {
-const container = document.getElementById("postsContainer");
-container.innerHTML = "";
 
-db.collection("posts")
-.orderBy("createdAt", "desc")
-.get()
-.then((snapshot) => {
-snapshot.forEach((doc) => {
-const post = doc.data();
+  const container = document.getElementById("postsContainer");
+  if (!container) return;
 
-```
-    const div = document.createElement("div");
-    div.className = "post";
+  container.innerHTML = "";
 
-    div.innerHTML = `
-      <h3 style="cursor:pointer;color:#4a6cf7;"
-          onclick="goProfile('${post.userId}')">
-        ${post.username || "مستخدم"}
-      </h3>
+  db.collection("posts")
+    .orderBy("createdAt", "desc")
+    .get()
+    .then((snapshot) => {
 
-      <p>${post.content || ""}</p>
+      snapshot.forEach((doc) => {
 
-      ${
-        post.imageUrl
-          ? `<img src="${post.imageUrl}" style="width:100%;border-radius:10px;margin-top:10px;">`
-          : ""
-      }
+        const post = doc.data();
 
-      <button onclick="likePost('${doc.id}')">
-        👍 ${post.likes || 0}
-      </button>
+        const div = document.createElement("div");
+        div.style.background = "#fff";
+        div.style.padding = "15px";
+        div.style.marginBottom = "10px";
+        div.style.borderRadius = "10px";
 
-      <br><br>
+        div.innerHTML = `
+          <h3 style="color:#4a6cf7;">
+            ${post.username || "مستخدم"}
+          </h3>
 
-      <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
-      <button onclick="addComment('${doc.id}')">إرسال</button>
+          <p>${post.content || ""}</p>
 
-      <div id="comments-${doc.id}"></div>
-    `;
+          ${
+            post.imageUrl
+              ? `<img src="${post.imageUrl}" style="width:100%;border-radius:10px;margin-top:10px;">`
+              : ""
+          }
 
-    container.appendChild(div);
+          <br><br>
 
-    loadComments(doc.id);
+          <button onclick="likePost('${doc.id}')">
+            👍 ${post.likes || 0}
+          </button>
+
+          <button onclick="toggleSave('${doc.id}')">
+            💾 حفظ
+          </button>
+
+          <br><br>
+
+          <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
+          <button onclick="addComment('${doc.id}')">إرسال</button>
+
+          <div id="comments-${doc.id}"></div>
+        `;
+
+        container.appendChild(div);
+
+        if (typeof loadComments === "function") {
+          loadComments(doc.id);
+        }
+
+      });
+
+    });
+}
+
+
+// 🔥 دالة الحفظ
+function toggleSave(postId) {
+
+  const user = firebase.auth().currentUser;
+
+  if (!user) {
+    alert("يجب تسجيل الدخول");
+    return;
+  }
+
+  const ref = db.collection("users")
+    .doc(user.uid)
+    .collection("saved")
+    .doc(postId);
+
+  ref.get().then((doc) => {
+
+    if (doc.exists) {
+      ref.delete();
+      alert("تم إزالة الحفظ");
+    } else {
+      ref.set({
+        savedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      alert("تم حفظ المنشور");
+    }
+
   });
-});
-```
 
 }
 
-// 🔥 انتقال مضمون
-function goProfile(userId) {
-if (!userId) {
-alert("لا يوجد userId");
-return;
-}
 
-window.location.href = BASE_URL + "/profile.html?uid=" + userId;
-}
-
+// تشغيل
 renderPosts();
