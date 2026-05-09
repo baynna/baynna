@@ -17,7 +17,6 @@ function renderPosts() {
         const div = document.createElement("div");
         div.className = "post-card";
 
-        // 🔥 إصلاح عرض التاريخ (حتى لو createdAt غير موجود)
         let dateText = "";
         if (post.createdAt && post.createdAt.toDate) {
           dateText = post.createdAt.toDate().toLocaleString();
@@ -47,7 +46,6 @@ function renderPosts() {
               👍 ${post.likes || 0}
             </button>
 
-            <!-- التفاعلات -->
             <div style="margin-top:5px;">
               <button onclick="react('${doc.id}','like')">👍</button>
               <button onclick="react('${doc.id}','love')">❤️</button>
@@ -68,7 +66,6 @@ function renderPosts() {
 
         container.appendChild(div);
 
-        // 🔥 مهم جدًا
         loadComments(doc.id);
       });
 
@@ -80,7 +77,7 @@ function renderPosts() {
 
 
 // =======================
-// التعليقات (مصححة نهائيًا)
+// 🔥 التعليقات (تشخيص + إصلاح)
 // =======================
 function loadComments(postId) {
 
@@ -89,9 +86,14 @@ function loadComments(postId) {
 
   db.collection("comments")
     .where("postId", "==", postId)
-    .onSnapshot((snapshot) => {   // ❗ بدون orderBy
+    .onSnapshot((snapshot) => {
 
       box.innerHTML = "";
+
+      // 🔥 إذا لم يجد شيء، نطبع السبب
+      if (snapshot.empty) {
+        console.log("⚠️ لا توجد تعليقات لهذا البوست:", postId);
+      }
 
       snapshot.forEach((doc) => {
         const c = doc.data();
@@ -104,7 +106,7 @@ function loadComments(postId) {
       });
 
     }, (error) => {
-      console.log("Comments error:", error.message);
+      console.log("❌ Comments error:", error.message);
     });
 }
 
@@ -121,7 +123,10 @@ function addComment(postId) {
   if (!text) return;
 
   const user = firebase.auth().currentUser;
-  if (!user) return;
+  if (!user) {
+    console.log("❌ المستخدم غير مسجل");
+    return;
+  }
 
   db.collection("users").doc(user.uid).get().then((doc) => {
 
@@ -137,11 +142,13 @@ function addComment(postId) {
       username: username,
       userId: user.uid,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      console.log("✅ تم إضافة التعليق");
     });
 
     input.value = "";
 
   }).catch((error) => {
-    console.log("Add comment error:", error.message);
+    console.log("❌ Add comment error:", error.message);
   });
 }
