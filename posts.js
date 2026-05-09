@@ -1,4 +1,3 @@
-
 const db = firebase.firestore();
 
 function renderPosts() {
@@ -44,6 +43,15 @@ function renderPosts() {
             <button onclick="likePost('${doc.id}')">
               👍 ${post.likes || 0}
             </button>
+
+            <!-- 🔥 التفاعلات الجديدة (بدون تخريب) -->
+            <div style="margin-top:5px;">
+              <button onclick="react('${doc.id}','like')">👍</button>
+              <button onclick="react('${doc.id}','love')">❤️</button>
+              <button onclick="react('${doc.id}','laugh')">😂</button>
+              <button onclick="react('${doc.id}','angry')">😡</button>
+            </div>
+
           </div>
 
           <div class="comments-section">
@@ -58,7 +66,7 @@ function renderPosts() {
 
         container.appendChild(div);
 
-        // 🔥 هذا أهم شيء — لا نحذفه
+        // لا نلمس هذا
         loadComments(doc.id);
       });
     });
@@ -66,7 +74,7 @@ function renderPosts() {
 
 
 // =======================
-// التعليقات (مطابقة لنظامك)
+// التعليقات (كما هي)
 // =======================
 function loadComments(postId) {
 
