@@ -2,30 +2,33 @@ const db = firebase.firestore();
 
 function renderPosts() {
   const container = document.getElementById("postsContainer");
+  if (!container) return;
+
   container.innerHTML = "";
 
   db.collection("posts")
     .orderBy("createdAt", "desc")
     .get()
     .then((snapshot) => {
+
       snapshot.forEach((doc) => {
         const post = doc.data();
 
         const div = document.createElement("div");
         div.className = "post-card";
 
+        // 🔥 إصلاح عرض التاريخ (حتى لو createdAt غير موجود)
+        let dateText = "";
+        if (post.createdAt && post.createdAt.toDate) {
+          dateText = post.createdAt.toDate().toLocaleString();
+        }
+
         div.innerHTML = `
           <div class="post-header">
             <div class="avatar">${(post.username || "م")[0]}</div>
             <div class="user-info">
               <div class="username">${post.username || "مستخدم"}</div>
-              <div class="date">
-                ${
-                  post.createdAt
-                    ? new Date(post.createdAt.seconds * 1000).toLocaleString()
-                    : ""
-                }
-              </div>
+              <div class="date">${dateText}</div>
             </div>
           </div>
 
@@ -44,14 +47,13 @@ function renderPosts() {
               👍 ${post.likes || 0}
             </button>
 
-            <!-- 🔥 التفاعلات الجديدة (بدون تخريب) -->
+            <!-- التفاعلات -->
             <div style="margin-top:5px;">
               <button onclick="react('${doc.id}','like')">👍</button>
               <button onclick="react('${doc.id}','love')">❤️</button>
               <button onclick="react('${doc.id}','laugh')">😂</button>
               <button onclick="react('${doc.id}','angry')">😡</button>
             </div>
-
           </div>
 
           <div class="comments-section">
@@ -66,15 +68,19 @@ function renderPosts() {
 
         container.appendChild(div);
 
-        // لا نلمس هذا
+        // 🔥 مهم جدًا
         loadComments(doc.id);
       });
+
+    })
+    .catch((error) => {
+      console.log("Posts error:", error.message);
     });
 }
 
 
 // =======================
-// التعليقات (كما هي)
+// التعليقات (مصححة نهائيًا)
 // =======================
 function loadComments(postId) {
 
@@ -83,8 +89,7 @@ function loadComments(postId) {
 
   db.collection("comments")
     .where("postId", "==", postId)
-    .orderBy("createdAt", "asc")
-    .onSnapshot((snapshot) => {
+    .onSnapshot((snapshot) => {   // ❗ بدون orderBy
 
       box.innerHTML = "";
 
@@ -98,6 +103,8 @@ function loadComments(postId) {
         `;
       });
 
+    }, (error) => {
+      console.log("Comments error:", error.message);
     });
 }
 
@@ -108,8 +115,9 @@ function loadComments(postId) {
 function addComment(postId) {
 
   const input = document.getElementById("commentInput-" + postId);
-  const text = input.value.trim();
+  if (!input) return;
 
+  const text = input.value.trim();
   if (!text) return;
 
   const user = firebase.auth().currentUser;
@@ -132,5 +140,8 @@ function addComment(postId) {
     });
 
     input.value = "";
+
+  }).catch((error) => {
+    console.log("Add comment error:", error.message);
   });
 }
