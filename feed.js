@@ -70,17 +70,16 @@ function loadFeed() {
 
               <br><br>
 
-              <!-- 🔥 إضافة تعليق -->
+              <!-- إضافة تعليق -->
               <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
               <button onclick="addComment('${doc.id}')">إرسال</button>
 
-              <!-- 🔥 عرض التعليقات -->
+              <!-- عرض التعليقات -->
               <div id="comments-${doc.id}"></div>
             `;
 
             container.appendChild(div);
 
-            // 🔥 تحميل التعليقات (بدون فلترة)
             loadComments(doc.id);
 
           });
@@ -93,7 +92,7 @@ function loadFeed() {
 
 
 // =======================
-// عرض التعليقات (إجباري)
+// عرض التعليقات (مصَحَّح)
 // =======================
 function loadComments(postId) {
 
@@ -109,6 +108,9 @@ function loadComments(postId) {
 
         const c = doc.data();
 
+        // 🔥 فلترة صحيحة
+        if (c.postId !== postId) return;
+
         box.innerHTML += `
           <div style="background:#f0f0f0;margin-top:5px;padding:5px;">
             <b>${c.username || "مستخدم"}:</b> ${c.text || ""}
@@ -123,37 +125,44 @@ function loadComments(postId) {
 
 
 // =======================
-// إضافة تعليق
+// إضافة تعليق (مصَحَّحة 100%)
 // =======================
 function addComment(postId) {
 
   const input = document.getElementById("commentInput-" + postId);
-  if (!input) return;
+  if (!input) {
+    alert("❌ لم يتم العثور على مربع التعليق");
+    return;
+  }
 
   const text = input.value.trim();
-  if (!text) return;
+  if (!text) {
+    alert("❌ اكتب تعليق أولاً");
+    return;
+  }
 
   const user = firebase.auth().currentUser;
-  if (!user) return;
+  if (!user) {
+    alert("❌ يجب تسجيل الدخول");
+    return;
+  }
 
-  db.collection("users").doc(user.uid).get().then(function(doc) {
+  const username = user.email || "مستخدم";
 
-    let username = "مستخدم";
-
-    if (doc.exists && doc.data().username) {
-      username = doc.data().username;
-    }
-
-    db.collection("comments").add({
-      postId: postId,
-      text: text,
-      username: username,
-      userId: user.uid,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
+  db.collection("comments").add({
+    postId: String(postId),   // 🔥 مهم جداً
+    text: text,
+    username: username,
+    userId: user.uid,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  })
+  .then(function() {
+    alert("✅ تم إرسال التعليق");
     input.value = "";
-
+  })
+  .catch(function(error) {
+    alert("❌ خطأ: " + error.message);
+    console.log(error);
   });
 
 }
