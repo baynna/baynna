@@ -13,7 +13,9 @@ firebase.auth().onAuthStateChanged(function(user) {
 });
 
 
-// 🔥 تحميل المنشورات الذكية
+// =======================
+// تحميل المنشورات
+// =======================
 function loadFeed() {
 
   const container = document.getElementById("postsContainer");
@@ -21,7 +23,6 @@ function loadFeed() {
 
   container.innerHTML = "<p>جاري تحميل المنشورات...</p>";
 
-  // جلب من أتابعهم
   db.collection("users")
     .doc(currentUser.uid)
     .collection("following")
@@ -34,15 +35,8 @@ function loadFeed() {
         followingIds.push(doc.id);
       });
 
-      // 🔥 أضف نفسك أيضاً
       followingIds.push(currentUser.uid);
 
-      if (followingIds.length === 0) {
-        container.innerHTML = "لا توجد منشورات بعد";
-        return;
-      }
-
-      // جلب المنشورات
       db.collection("posts")
         .orderBy("createdAt", "desc")
         .get()
@@ -54,7 +48,6 @@ function loadFeed() {
 
             const post = doc.data();
 
-            // 🔥 فلترة ذكية
             if (!followingIds.includes(post.userId)) return;
 
             const div = document.createElement("div");
@@ -83,9 +76,19 @@ function loadFeed() {
               <button onclick="toggleSave('${doc.id}')">
                 💾 حفظ
               </button>
+
+              <br><br>
+
+              <!-- 🔥 التعليقات -->
+              <input id="commentInput-${doc.id}" placeholder="اكتب تعليق..." />
+              <button onclick="addComment('${doc.id}')">إرسال</button>
+
+              <div id="comments-${doc.id}"></div>
             `;
 
             container.appendChild(div);
+
+            loadComments(doc.id); // 🔥 مهم جداً
 
           });
 
@@ -93,6 +96,68 @@ function loadFeed() {
 
     });
 
+}
+
+
+// =======================
+// عرض التعليقات
+// =======================
+function loadComments(postId) {
+
+  const box = document.getElementById("comments-" + postId);
+  if (!box) return;
+
+  db.collection("comments")
+    .where("postId", "==", postId)
+    .onSnapshot(function(snapshot) {
+
+      box.innerHTML = "";
+
+      snapshot.forEach(function(doc) {
+        const c = doc.data();
+
+        box.innerHTML += `
+          <div style="background:#eef3ff;padding:6px;border-radius:6px;margin-top:5px;">
+            <b>${c.username || "مستخدم"}:</b> ${c.text || ""}
+          </div>
+        `;
+      });
+
+    });
+}
+
+
+// =======================
+// إضافة تعليق
+// =======================
+function addComment(postId) {
+
+  const input = document.getElementById("commentInput-" + postId);
+  const text = input.value.trim();
+  if (!text) return;
+
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  db.collection("users").doc(user.uid).get().then(function(doc) {
+
+    let username = "مستخدم";
+
+    if (doc.exists && doc.data().username) {
+      username = doc.data().username;
+    }
+
+    db.collection("comments").add({
+      postId: postId,
+      text: text,
+      username: username,
+      userId: user.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    input.value = "";
+
+  });
 }
 
 
