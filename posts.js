@@ -1,5 +1,8 @@
 const db = firebase.firestore();
 
+// =======================
+// عرض المنشورات
+// =======================
 function renderPosts() {
   const container = document.getElementById("postsContainer");
   if (!container) return;
@@ -55,12 +58,14 @@ function renderPosts() {
           </div>
 
           <div class="comments-section">
+
             <div class="add-comment">
               <input id="commentInput-${doc.id}" placeholder="اكتب تعليق..." />
               <button onclick="addComment('${doc.id}')">إرسال</button>
             </div>
 
             <div id="comments-${doc.id}" class="comments-list"></div>
+
           </div>
         `;
 
@@ -69,44 +74,64 @@ function renderPosts() {
         loadComments(doc.id);
       });
 
-    })
-    .catch((error) => {
-      console.log("Posts error:", error.message);
     });
 }
 
 
 // =======================
-// 🔥 التعليقات (تشخيص + إصلاح)
+// عرض التعليقات + الردود
 // =======================
 function loadComments(postId) {
 
   const box = document.getElementById("comments-" + postId);
   if (!box) return;
 
-  db.collection("comments")
-    .where("postId", "==", postId)
+  db.collection("posts")
+    .doc(postId)
+    .collection("comments")
+    .orderBy("createdAt")
     .onSnapshot((snapshot) => {
 
       box.innerHTML = "";
 
-      // 🔥 إذا لم يجد شيء، نطبع السبب
-      if (snapshot.empty) {
-        console.log("⚠️ لا توجد تعليقات لهذا البوست:", postId);
-      }
+      let comments = [];
 
       snapshot.forEach((doc) => {
         const c = doc.data();
-
-        box.innerHTML += `
-          <div class="comment">
-            <b>${c.username || "مستخدم"}:</b> ${c.text || ""}
-          </div>
-        `;
+        c.id = doc.id;
+        comments.push(c);
       });
 
-    }, (error) => {
-      console.log("❌ Comments error:", error.message);
+      let mainComments = comments.filter(c => !c.parentId);
+      let replies = comments.filter(c => c.parentId);
+
+      mainComments.forEach(c => {
+
+        let html = `
+          <div style="background:#eef3ff;padding:8px;border-radius:8px;margin-top:5px;">
+            <b>${c.username}:</b> ${c.text}
+
+            <div style="margin-top:5px;">
+              <input id="replyInput-${c.id}" placeholder="رد..." />
+              <button onclick="addReply('${postId}','${c.id}')">رد</button>
+            </div>
+        `;
+
+        replies
+          .filter(r => r.parentId === c.id)
+          .forEach(r => {
+            html += `
+              <div style="margin-top:5px;margin-right:15px;background:#fff;padding:6px;border-radius:6px;">
+                <b>${r.username}:</b> ${r.text}
+              </div>
+            `;
+          });
+
+        html += `</div>`;
+
+        box.innerHTML += html;
+      });
+
     });
 }
 
@@ -117,38 +142,65 @@ function loadComments(postId) {
 function addComment(postId) {
 
   const input = document.getElementById("commentInput-" + postId);
-  if (!input) return;
-
   const text = input.value.trim();
   if (!text) return;
 
   const user = firebase.auth().currentUser;
-  if (!user) {
-    console.log("❌ المستخدم غير مسجل");
-    return;
-  }
+  if (!user) return;
 
   db.collection("users").doc(user.uid).get().then((doc) => {
 
     let username = "مستخدم";
-
     if (doc.exists && doc.data().username) {
       username = doc.data().username;
     }
 
-    db.collection("comments").add({
-      postId: postId,
-      text: text,
-      username: username,
-      userId: user.uid,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-      console.log("✅ تم إضافة التعليق");
-    });
+    db.collection("posts")
+      .doc(postId)
+      .collection("comments")
+      .add({
+        text,
+        username,
+        userId: user.uid,
+        parentId: null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
 
     input.value = "";
+  });
+}
 
-  }).catch((error) => {
-    console.log("❌ Add comment error:", error.message);
+
+// =======================
+// الرد على تعليق
+// =======================
+function addReply(postId, parentId) {
+
+  const input = document.getElementById("replyInput-" + parentId);
+  const text = input.value.trim();
+  if (!text) return;
+
+  const user = firebase.auth().currentUser;
+  if (!user) return;
+
+  db.collection("users").doc(user.uid).get().then((doc) => {
+
+    let username = "مستخدم";
+    if (doc.exists && doc.data().username) {
+      username = doc.data().username;
+    }
+
+    db.collection("posts")
+      .doc(postId)
+      .collection("comments")
+      .add({
+        text,
+        username,
+        userId: user.uid,
+        parentId: parentId,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+    input.value = "";
   });
 }
