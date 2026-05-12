@@ -4,11 +4,8 @@ let currentUser = null;
 
 // انتظار تسجيل الدخول
 firebase.auth().onAuthStateChanged(function(user) {
-
   if (!user) return;
-
   currentUser = user;
-
   loadFeed();
 });
 
@@ -21,7 +18,7 @@ function loadFeed() {
   const container = document.getElementById("postsContainer");
   if (!container) return;
 
-  container.innerHTML = "<p>جاري تحميل المنشورات...</p>";
+  container.innerHTML = "جاري التحميل...";
 
   db.collection("users")
     .doc(currentUser.uid)
@@ -51,44 +48,40 @@ function loadFeed() {
             if (!followingIds.includes(post.userId)) return;
 
             const div = document.createElement("div");
-            div.className = "post";
+            div.style.border = "1px solid #ddd";
+            div.style.padding = "10px";
+            div.style.marginBottom = "10px";
 
             div.innerHTML = `
-              <h3 style="cursor:pointer;color:#4a6cf7;"
-              onclick="openProfile('${post.userId}')">
-              ${post.username || "مستخدم"}
-              </h3>
-
+              <h3>${post.username || "مستخدم"}</h3>
               <p>${post.content || ""}</p>
 
               ${
                 post.imageUrl
-                ? `<img src="${post.imageUrl}" style="width:100%;border-radius:10px;">`
+                ? `<img src="${post.imageUrl}" style="width:100%">`
                 : ""
               }
 
-              <br><br>
+              <br>
 
               <button onclick="likePost('${doc.id}')">
                 👍 ${post.likes || 0}
               </button>
 
-              <button onclick="toggleSave('${doc.id}')">
-                💾 حفظ
-              </button>
-
               <br><br>
 
-              <!-- 🔥 التعليقات -->
-              <input id="commentInput-${doc.id}" placeholder="اكتب تعليق..." />
+              <!-- 🔥 إضافة تعليق -->
+              <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
               <button onclick="addComment('${doc.id}')">إرسال</button>
 
+              <!-- 🔥 عرض التعليقات -->
               <div id="comments-${doc.id}"></div>
             `;
 
             container.appendChild(div);
 
-            loadComments(doc.id); // 🔥 مهم جداً
+            // 🔥 تحميل التعليقات (بدون فلترة)
+            loadComments(doc.id);
 
           });
 
@@ -100,7 +93,7 @@ function loadFeed() {
 
 
 // =======================
-// عرض التعليقات
+// عرض التعليقات (إجباري)
 // =======================
 function loadComments(postId) {
 
@@ -108,22 +101,24 @@ function loadComments(postId) {
   if (!box) return;
 
   db.collection("comments")
-    .where("postId", "==", postId)
     .onSnapshot(function(snapshot) {
 
       box.innerHTML = "";
 
       snapshot.forEach(function(doc) {
+
         const c = doc.data();
 
         box.innerHTML += `
-          <div style="background:#eef3ff;padding:6px;border-radius:6px;margin-top:5px;">
+          <div style="background:#f0f0f0;margin-top:5px;padding:5px;">
             <b>${c.username || "مستخدم"}:</b> ${c.text || ""}
           </div>
         `;
+
       });
 
     });
+
 }
 
 
@@ -133,6 +128,8 @@ function loadComments(postId) {
 function addComment(postId) {
 
   const input = document.getElementById("commentInput-" + postId);
+  if (!input) return;
+
   const text = input.value.trim();
   if (!text) return;
 
@@ -158,6 +155,7 @@ function addComment(postId) {
     input.value = "";
 
   });
+
 }
 
 
