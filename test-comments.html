@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>اختبار التعليقات</title>
+</head>
+
+<body style="font-family:Tahoma;padding:20px;">
+
+<h2>🔥 نظام التعليقات (اختبار)</h2>
+
+<div id="commentsApp"></div>
+
+<script>
+// =========================
+// نظام التعليقات الكامل
+// =========================
+
+const STORAGE_KEY = "comments_test";
+
+function loadData() {
+  return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+}
+
+function saveData(data) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function uid() {
+  return Math.random().toString(36).substr(2, 9);
+}
+
+const REACTIONS = ["👍","❤️","😂","😡","😢","🔥"];
+
+// تشغيل
+function init() {
+  const app = document.getElementById("commentsApp");
+
+  app.innerHTML = `
+    <input id="commentInput" placeholder="اكتب تعليق">
+    <button onclick="addComment()">إرسال</button>
+    <div id="list"></div>
+  `;
+
+  render();
+}
+
+// إضافة تعليق
+function addComment() {
+  const input = document.getElementById("commentInput");
+  const text = input.value.trim();
+  if (!text) return;
+
+  const data = loadData();
+
+  if (!data.comments) data.comments = [];
+
+  data.comments.push({
+    id: uid(),
+    text,
+    replies: [],
+    reactions: {}
+  });
+
+  saveData(data);
+  input.value = "";
+  render();
+}
+
+// رد
+function addReply(id) {
+  const input = document.getElementById("reply-"+id);
+  const text = input.value.trim();
+  if (!text) return;
+
+  const data = loadData();
+  const c = data.comments.find(x => x.id === id);
+
+  c.replies.push({
+    id: uid(),
+    text,
+    reactions: {}
+  });
+
+  saveData(data);
+  render();
+}
+
+// تفاعل
+function react(commentId, replyId, emoji) {
+  const data = loadData();
+
+  let target;
+
+  if (replyId) {
+    const c = data.comments.find(x => x.id === commentId);
+    target = c.replies.find(r => r.id === replyId);
+  } else {
+    target = data.comments.find(x => x.id === commentId);
+  }
+
+  if (!target.reactions[emoji]) target.reactions[emoji] = 0;
+  target.reactions[emoji]++;
+
+  saveData(data);
+  render();
+}
+
+// عرض
+function render() {
+  const box = document.getElementById("list");
+  const data = loadData();
+
+  const comments = data.comments || [];
+
+  box.innerHTML = "";
+
+  comments.forEach(c => {
+
+    let html = `
+      <div style="background:#eee;margin-top:10px;padding:10px;border-radius:8px;">
+        ${c.text}
+        <br>
+    `;
+
+    REACTIONS.forEach(e => {
+      html += `<button onclick="react('${c.id}',null,'${e}')">${e} ${c.reactions[e]||0}</button>`;
+    });
+
+    html += `
+      <br>
+      <input id="reply-${c.id}" placeholder="رد">
+      <button onclick="addReply('${c.id}')">رد</button>
+    `;
+
+    c.replies.forEach(r => {
+      html += `
+        <div style="margin-right:20px;margin-top:5px;background:#fff;padding:5px;">
+          ${r.text}
+          <br>
+      `;
+
+      REACTIONS.forEach(e => {
+        html += `<button onclick="react('${c.id}','${r.id}','${e}')">${e} ${r.reactions[e]||0}</button>`;
+      });
+
+      html += `</div>`;
+    });
+
+    html += `</div>`;
+
+    box.innerHTML += html;
+  });
+}
+
+init();
+</script>
+
+</body>
+</html>
