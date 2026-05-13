@@ -2,6 +2,10 @@ const db = firebase.firestore();
 
 let currentUser = null;
 
+window.addEventListener("error", function(e) {
+  console.log("JS ERROR:", e.message);
+});
+
 // تسجيل الدخول
 firebase.auth().onAuthStateChanged(function(user) {
   if (!user) return;
@@ -21,7 +25,6 @@ function loadFeed() {
   container.innerHTML = "جاري التحميل...";
 
   db.collection("posts")
-    .orderBy("createdAt", "desc")
     .get()
     .then(function(postsSnap) {
 
@@ -46,16 +49,11 @@ function loadFeed() {
             : ""
           }
 
-          <br>
-
-          <button onclick="likePost('${doc.id}')">
-            👍 ${post.likes || 0}
-          </button>
-
           <br><br>
 
-          <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
-          <button onclick="addComment('${doc.id}')">إرسال</button>
+          <button onclick="testAddComment('${doc.id}')">
+            🔥 اضغط لاختبار التعليق
+          </button>
 
           <div id="comments-${doc.id}"></div>
         `;
@@ -78,45 +76,41 @@ function loadComments(postId) {
   const box = document.getElementById("comments-" + postId);
   if (!box) return;
 
-  const comments = JSON.parse(localStorage.getItem("comments_" + postId)) || [];
+  db.collection("comments")
+    .get()
+    .then(function(snapshot) {
 
-  box.innerHTML = "";
+      box.innerHTML = "";
 
-  comments.forEach(function(c) {
+      snapshot.forEach(function(doc) {
+        const c = doc.data();
 
-    box.innerHTML += `
-      <div style="background:#f0f0f0;margin-top:5px;padding:5px;">
-        <b>${c.username}:</b> ${c.text}
-      </div>
-    `;
+        box.innerHTML += `
+          <div style="background:#eee;margin-top:5px;padding:5px;">
+            ${c.text}
+          </div>
+        `;
+      });
 
-  });
+    });
 }
 
 
 // =======================
-// إضافة تعليق
+// 🔥 اختبار الحفظ (الحاسم)
 // =======================
-function addComment(postId) {
+function testAddComment(postId) {
 
-  const input = document.getElementById("commentInput-" + postId);
-  if (!input) return;
+  alert("تم الضغط ✔");
 
-  const text = input.value.trim();
-  if (!text) return;
-
-  const username = currentUser.email || "مستخدم";
-
-  let comments = JSON.parse(localStorage.getItem("comments_" + postId)) || [];
-
-  comments.push({
-    text: text,
-    username: username
+  db.collection("comments").add({
+    text: "TEST COMMENT",
+    createdAt: new Date()
+  })
+  .then(function() {
+    alert("✅ تم الحفظ في Firebase");
+  })
+  .catch(function(error) {
+    alert("❌ فشل الحفظ: " + error.message);
   });
-
-  localStorage.setItem("comments_" + postId, JSON.stringify(comments));
-
-  input.value = "";
-
-  loadComments(postId);
 }
