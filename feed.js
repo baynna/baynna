@@ -2,10 +2,6 @@ const db = firebase.firestore();
 
 let currentUser = null;
 
-window.addEventListener("error", function(e) {
-  console.log("JS ERROR:", e.message);
-});
-
 // تسجيل الدخول
 firebase.auth().onAuthStateChanged(function(user) {
   if (!user) return;
@@ -25,6 +21,7 @@ function loadFeed() {
   container.innerHTML = "جاري التحميل...";
 
   db.collection("posts")
+    .orderBy("createdAt", "desc")
     .get()
     .then(function(postsSnap) {
 
@@ -39,29 +36,57 @@ function loadFeed() {
         div.style.padding = "10px";
         div.style.marginBottom = "10px";
 
-        div.innerHTML = `
-          <h3>${post.username || "مستخدم"}</h3>
-          <p>${post.content || ""}</p>
+        // نبني عناصر حقيقية بدل HTML onclick
+        const title = document.createElement("h3");
+        title.textContent = post.username || "مستخدم";
 
-          ${
-            post.imageUrl
-            ? `<img src="${post.imageUrl}" style="width:100%">`
-            : ""
-          }
+        const content = document.createElement("p");
+        content.textContent = post.content || "";
 
-          <br><br>
+        const likeBtn = document.createElement("button");
+        likeBtn.textContent = "👍 " + (post.likes || 0);
+        likeBtn.onclick = function() {
+          if (typeof likePost === "function") likePost(doc.id);
+        };
 
-          <button onclick="testAddComment('${doc.id}')">
-            🔥 اضغط لاختبار التعليق
-          </button>
+        const input = document.createElement("input");
+        input.id = "commentInput-" + doc.id;
+        input.placeholder = "اكتب تعليق";
 
-          <div id="comments-${doc.id}"></div>
-        `;
+        const sendBtn = document.createElement("button");
+        sendBtn.textContent = "إرسال";
+
+        // 🔥 ربط مباشر (هذا يحل المشكلة نهائيًا)
+        sendBtn.addEventListener("click", function() {
+          addComment(doc.id);
+        });
+
+        const commentsBox = document.createElement("div");
+        commentsBox.id = "comments-" + doc.id;
+
+        div.appendChild(title);
+        div.appendChild(content);
+
+        if (post.imageUrl) {
+          const img = document.createElement("img");
+          img.src = post.imageUrl;
+          img.style.width = "100%";
+          div.appendChild(img);
+        }
+
+        div.appendChild(document.createElement("br"));
+        div.appendChild(likeBtn);
+
+        div.appendChild(document.createElement("br"));
+        div.appendChild(document.createElement("br"));
+
+        div.appendChild(input);
+        div.appendChild(sendBtn);
+        div.appendChild(commentsBox);
 
         container.appendChild(div);
 
         loadComments(doc.id);
-
       });
 
     });
@@ -77,19 +102,21 @@ function loadComments(postId) {
   if (!box) return;
 
   db.collection("comments")
-    .get()
-    .then(function(snapshot) {
+    .where("postId", "==", postId)
+    .onSnapshot(function(snapshot) {
 
       box.innerHTML = "";
 
       snapshot.forEach(function(doc) {
         const c = doc.data();
 
-        box.innerHTML += `
-          <div style="background:#eee;margin-top:5px;padding:5px;">
-            ${c.text}
-          </div>
-        `;
+        const d = document.createElement("div");
+        d.style.background = "#eee";
+        d.style.marginTop = "5px";
+        d.style.padding = "5px";
+        d.textContent = (c.username || "مستخدم") + ": " + (c.text || "");
+
+        box.appendChild(d);
       });
 
     });
@@ -97,20 +124,43 @@ function loadComments(postId) {
 
 
 // =======================
-// 🔥 اختبار الحفظ (الحاسم)
+// إضافة تعليق (نهائي)
 // =======================
-function testAddComment(postId) {
+function addComment(postId) {
 
-  alert("تم الضغط ✔");
+  const input = document.getElementById("commentInput-" + postId);
+  if (!input) {
+    alert("❌ لم يتم العثور على مربع التعليق");
+    return;
+  }
+
+  const text = input.value.trim();
+  if (!text) {
+    alert("❌ اكتب تعليق أولاً");
+    return;
+  }
+
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert("❌ يجب تسجيل الدخول");
+    return;
+  }
+
+  const username = user.email || "مستخدم";
 
   db.collection("comments").add({
-    text: "TEST COMMENT",
-    createdAt: new Date()
+    postId: postId,
+    text: text,
+    username: username,
+    userId: user.uid,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
   })
   .then(function() {
-    alert("✅ تم الحفظ في Firebase");
+    input.value = "";
+    alert("✅ تم إرسال التعليق");
   })
   .catch(function(error) {
-    alert("❌ فشل الحفظ: " + error.message);
+    alert("❌ خطأ: " + error.message);
+    console.log(error);
   });
 }
