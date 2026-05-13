@@ -2,7 +2,7 @@ const db = firebase.firestore();
 
 let currentUser = null;
 
-// انتظار تسجيل الدخول
+// تسجيل الدخول
 firebase.auth().onAuthStateChanged(function(user) {
   if (!user) return;
   currentUser = user;
@@ -20,155 +20,103 @@ function loadFeed() {
 
   container.innerHTML = "جاري التحميل...";
 
-  db.collection("users")
-    .doc(currentUser.uid)
-    .collection("following")
+  db.collection("posts")
+    .orderBy("createdAt", "desc")
     .get()
-    .then(function(snapshot) {
+    .then(function(postsSnap) {
 
-      let followingIds = [];
+      container.innerHTML = "";
 
-      snapshot.forEach(function(doc) {
-        followingIds.push(doc.id);
+      postsSnap.forEach(function(doc) {
+
+        const post = doc.data();
+
+        const div = document.createElement("div");
+        div.style.border = "1px solid #ddd";
+        div.style.padding = "10px";
+        div.style.marginBottom = "10px";
+
+        div.innerHTML = `
+          <h3>${post.username || "مستخدم"}</h3>
+          <p>${post.content || ""}</p>
+
+          ${
+            post.imageUrl
+            ? `<img src="${post.imageUrl}" style="width:100%">`
+            : ""
+          }
+
+          <br>
+
+          <button onclick="likePost('${doc.id}')">
+            👍 ${post.likes || 0}
+          </button>
+
+          <br><br>
+
+          <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
+          <button onclick="addComment('${doc.id}')">إرسال</button>
+
+          <div id="comments-${doc.id}"></div>
+        `;
+
+        container.appendChild(div);
+
+        loadComments(doc.id);
+
       });
 
-      followingIds.push(currentUser.uid);
-
-      db.collection("posts")
-        .orderBy("createdAt", "desc")
-        .get()
-        .then(function(postsSnap) {
-
-          container.innerHTML = "";
-
-          postsSnap.forEach(function(doc) {
-
-            const post = doc.data();
-
-            if (!followingIds.includes(post.userId)) return;
-
-            const div = document.createElement("div");
-            div.style.border = "1px solid #ddd";
-            div.style.padding = "10px";
-            div.style.marginBottom = "10px";
-
-            div.innerHTML = `
-              <h3>${post.username || "مستخدم"}</h3>
-              <p>${post.content || ""}</p>
-
-              ${
-                post.imageUrl
-                ? `<img src="${post.imageUrl}" style="width:100%">`
-                : ""
-              }
-
-              <br>
-
-              <button onclick="likePost('${doc.id}')">
-                👍 ${post.likes || 0}
-              </button>
-
-              <br><br>
-
-              <!-- إضافة تعليق -->
-              <input id="commentInput-${doc.id}" placeholder="اكتب تعليق">
-              <button onclick="addComment('${doc.id}')">إرسال</button>
-
-              <!-- عرض التعليقات -->
-              <div id="comments-${doc.id}"></div>
-            `;
-
-            container.appendChild(div);
-
-            loadComments(doc.id);
-
-          });
-
-        });
-
     });
-
 }
 
 
 // =======================
-// عرض التعليقات (مصَحَّح)
+// عرض التعليقات
 // =======================
 function loadComments(postId) {
 
   const box = document.getElementById("comments-" + postId);
   if (!box) return;
 
-  db.collection("comments")
-    .onSnapshot(function(snapshot) {
+  const comments = JSON.parse(localStorage.getItem("comments_" + postId)) || [];
 
-      box.innerHTML = "";
+  box.innerHTML = "";
 
-      snapshot.forEach(function(doc) {
+  comments.forEach(function(c) {
 
-        const c = doc.data();
+    box.innerHTML += `
+      <div style="background:#f0f0f0;margin-top:5px;padding:5px;">
+        <b>${c.username}:</b> ${c.text}
+      </div>
+    `;
 
-        // 🔥 فلترة صحيحة
-        if (c.postId !== postId) return;
-
-        box.innerHTML += `
-          <div style="background:#f0f0f0;margin-top:5px;padding:5px;">
-            <b>${c.username || "مستخدم"}:</b> ${c.text || ""}
-          </div>
-        `;
-
-      });
-
-    });
-
+  });
 }
 
 
 // =======================
-// إضافة تعليق (مصَحَّحة 100%)
+// إضافة تعليق
 // =======================
 function addComment(postId) {
 
   const input = document.getElementById("commentInput-" + postId);
-  if (!input) {
-    alert("❌ لم يتم العثور على مربع التعليق");
-    return;
-  }
+  if (!input) return;
 
   const text = input.value.trim();
-  if (!text) {
-    alert("❌ اكتب تعليق أولاً");
-    return;
-  }
+  if (!text) return;
 
-  const user = firebase.auth().currentUser;
-  if (!user) {
-    alert("❌ يجب تسجيل الدخول");
-    return;
-  }
+  const username = currentUser.email || "مستخدم";
 
-  const username = user.email || "مستخدم";
+  let comments = JSON.parse(localStorage.getItem("comments_" + postId)) || [];
 
-  db.collection("comments").add({
-    postId: String(postId),   // 🔥 مهم جداً
+  comments.push({
     text: text,
-    username: username,
-    userId: user.uid,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  })
-  .then(function() {
-    alert("✅ تم إرسال التعليق");
-    input.value = "";
-  })
-  .catch(function(error) {
-    alert("❌ خطأ: " + error.message);
-    console.log(error);
+    username: username
   });
 
-}
+  localStorage.setItem("comments_" + postId, JSON.stringify(comments));
 
+  input.value = "";
 
-// فتح البروفايل
-function openProfile(userId) {
-  window.location.href = "profile.html?uid=" + userId;
+  loadComments(postId);
 }
