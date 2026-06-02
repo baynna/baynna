@@ -4,7 +4,10 @@ let currentUser = null;
 
 // تسجيل الدخول
 firebase.auth().onAuthStateChanged(function(user) {
-  if (!user) return;
+  if (!user) {
+    alert("❌ يجب تسجيل الدخول أولاً");
+    return;
+  }
   currentUser = user;
   loadPosts();
 });
@@ -45,7 +48,6 @@ function loadPosts() {
 
       container.appendChild(div);
 
-      // 🔥 ربط الزر (مهم جداً)
       document.getElementById("btn-" + doc.id)
         .addEventListener("click", function() {
           sendComment(doc.id);
@@ -78,10 +80,10 @@ function sendComment(postId) {
   }
 
   db.collection("comments").add({
-    postId: postId,
+    postId: String(postId),
     text: text,
     userId: currentUser.uid,
-    username: currentUser.email,
+    username: currentUser.email || "مستخدم",
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   })
   .then(function() {
@@ -96,7 +98,7 @@ function sendComment(postId) {
 
 
 // =======================
-// عرض التعليقات
+// عرض التعليقات (بدون فلترة 🔥)
 // =======================
 function loadComments(postId) {
 
@@ -104,7 +106,6 @@ function loadComments(postId) {
   if (!box) return;
 
   db.collection("comments")
-    .where("postId", "==", postId)
     .onSnapshot(function(snapshot) {
 
       box.innerHTML = "";
@@ -112,6 +113,9 @@ function loadComments(postId) {
       snapshot.forEach(function(doc) {
 
         const c = doc.data();
+
+        // 🔥 نفلتر يدويًا بدل Firestore
+        if (c.postId !== postId) return;
 
         const div = document.createElement("div");
         div.style.background = "#eee";
