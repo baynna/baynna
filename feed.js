@@ -1,27 +1,14 @@
 const db = firebase.firestore();
 
-let currentUser = null;
-
-// تسجيل الدخول
-firebase.auth().onAuthStateChanged(function(user) {
-  if (!user) {
-    alert("❌ يجب تسجيل الدخول أولاً");
-    return;
-  }
-  currentUser = user;
-  loadPosts();
-});
-
-
 // =======================
-// عرض المنشورات
+// تحميل المنشورات
 // =======================
 function loadPosts() {
 
   const container = document.getElementById("postsContainer");
   if (!container) return;
 
-  container.innerHTML = "جاري التحميل...";
+  container.innerHTML = "Loading...";
 
   db.collection("posts").get().then(function(snapshot) {
 
@@ -37,24 +24,18 @@ function loadPosts() {
       div.style.padding = "10px";
 
       div.innerHTML = `
-        <h3>${post.username || "مستخدم"}</h3>
+        <h3>${post.username || "user"}</h3>
         <p>${post.content || ""}</p>
 
-        <input id="comment-${doc.id}" placeholder="اكتب تعليق">
-        <button id="btn-${doc.id}">إرسال</button>
+        <input id="comment-${doc.id}" placeholder="write comment">
+        <button onclick="sendComment('${doc.id}')">Send</button>
 
         <div id="comments-${doc.id}"></div>
       `;
 
       container.appendChild(div);
 
-      document.getElementById("btn-" + doc.id)
-        .addEventListener("click", function() {
-          sendComment(doc.id);
-        });
-
       loadComments(doc.id);
-
     });
 
   });
@@ -62,7 +43,7 @@ function loadPosts() {
 
 
 // =======================
-// إرسال تعليق
+// إرسال تعليق (مباشر بدون auth)
 // =======================
 function sendComment(postId) {
 
@@ -70,35 +51,27 @@ function sendComment(postId) {
   const text = input.value.trim();
 
   if (!text) {
-    alert("اكتب تعليق");
-    return;
-  }
-
-  if (!currentUser) {
-    alert("يجب تسجيل الدخول");
+    alert("write something");
     return;
   }
 
   db.collection("comments").add({
-    postId: String(postId),
+    postId: postId,
     text: text,
-    userId: currentUser.uid,
-    username: currentUser.email || "مستخدم",
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    username: "test-user"
   })
   .then(function() {
     input.value = "";
-    alert("تم إرسال التعليق ✅");
+    alert("DONE ✅");
   })
-  .catch(function(error) {
-    alert("خطأ ❌: " + error.message);
-    console.log(error);
+  .catch(function(e) {
+    alert("ERROR: " + e.message);
   });
 }
 
 
 // =======================
-// عرض التعليقات (بدون فلترة 🔥)
+// عرض التعليقات (بدون where)
 // =======================
 function loadComments(postId) {
 
@@ -114,19 +87,22 @@ function loadComments(postId) {
 
         const c = doc.data();
 
-        // 🔥 نفلتر يدويًا بدل Firestore
-        if (c.postId !== postId) return;
+        // فلترة يدوية (بدون where)
+        if (c.postId != postId) return;
 
-        const div = document.createElement("div");
-        div.style.background = "#eee";
-        div.style.marginTop = "5px";
-        div.style.padding = "5px";
+        const d = document.createElement("div");
+        d.style.background = "#eee";
+        d.style.marginTop = "5px";
+        d.style.padding = "5px";
 
-        div.textContent = (c.username || "مستخدم") + ": " + c.text;
+        d.textContent = c.username + ": " + c.text;
 
-        box.appendChild(div);
+        box.appendChild(d);
       });
 
     });
-
 }
+
+
+// تشغيل
+loadPosts();
