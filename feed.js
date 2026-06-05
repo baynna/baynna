@@ -43,7 +43,7 @@ function loadPosts() {
 
 
 // =======================
-// إرسال تعليق (مباشر بدون auth)
+// إرسال تعليق
 // =======================
 function sendComment(postId) {
 
@@ -58,7 +58,8 @@ function sendComment(postId) {
   db.collection("comments").add({
     postId: postId,
     text: text,
-    username: "test-user"
+    username: "test-user",
+    likes: 0   // 🔥 مهم لتهيئة اللايك
   })
   .then(function() {
     input.value = "";
@@ -71,7 +72,22 @@ function sendComment(postId) {
 
 
 // =======================
-// عرض التعليقات (بدون where)
+// لايك التعليق
+// =======================
+function likeComment(commentId) {
+
+  db.collection("comments").doc(commentId).update({
+    likes: firebase.firestore.FieldValue.increment(1)
+  })
+  .catch(function(e) {
+    console.log(e);
+  });
+
+}
+
+
+// =======================
+// عرض التعليقات
 // =======================
 function loadComments(postId) {
 
@@ -87,7 +103,6 @@ function loadComments(postId) {
 
         const c = doc.data();
 
-        // فلترة يدوية (بدون where)
         if (c.postId != postId) return;
 
         const d = document.createElement("div");
@@ -95,7 +110,12 @@ function loadComments(postId) {
         d.style.marginTop = "5px";
         d.style.padding = "5px";
 
-        d.textContent = c.username + ": " + c.text;
+        d.innerHTML = `
+          ${c.username}: ${c.text}
+          <br>
+          <button onclick="likeComment('${doc.id}')">👍</button>
+          ${c.likes || 0}
+        `;
 
         box.appendChild(d);
       });
