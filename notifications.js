@@ -1,22 +1,11 @@
-
-const db = firebase.firestore();
-
-firebase.auth().onAuthStateChanged(function(user) {
-
-  if (!user) return;
-
-  const box = document.getElementById("notificationsBox");
-  if (!box) return;
-
-  // 🔥 لا نحمل الإشعارات إذا ما عندنا بيانات
-  db.collection("notifications")
-    .limit(1)
-    .get()
-    .then(function() {
-      console.log("notifications safe");
-    })
-    .catch(function(error) {
-      console.log("notifications blocked:", error.message);
-    });
-
-});
+/* Baynna notification compatibility shim
+ * The main page owns notification listeners/rendering.
+ * This file stays inert to prevent duplicate Firestore reads and conflicting listeners.
+ */
+(function () {
+  "use strict";
+  window.BaynnaNotifications = Object.freeze({
+    version: "compat",
+    active: false
+  });
+})();
