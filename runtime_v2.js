@@ -32,6 +32,12 @@
     box._timer = setTimeout(function () { if (box.parentNode) box.parentNode.removeChild(box); }, 6000);
   }
 
+  // The legacy page silences alert() near the end of the document. Replace
+  // that silence with visible feedback after the hardened runtime is loaded.
+  window.alert = function (message) {
+    toast(String(message || ""), false);
+  };
+
   function userOrNotify() {
     const user = auth.currentUser;
     if (!user) { toast("يجب تسجيل الدخول أولاً.", false); return null; }
@@ -53,7 +59,6 @@
     return fallback || "مستخدم";
   }
 
-  // One notification schema everywhere: users/{uid}/notifications/{id}.
   window.createNotification = async function (targetUid, payload) {
     if (!targetUid || !payload || targetUid === (auth.currentUser && auth.currentUser.uid)) return;
     const clean = Object.assign({}, payload, {
@@ -142,11 +147,12 @@
       const commentRef = db.collection("posts").doc(postId).collection("comments").doc(commentId);
       const commentSnap = await commentRef.get();
       const comment = commentSnap.exists ? commentSnap.data() : null;
+      if (!comment) { toast("التعليق غير موجود.", false); return; }
       await commentRef.collection("replies").add({ text:text, name:user.email || "مستخدم", uid:user.uid, time:Date.now() });
       if (input) input.value = "";
       const from = displayName(user.uid,user.email);
-      if (comment && comment.uid && comment.uid !== user.uid) await window.createNotification(comment.uid, { type:"reply", fromUid:user.uid, fromName:from, postId:postId, text:from+" رد على تعليقك", time:Date.now(), read:false });
-      rerender();
+      if (comment.uid && comment.uid !== user.uid) await window.createNotification(comment.uid, { type:"reply", fromUid:user.uid, fromName:from, postId:postId, text:from+" رد على تعليقك", time:Date.now(), read:false });
+      if (typeof window.renderPosts === "function") rerender();
     } catch (e) { toast(errorText(e), false); }
   };
 
@@ -191,7 +197,25 @@
     const password = passwordEl ? passwordEl.value.trim() : "";
     if (!email || !password) { toast("اكتب البريد وكلمة المرور.", false); return; }
     if (password.length < 6) { toast("كلمة المرور يجب أن تكون 6 أحرف على الأقل.", false); return; }
-    try { await auth.createUserWithEmailAndPassword(email,password); toast("تم إنشاء الحساب.", true); }
+    try {
+      const result = await auth.createUserWithEmailAndPassword(email,password);
+      if (result && result.user) {
+        try {
+          await db.collection("users").doc(result.user.uid).set({
+            uid: result.user.uid,
+            email: result.user.email || email,
+            username: "",
+            bio: "",
+            createdAt: Date.now(),
+            showEmailPublic: false,
+            allowComments: "all"
+          }, { merge: true });
+        } catch (profileError) {
+          console.error("Baynna profile creation error", profileError);
+        }
+      }
+      toast("تم إنشاء الحساب.", true);
+    }
     catch (e) { toast(errorText(e), false); }
   };
 
@@ -200,7 +224,6 @@
     catch (e) { toast(errorText(e), false); }
   };
 
-  // Make image rendering safer for both data URLs and remote URLs.
   function sanitizeImages(root) {
     const scope = root && root.querySelectorAll ? root : document;
     scope.querySelectorAll("img.post-image").forEach(function (img) {
@@ -216,7 +239,7 @@
     });
   }
 
-  window.BaynnaRuntime = Object.freeze({ version:"2.0", hardened:true, firestore:true });
+  window.BaynnaRuntime = Object.freeze({ version:"2.1", hardened:true, firestore:true });
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function(){ sanitizeImages(document); }, {once:true});
   else sanitizeImages(document);
