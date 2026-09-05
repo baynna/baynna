@@ -1,52 +1,25 @@
+// Baynna comments compatibility module.
+// Authentication is initialized by the main page; this file must remain safe
+// if loaded independently.
 const db = firebase.firestore();
 
-// إضافة تعليق
 function addComment(postId) {
-const input = document.getElementById(`commentInput-${postId}`);
-const text = input.value.trim();
+  const input = document.getElementById("commentInput-" + postId);
+  const text = input ? input.value.trim() : "";
+  const user = firebase.auth().currentUser;
+  if (!input || !text || !user || !postId) return;
 
-if (!text) return;
-
-db.collection("posts")
-.doc(postId)
-.collection("comments")
-.add({
-text: text,
-username: currentUsername,
-createdAt: firebase.firestore.FieldValue.serverTimestamp()
-})
-.then(() => {
-input.value = "";
-loadComments(postId);
-});
-}
-
-// تحميل التعليقات
-function loadComments(postId) {
-const container = document.getElementById(`comments-${postId}`);
-container.innerHTML = "";
-
-db.collection("posts")
-.doc(postId)
-.collection("comments")
-.orderBy("createdAt", "asc")
-.get()
-.then((snapshot) => {
-snapshot.forEach((doc) => {
-const c = doc.data();
-
-```
-    const div = document.createElement("div");
-    div.className = "comment";
-
-    div.innerHTML = `
-      <strong>${c.username}</strong>
-      <p>${c.text}</p>
-    `;
-
-    container.appendChild(div);
-  });
-});
-```
-
+  db.collection("users").doc(user.uid).get()
+    .then(function (doc) {
+      const data = doc.exists ? doc.data() : {};
+      return db.collection("posts").doc(postId).collection("comments").add({
+        text: text,
+        username: data.username || user.displayName || user.email || "مستخدم",
+        userId: user.uid,
+        parentId: null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    })
+    .then(function () { input.value = ""; })
+    .catch(function (error) { console.error("Baynna comment failed:", error); });
 }
